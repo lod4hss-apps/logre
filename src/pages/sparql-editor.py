@@ -36,7 +36,7 @@ def read_saved_queries() -> dict[str:str]:
     for raw_queries in queries_list:
         # If an error occurs here, it is because the file has the wrong format
         try:
-            if raw_queries.strip() == "":
+            if raw_queries.strip() != "":
                 colon_index = raw_queries.index(':')
                 name = raw_queries[0:colon_index].strip()
                 text = raw_queries[colon_index+1:].strip()
@@ -47,6 +47,7 @@ def read_saved_queries() -> dict[str:str]:
     # Put the endpoints information in session
     st.session_state['all_queries'] = queries
 
+    print(queries_list)
 
 def write_queries_list() -> None:
     """Write all queries that are in session memory on disk."""
