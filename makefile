@@ -1,5 +1,6 @@
 default: help
 
+SHELL := /bin/bash
 PIPENV_NAME := pipenv_logre
 REQUIREMENTS_FILE := requirements.txt
 
@@ -21,9 +22,13 @@ install:
 		echo "Environment $(PIPENV_NAME) already exists."; \
 	fi
 	@echo "Activating environment $(PIPENV_NAME)..."
-	@source $(PIPENV_NAME)/bin/activate && \
+	@source ./$(PIPENV_NAME)/bin/activate && \
 	echo "Installing packages from $(REQUIREMENTS_FILE)..." && \
 	pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
+	@echo "Initializing folder..."
+	mkdir -p "./data"
+	touch "./data/saved_endpoints"
+	touch "./data/saved_queries"
 
 
 start: install
@@ -32,4 +37,4 @@ start: install
 	cd src; python3.10 -m streamlit run server.py
 
 update: 
-	@echo update
+	git pull origin main

@@ -9,3 +9,9 @@ def init() -> None:
         page_title='Logre',
         page_icon='👹'
     )
+
+    # Load version number
+    file = open('../VERSION', 'r')
+    version = file.read()
+    file.close()
+    st.session_state['VERSION'] = version

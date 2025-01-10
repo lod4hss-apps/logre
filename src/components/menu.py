@@ -1,8 +1,11 @@
 import streamlit as st
 
-
 def menu() -> None:
-    """Component function: the sidebar."""
+    """Component function: the sidebar"""
+
+    col1, col2 = st.sidebar.columns([2, 1], vertical_alignment='bottom')
+    col1.markdown(f"# Logre")
+    col2.markdown(f"<small>v{st.session_state['VERSION']}</small>", unsafe_allow_html=True)
 
     st.sidebar.page_link("pages/home.py", label="Presentation")
     st.sidebar.page_link("pages/endpoint-config.py", label="Endpoint configuration")

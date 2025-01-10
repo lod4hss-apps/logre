@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## v1.2.0 - Date: 2025-01-10
+
+Add the possibility to save and chose among saved queries in the SPARQL editor
+
 ## v1.1.0 - Date: 2025-01-08
 
 Add the possibility to save and chose among saved endpoints.

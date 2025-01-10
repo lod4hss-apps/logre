@@ -3,7 +3,7 @@ from typing import Callable
 
 
 @st.dialog("Confirmation")
-def confirmation(text: str, callback: Callable, **kwargs) -> None:
+def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
     """
     Dialog function that ask confirmation on any given action.
     Dialog will close if the user clicks on "Yes" or "No".

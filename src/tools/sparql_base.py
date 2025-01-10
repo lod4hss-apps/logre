@@ -1,7 +1,8 @@
 from typing import Dict
 import streamlit as st
 import pandas as pd
-from SPARQLWrapper import SPARQLWrapper, JSON
+from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
+from urllib.error import HTTPError
 
 
 
@@ -18,6 +19,11 @@ def query(request: str) -> pd.DataFrame:
     Execute the given request against the in session endpoint.
     Request needs to be only SELECT: won't work if it is a INSERT or DELETE request.
     """
+
+    # If no endpoint is selected, do not do anything
+    if 'endpoint' not in st.session_state:
+        st.error('No endpoint has been selected, set it in "Endpoint configuration" page')
+        return False
 
     # Init the endpoint
     sparql_endpoint = SPARQLWrapper(
@@ -45,6 +51,11 @@ def execute(request: str) -> None:
     Request needs to be only INSERTs or DELETEs.
     """
 
+    # If no endpoint is selected, do not do anything
+    if 'endpoint' not in st.session_state:
+        st.error('No endpoint has been selected, set it in "Endpoint configuration" page')
+        return False
+    
     # Init the endpoint
     sparql_endpoint = SPARQLWrapper(st.session_state['endpoint']['url'])
         
@@ -54,6 +65,7 @@ def execute(request: str) -> None:
 
     # Execute the query
     sparql_endpoint.query()
+    return True
 
 
 def run(query_string: str) -> pd.DataFrame | None:
@@ -62,10 +74,16 @@ def run(query_string: str) -> pd.DataFrame | None:
     In case the query is a select, returns a DataFrame.
     Otherwise returns nothing.
     """
-
-    if 'delete' in query_string.lower() or 'insert' in query_string.lower():
-        execute(query_string)
-    elif 'select' in query_string.lower():
-        return query(query_string)
-    else:
-        st.error('Query error: Only "SELECT", "INSERT", "DELETE" are supported.')
+    try: 
+        if 'delete' in query_string.lower() or 'insert' in query_string.lower():
+            return execute(query_string)
+        elif 'select' in query_string.lower():
+            return query(query_string)
+        else:
+            st.error('Query error: Only "SELECT", "INSERT", "DELETE" are supported.')
+    except SPARQLExceptions.QueryBadFormed as error:
+        st.error(error.msg)
+        return False
+    except HTTPError as error:
+        st.error(f"HTTP Error {error.code}: {error.reason}")
+        return False

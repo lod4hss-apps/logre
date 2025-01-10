@@ -1,14 +1,14 @@
 import streamlit as st
 from components.init import init
 from components.menu import menu
-from components.confirmation import confirmation
+from components.confirmation import dialog_confirmation
 
 
 def read_endpoint_list() -> dict[str:str]:
-    """Put in session the content of the data/endpoint-urls file."""
+    """Put in session the content of the data/saved_endpoints file."""
 
     # Read the file content
-    file = open('../data/endpoint-urls', 'r')
+    file = open('../data/saved_endpoints', 'r')
     content = file.read().strip()
     file.close()
 
@@ -18,12 +18,13 @@ def read_endpoint_list() -> dict[str:str]:
     for raw_endpoint in endpoint_list:
         # If an error occurs here, it is because the file has the wrong format
         try:
-            colon_index = raw_endpoint.index(':')
-            name = raw_endpoint[0:colon_index].strip()
-            url = raw_endpoint[colon_index+1:].strip()
-            endpoints.append({'name':name, 'url':url})
+            if raw_endpoint.strip() != "":
+                colon_index = raw_endpoint.index(':')
+                name = raw_endpoint[0:colon_index].strip()
+                url = raw_endpoint[colon_index+1:].strip()
+                endpoints.append({'name':name, 'url':url})
         except Exception:
-            st.error('File "data/endpoint-urls" is wrongly formatted. Correct it then reload the page.')
+            st.error('File "data/saved_endpoints" is wrongly formatted. Correct it then reload the page.')
 
     # Put the endpoints information in session
     st.session_state['all_endpoints'] = endpoints
@@ -38,7 +39,7 @@ def write_endpoint_list() -> None:
         content += f"{endpoint['name']}: {endpoint['url']}\n"
 
     # Write the generated string on disk
-    file = open('../data/endpoint-urls', 'w')
+    file = open('../data/saved_endpoints', 'w')
     file.write(content)
     file.close()
 
@@ -57,20 +58,17 @@ def delete_endpoint(index: int):
     write_endpoint_list()
 
 
-
 ##### Modals #####
 
-
-
 @st.dialog('Add a new endpoint')
-def add_new_endpoint():
+def dialog_add_new_endpoint():
 
     # User inputs
     new_name = st.text_input('Endpoint name')
     new_url = st.text_input('Endpoint URL')
     btn = st.button('Save')
 
-    # If we have everythin filled, and the user clicks on the button:
+    # If we have everything filled, and the user clicks on the button:
     if new_name and new_url and btn:
         # We need to verify that the endpoint is new (name and URL)
         endpoint_labels = list(map(lambda endpoint: endpoint['name'], st.session_state['all_endpoints']))
@@ -84,7 +82,6 @@ def add_new_endpoint():
             st.session_state['all_endpoints'].append({'name': new_name, 'url': new_url})
             write_endpoint_list()
             st.rerun()
-
 
 
 ##### The page #####
@@ -106,11 +103,19 @@ col1, col2 = st.columns([3, 1], vertical_alignment='bottom')
 read_endpoint_list()
 endpoint_labels = list(map(lambda endpoint: endpoint['name'], st.session_state['all_endpoints']))
 endpoint_urls = list(map(lambda endpoint: endpoint['url'], st.session_state['all_endpoints']))
+
+# If an endpoint is already selected, find it, otherwise just init to Nothing
 if 'endpoint' in st.session_state:
     selected_index = endpoint_labels.index(st.session_state['endpoint']['name'])
 else:
     selected_index = None
-selected_label = col1.selectbox('Known endpoints', endpoint_labels, key="selectbox-endpoint", index=selected_index, placeholder="Choose an endpoint")
+
+# If there are endpoints on disk, allow selection, otherwise display a message
+if len(endpoint_labels):
+    selected_label = col1.selectbox('Known endpoints', endpoint_labels, key="selectbox-endpoint", index=selected_index, placeholder="Choose an endpoint")
+else:
+    st.info('No endpoints are saved on disk')
+    selected_label = None
 
 # If there is a selected endpoint, 
 if selected_label :
@@ -124,7 +129,7 @@ if selected_label :
 
     # Allow the user to remove an endpoint from disk
     if col2.button('Remove endpoint'):
-        confirmation(f'This will delete "{selected_label}" from your favorites.', delete_endpoint, index=selected_index)
+        dialog_confirmation(f'This will delete "{selected_label}" from your favorites.', delete_endpoint, index=selected_index)
 
 
 # -- Second part: Allow user to write a new endpoint
@@ -134,4 +139,4 @@ st.text('') # Spacer
 st.markdown('Your endpoint is not in the list?')
 
 if st.button('Add a new endpoint'):
-    add_new_endpoint()
+    dialog_add_new_endpoint()
