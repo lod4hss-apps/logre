@@ -17,9 +17,6 @@ install:
 	@if [ ! -d "$(PIPENV_NAME)" ]; then \
 		echo "Environment $(PIPENV_NAME) not found. Creating..."; \
 		python3.10 -m venv $(PIPENV_NAME) > /dev/null 2>&1; \
-		echo "Environment $(PIPENV_NAME) created."; \
-	else \
-		echo "Environment $(PIPENV_NAME) already exists."; \
 	fi
 	@echo "Activating environment $(PIPENV_NAME)..."
 	@source ./$(PIPENV_NAME)/bin/activate && \
