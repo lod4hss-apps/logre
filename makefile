@@ -8,7 +8,7 @@ help:
 	@echo "[make help]: Outputs this help"
 	@echo "[make install]: Prepare everything so that the tool can be used"
 	@echo "[make start]: Launch Logre"
-	@echo "[make update]: Update the code base, and re-install"
+	@echo "[make update]: Update the code base"
 
 
 # Recipe to create and activate the environment, then install packages
