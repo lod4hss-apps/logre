@@ -166,17 +166,19 @@ if sparql_query['type'] == 'submit':
     # If there is a result, display options and result itself
     # Option1: Save the query that gave this result
     # Option2: Download the dataframe as a CSV
-    if isinstance(result, pd.DataFrame):
+    if isinstance(result, list):
+        result_df = pd.DataFrame(data=result)
+        
         # Option line
         col1, col2, col3 = st.columns([2, 1, 1], vertical_alignment='bottom')
-        col1.markdown("### Response" + ' *(shape: ' + str(result.shape[0]) + 'x' + str(result.shape[1]) + "*)")
-        col2.download_button('Download as CSV', data=result.to_csv(index=False), file_name="logre-download.csv", mime="text/csv")
+        col1.markdown("### Response" + ' *(shape: ' + str(result_df.shape[0]) + 'x' + str(result_df.shape[1]) + "*)")
+        col2.download_button('Download as CSV', data=result_df.to_csv(index=False), file_name="logre-download.csv", mime="text/csv")
         if col3.button('Save query'):
             dialog_save_query(sparql_query['text'])
         
         # The result itself
-        st.dataframe(result, use_container_width=True, hide_index=True)
+        st.dataframe(result_df, use_container_width=True, hide_index=True)
 
-    elif result != False:
+    elif result:
         # In case the query was an insert or a delete, display a message to inform user
         st.success('Query executed')

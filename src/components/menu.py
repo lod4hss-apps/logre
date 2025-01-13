@@ -10,7 +10,7 @@ def menu() -> None:
     st.sidebar.page_link("pages/home.py", label="Presentation")
     st.sidebar.page_link("pages/endpoint-config.py", label="Endpoint configuration")
     st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor")
-
+    st.sidebar.page_link("pages/explore.py", label="Explore Graph")
 
     if 'endpoint' in st.session_state:
         st.sidebar.divider()

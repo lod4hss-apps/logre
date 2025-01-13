@@ -44,13 +44,6 @@ def write_endpoint_list() -> None:
     file.close()
 
 
-def select_endpoint_callback() -> None:
-    """Callback function for the Endpoint select box"""
-    index = endpoint_labels.index(selected_label)
-    selected_url = endpoint_urls[index]
-    st.session_state['endpoint'] = {'name': selected_label, 'url': selected_url}
-    
-
 def delete_endpoint(index: int):
     """Callback function to delete a endpoint from the list"""
     del st.session_state['endpoint']
@@ -125,6 +118,9 @@ if selected_label :
         selected_index = endpoint_labels.index(selected_label)
         selected_url = endpoint_urls[selected_index]
         st.session_state['endpoint'] = {'name': selected_label, 'url': selected_url}
+        # Clear the cache
+        st.cache_data.clear()
+        st.cache_resource.clear()
         st.rerun()
 
     # Allow the user to remove an endpoint from disk

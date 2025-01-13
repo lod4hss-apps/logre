@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 import streamlit as st
 import pandas as pd
 from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
@@ -14,7 +14,7 @@ def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
     return obj
 
 
-def query(request: str) -> pd.DataFrame:
+def query(request: str) -> List[Dict[str, str]] | bool:
     """
     Execute the given request against the in session endpoint.
     Request needs to be only SELECT: won't work if it is a INSERT or DELETE request.
@@ -35,17 +35,17 @@ def query(request: str) -> pd.DataFrame:
     # Prepare the query
     sparql_endpoint.setQuery(request)
 
+    print('==============')
+    print(request)
+
     # Execute the query
     response = sparql_endpoint.queryAndConvert()["results"]["bindings"]
 
     # Transform object
-    response_rows = list(map(__handle_row, response))
-
-    # Into Dataframe
-    return pd.DataFrame(data=response_rows)
+    return list(map(__handle_row, response))
 
 
-def execute(request: str) -> None:
+def execute(request: str) -> bool:
     """
     Execute the given request agains the previously set endpoint.
     Request needs to be only INSERTs or DELETEs.
@@ -68,7 +68,7 @@ def execute(request: str) -> None:
     return True
 
 
-def run(query_string: str) -> pd.DataFrame | None:
+def run(query_string: str) -> bool | List[Dict[str, str]]:
     """
     Dispatch between "select" queries and "insert" or "delete" queries.
     In case the query is a select, returns a DataFrame.
@@ -81,6 +81,7 @@ def run(query_string: str) -> pd.DataFrame | None:
             return query(query_string)
         else:
             st.error('Query error: Only "SELECT", "INSERT", "DELETE" are supported.')
+            return False
     except SPARQLExceptions.QueryBadFormed as error:
         st.error(error.msg)
         return False

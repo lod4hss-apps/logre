@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.3.0 - Date: 2025-01-13
+
+Add the "entity card": display triples of an entity.
+Also create the "find entity" form, to select an entity.
 
 ## v1.2.0 - Date: 2025-01-10
 
@@ -11,9 +15,6 @@ Add the possibility to save and chose among saved queries in the SPARQL editor
 
 Add the possibility to save and chose among saved endpoints.
 Persists on disk.
-
-Resolves Issue [#2](https://github.com/geovistory/logre/issues/2)
-
 
 ## v1.0.0 - Date: 2025-01-08
 
