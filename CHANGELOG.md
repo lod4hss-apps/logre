@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.3.1 - Date 2025-01-14
+
+Change the makefile so that it updates "alone", when running `make start`
+
 ## v1.3.0 - Date: 2025-01-13
 
 Add the "entity card": display triples of an entity.

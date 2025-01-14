@@ -23,15 +23,17 @@ install:
 	echo "Installing packages from $(REQUIREMENTS_FILE)..." && \
 	pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
 	@echo "Initializing folder..."
-	mkdir -p "./data"
-	touch "./data/saved_endpoints"
-	touch "./data/saved_queries"
+	@mkdir -p "./data"
+	@touch "./data/saved_endpoints"
+	@touch "./data/saved_queries"
 
+update: 
+	@echo "Current version:" $$(cat VERSION)
+	@echo "Updating code base..."
+	@git pull origin main > /dev/null 2<&1
+	@echo "Now having version:" $$(cat ./VERSION)
 
-start: install
+start: update install
 	@echo "Selecting environment $(PIPENV_NAME)..."
 	@source $(PIPENV_NAME)/bin/activate && \
 	cd src; python3.10 -m streamlit run server.py
-
-update: 
-	git pull origin main
