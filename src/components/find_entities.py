@@ -12,12 +12,20 @@ def dialog_find_entity() -> None:
     The chosen entity will be set in the session as "selected_entity".
     """
 
-    # First, begin to load all the used classes on the endpoint
-    with st.spinner('Fetching all classes from endpoint...'):
-        classes = list_used_classes()
+    if 'endpoint' not in st.session_state:
+        st.warning('You must first choose an endpoint')
+        return
 
-    # In case the query had a problem, do nothing
+    # First, begin to load all the used classes on the endpoint
+    classes = []
+    selected_graphs = [graph for graph in st.session_state['all_graphs'] if graph['activated']]
+    for graph in selected_graphs:
+        with st.spinner(f'Fetching all classes from graph {graph["label"]}...'):
+            classes += list_used_classes(graph['uri'])
+
+    # If no classes has been found on the endpoint
     if not classes: 
+        st.info("Nothing is listed as a class on this endpoint")
         return
 
     # User commands: Select a class, and type an entity name
@@ -34,14 +42,15 @@ def dialog_find_entity() -> None:
     # When the input is validated
     if label:
         with st.spinner("Fetching corresponding entities from endpoint"):
-            entities = list_entities(label, selected_class['uri'] if selected_class is not None else None)
+            for graph in selected_graphs:
+                entities = list_entities(label, selected_class['uri'] if selected_class is not None else None, graph=graph['uri'])
 
             # If some entities match: display them with a select option
             if entities:
                 st.divider()
 
                 for i, entity in enumerate(entities):
-                    display_label = f"{entity['label']} ({entity['class_label'] or 'Uknown'})"
+                    display_label = f"{entity['label']} ({entity['class_label']})"
                     col1, col2 = st.columns([5, 2])
                     if st.button(display_label, type='tertiary', key=f"find_entity_{i}"):
                         st.session_state['selected_entity'] = {

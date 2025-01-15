@@ -6,11 +6,32 @@ from urllib.error import HTTPError
 
 
 
+def get_prefixes() -> str:
+    """Gives the string prefixes needed for the queries"""
+
+    return f"""
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        PREFIX ontome: <https://ontome.net/ontology/>
+        PREFIX infocean: <http://geovistory.org/information/>
+
+    """
+
+def replace_prefixes(uri: str):
+    uri = uri.replace('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:')
+    uri = uri.replace('http://www.w3.org/2000/01/rdf-schema#', 'rdfs:')
+    uri = uri.replace('http://www.w3.org/2002/07/owl#', 'owl:')
+    uri = uri.replace('https://ontome.net/ontology/', 'ontome:')
+    uri = uri.replace('http://geovistory.org/information/', 'infocean:')
+    return uri
+
+
 def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
     """Transform a returning object into a dictionnary for better use."""
     obj: Dict[str, str] = {}
     for key in row.keys():
-        obj[key] = row[key]["value"]
+        obj[key] = replace_prefixes(row[key]["value"])
     return obj
 
 
@@ -33,16 +54,19 @@ def query(request: str) -> List[Dict[str, str]] | bool:
     sparql_endpoint.setReturnFormat(JSON)
 
     # Prepare the query
-    sparql_endpoint.setQuery(request)
+    sparql_endpoint.setQuery(get_prefixes() + request)
 
     print('==============')
-    print(request)
+    print(get_prefixes() + request)
 
-    # Execute the query
+    # Execute the query, and transform the object
     response = sparql_endpoint.queryAndConvert()["results"]["bindings"]
+    response = list(map(__handle_row, response))
 
-    # Transform object
-    return list(map(__handle_row, response))
+    if response == [{}]: 
+        return []
+    
+    return response
 
 
 def execute(request: str) -> bool:
@@ -60,11 +84,17 @@ def execute(request: str) -> bool:
     sparql_endpoint = SPARQLWrapper(st.session_state['endpoint']['url'])
         
     # Prepare the query
-    sparql_endpoint.setQuery(request)
+    sparql_endpoint.setQuery(get_prefixes() + request)
     sparql_endpoint.method = "POST"
+
+    print('==============')
+    print(get_prefixes() + request)
 
     # Execute the query
     sparql_endpoint.query()
+
+    st.cache_data.clear()
+    st.cache_resource.clear()
     return True
 
 

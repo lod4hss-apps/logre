@@ -2,3 +2,5 @@ streamlit
 streamlit_code_editor
 SPARQLWrapper
 pandas
+unicode
+re

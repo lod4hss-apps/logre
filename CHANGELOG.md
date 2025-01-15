@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.4.0 - Date 2025-01-15
+
+Rework Endpoint configuration page
+Add the graph handling to the endpoint configuration page
+Add endpoint selection in the menu
+Add graph activation in the menu
+Change queries so that they work only on selected graphs
+Implement "global" prefixes, and replace in results
+
 ## v1.3.1 - Date 2025-01-14
 
 Change the makefile so that it updates "alone", when running `make start`
