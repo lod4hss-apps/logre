@@ -22,8 +22,8 @@ LIMIT 10
 """.strip()
 
 
-def read_saved_queries() -> dict[str:str]:
-    """Put in session the content of the data/saved_queries file."""
+def __read_saved_queries() -> dict[str:str]:
+    """Put in session the content of the logre/data/saved_queries file."""
 
     # Read the file content
     file = open('../data/saved_queries', 'r')
@@ -49,7 +49,7 @@ def read_saved_queries() -> dict[str:str]:
 
     print(queries_list)
 
-def write_queries_list() -> None:
+def __write_queries_list() -> None:
     """Write all queries that are in session memory on disk."""
 
     # Transform the list of objects into a string
@@ -68,8 +68,10 @@ def write_queries_list() -> None:
 
 @st.dialog('Load saved queries')
 def dialog_load_saved_queries():
+    """Dialog function to make user chose a saved query to load or delete."""
+
     # First read saved queries from disk
-    read_saved_queries()
+    __read_saved_queries()
 
     # Extract needed information
     queries_names = list(map(lambda query: query['name'], st.session_state['all_queries']))
@@ -98,13 +100,14 @@ def dialog_load_saved_queries():
             st.session_state['sparql_editor_query_confirm_deletion'] = False
             st.session_state['all_queries'] = list(filter(lambda query: query['name'] != query_name, st.session_state['all_queries']))
             # And write new list on disk
-            write_queries_list()
+            __write_queries_list()
             st.rerun()
 
 
 @st.dialog('Save query')
 def dialog_save_query(text: str):
-    """The dialog takes an string input: the query text itself"""
+    """Dialog function that finishes with the saving of the given SPARQL query (after giving it a name)."""
+
     # User inputs
     new_name = st.text_input('Query name', help="Give it a name so you will recognize this query among all your saved queries")
     btn = st.button('Save')
@@ -112,11 +115,11 @@ def dialog_save_query(text: str):
     # When the user has set a name and validates
     if new_name and btn:
         # Load last version of saved queries (might not have been loaded: only if he loaded a saved query)
-        read_saved_queries()
+        __read_saved_queries()
         # Add the new query to the session
         st.session_state['all_queries'].append({'name': new_name, 'text': text})
         # And write on disk
-        write_queries_list()
+        __write_queries_list()
         st.rerun()
 
 
@@ -135,16 +138,13 @@ if 'sparql_editor_query_confirm_deletion' not in st.session_state:
 init()
 menu()
 
-# -- First part: Title and load query option
-
+# Title and load query option
 col1, col2 = st.columns([5, 3], vertical_alignment='bottom')
 col1.markdown("# SPARQL Editor")
 if col2.button('Load saved queries'):
     dialog_load_saved_queries()
 
-
-# -- Second part: Code editor
-
+# Code editor
 sparql_query = code_editor(
     lang="sparql",
     code=st.session_state['sparql_editor_text'],
@@ -152,20 +152,18 @@ sparql_query = code_editor(
     buttons=[{"name": "Run SPARQL Query", "hasText": True, "alwaysOn": True,"style": {"top": "400px", "right": "0.4rem"}, "commands": ["submit"]}]
 )
 
-
-# -- Third part: Results, save option, download option
-
+# Results, save option, download option
 st.text("")
 
-# When the user exeute via the inbox button
+# When the user executes via the inbox button
 if sparql_query['type'] == 'submit':
 
     # Run the query itself
     result = sparql.run(sparql_query['text'])
 
-    # If there is a result, display options and result itself
-    # Option1: Save the query that gave this result
-    # Option2: Download the dataframe as a CSV
+    # If there is a result, display result and options:
+    #       Option1: Save the query that gave this result
+    #       Option2: Download the dataframe as a CSV
     if isinstance(result, list):
         result_df = pd.DataFrame(data=result)
         

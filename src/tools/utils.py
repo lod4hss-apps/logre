@@ -49,8 +49,7 @@ def readable_number(number: float) -> str:
     raise Exception("This Exception should never happen")
 
 
-
-def to_snake_case(text):
+def to_snake_case(text: str) -> str:
     """Format the given string into snake-case"""
 
     # Normalize text to decompose accented characters (e.g., é -> e)

@@ -5,9 +5,11 @@ from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
 from urllib.error import HTTPError
 
 
-
-def get_prefixes() -> str:
-    """Gives the string prefixes needed for the queries"""
+def __get_prefixes() -> str:
+    """
+    Gives the string prefixes needed for the queries.
+    This function exists to avoid to have prefixes in spreaded places.
+    """
 
     return f"""
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -18,7 +20,13 @@ def get_prefixes() -> str:
 
     """
 
-def replace_prefixes(uri: str):
+
+def __replace_prefixes(uri: str):
+    """
+    This function allows to have short and concise query results,
+    displays a prefix instead of a full URI.
+    """
+
     uri = uri.replace('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:')
     uri = uri.replace('http://www.w3.org/2000/01/rdf-schema#', 'rdfs:')
     uri = uri.replace('http://www.w3.org/2002/07/owl#', 'owl:')
@@ -28,10 +36,11 @@ def replace_prefixes(uri: str):
 
 
 def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
-    """Transform a returning object into a dictionnary for better use."""
+    """Transform an object coming from a SPARQL query (through SPARQLWrapper) into a dictionnary for better use."""
+
     obj: Dict[str, str] = {}
     for key in row.keys():
-        obj[key] = replace_prefixes(row[key]["value"])
+        obj[key] = __replace_prefixes(row[key]["value"])
     return obj
 
 
@@ -41,11 +50,6 @@ def query(request: str) -> List[Dict[str, str]] | bool:
     Request needs to be only SELECT: won't work if it is a INSERT or DELETE request.
     """
 
-    # If no endpoint is selected, do not do anything
-    if 'endpoint' not in st.session_state:
-        st.error('No endpoint has been selected, set it in "Endpoint configuration" page')
-        return False
-
     # Init the endpoint
     sparql_endpoint = SPARQLWrapper(
         st.session_state['endpoint']['url'],
@@ -54,15 +58,25 @@ def query(request: str) -> List[Dict[str, str]] | bool:
     sparql_endpoint.setReturnFormat(JSON)
 
     # Prepare the query
-    sparql_endpoint.setQuery(get_prefixes() + request)
+    sparql_endpoint.setQuery(__get_prefixes() + request)
 
+    # DEBUG
     print('==============')
-    print(get_prefixes() + request)
+    print(__get_prefixes() + request)
 
-    # Execute the query, and transform the object
-    response = sparql_endpoint.queryAndConvert()["results"]["bindings"]
+    # Execute the query, handles errors,
+    try: 
+        response = sparql_endpoint.queryAndConvert()["results"]["bindings"]
+    except SPARQLExceptions.QueryBadFormed as error:
+        st.error(error.msg)
+        return False
+    except HTTPError as error:
+        st.error(f"HTTP Error {error.code}: {error.reason}")
+        return False
+    # and transform the object
     response = list(map(__handle_row, response))
 
+    # If the answer is empty, return an actual empty array
     if response == [{}]: 
         return []
     
@@ -71,50 +85,46 @@ def query(request: str) -> List[Dict[str, str]] | bool:
 
 def execute(request: str) -> bool:
     """
-    Execute the given request agains the previously set endpoint.
+    Execute the given request against the previously set endpoint.
     Request needs to be only INSERTs or DELETEs.
     """
-
-    # If no endpoint is selected, do not do anything
-    if 'endpoint' not in st.session_state:
-        st.error('No endpoint has been selected, set it in "Endpoint configuration" page')
-        return False
     
     # Init the endpoint
     sparql_endpoint = SPARQLWrapper(st.session_state['endpoint']['url'])
         
     # Prepare the query
-    sparql_endpoint.setQuery(get_prefixes() + request)
+    sparql_endpoint.setQuery(__get_prefixes() + request)
     sparql_endpoint.method = "POST"
 
+    # DEBUG
     print('==============')
-    print(get_prefixes() + request)
+    print(__get_prefixes() + request)
 
     # Execute the query
-    sparql_endpoint.query()
+    try: 
+        sparql_endpoint.query()
+    except SPARQLExceptions.QueryBadFormed as error:
+        st.error(error.msg)
+        return False
+    except HTTPError as error:
+        st.error(f"HTTP Error {error.code}: {error.reason}")
+        return False
 
+    # The idea behind clearing the cache at this place is to make sure that executed 
+    # (insert or delete) are taking into account for next queries.
+    # Emptying the cache makes sure of that.
     st.cache_data.clear()
     st.cache_resource.clear()
     return True
 
 
 def run(query_string: str) -> bool | List[Dict[str, str]]:
-    """
-    Dispatch between "select" queries and "insert" or "delete" queries.
-    In case the query is a select, returns a DataFrame.
-    Otherwise returns nothing.
-    """
-    try: 
-        if 'delete' in query_string.lower() or 'insert' in query_string.lower():
-            return execute(query_string)
-        elif 'select' in query_string.lower():
-            return query(query_string)
-        else:
-            st.error('Query error: Only "SELECT", "INSERT", "DELETE" are supported.')
-            return False
-    except SPARQLExceptions.QueryBadFormed as error:
-        st.error(error.msg)
-        return False
-    except HTTPError as error:
-        st.error(f"HTTP Error {error.code}: {error.reason}")
+    """ Wrapper of "query" and "execute" function."""
+    
+    if 'delete' in query_string.lower() or 'insert' in query_string.lower():
+        return execute(query_string)
+    elif 'select' in query_string.lower():
+        return query(query_string)
+    else:
+        st.error('Query error: Only "SELECT", "INSERT", "DELETE" are supported.')
         return False

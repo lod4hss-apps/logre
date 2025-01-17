@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.5.0 - Date 2025-01-17
+
+Allow to create an entity
+Allow to create a triple
+
 ## v1.4.0 - Date 2025-01-15
 
 Rework Endpoint configuration page

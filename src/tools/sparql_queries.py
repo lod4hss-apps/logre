@@ -4,18 +4,28 @@ from tools.sparql_base import query, execute
 from tools.utils import ensure_uri
 
 
+##### Model #####
+
 class Entity(TypedDict):
+    """Any type of entity."""
+
     uri: str
     label: str
     comment: str
 
+
 class EntityWithClass(TypedDict):
+    """Any type of entity with class (and class label)."""
+
     uri: str
     label: str
     cls: str
     class_label: str
 
+
 class Triple:
+    """All needed information of a triple."""
+
     subject: str
     subject_label: str
     subject_class: str
@@ -29,17 +39,21 @@ class Triple:
     isliteral: str
 
 
+##### Functions #####    
+
 @st.cache_data(ttl="1d", show_spinner=False)
-def list_used_classes(graph = None) -> bool | List[Entity]:
+def list_used_classes(graph: str = None) -> List[Entity]:
     """
-    List all classes available on the endpoint. 
-    Only those from the default endpoint: does not look at the ontology, 
-    but on how classes are used (ie: objects of 'subject a object' triples)
+    List all classes available on the endpoint and graph, if specified. 
+    Does not look at the ontology, but on how classes are used
+    (ie: objects of 'subject a object' triples).
     """
 
+    # Only if the graph is not default (None)
     graph_begin = "GRAPH " + ensure_uri(graph) + " {" if graph else ""
     graph_end = "}" if graph else ""
 
+    # Prepare the query
     text = """
         SELECT DISTINCT ?uri (COALESCE(?label_, ?uri) as ?label)
         WHERE { 
@@ -50,32 +64,74 @@ def list_used_classes(graph = None) -> bool | List[Entity]:
         }
     """
 
-    return query(text)
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return []
+    return response
+
+
+@st.cache_data(ttl='1d', show_spinner=False)
+def list_used_properties(graph: str = None) -> List[Entity]:
+    """
+    List all properties available on the endpoint and graph. 
+    Does not look at the ontology, but on how properties are used 
+    (ie: properties of 'subject property object' triples).
+    """
+
+    # Only if the graph is not default (None)
+    graph_begin = "GRAPH " + ensure_uri(graph) + " {" if graph else ""
+    graph_end = "}" if graph else ""
+
+    # Prepare the query
+    text = """
+        SELECT DISTINCT ?uri (COALESCE(?label_, ?uri) as ?label)
+        WHERE { 
+        """ + graph_begin + """
+            ?subject ?uri ?object .
+            optional { ?uri rdfs:label ?label_ . }
+        """ + graph_end + """
+        }
+    """
+
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return []
+    return response
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
-def list_entities(label: str, cls: str = None, limit: int = 20, graph = None) -> bool | List[EntityWithClass]:
+def list_entities(label: str = None, cls: str = None, limit: int = 20, graph = None) -> List[EntityWithClass]:
     """
     Fetch the list of entities on the endpoint with:
     Args:
-        label (str): the text that should be included in entity's rdfs:label 
-        cls (str): entity's class, optional
-        limit (int): max number of retrived entities
+        label (str): the text that should be included in entity's rdfs:label. If None, fetch all entities.
+        cls (str): entity's class. Filter by the given class, if specified
+        limit (int): max number of retrived entities. If None, no limit is applied
     """
+
+    # Make sure the given class is a valid URI
     class_uri = ensure_uri(cls)
+
+    # Create parts of the request, depending on args:
 
     # Get the entity label
     entity_label = f"?uri rdfs:label ?label ."
     # Only result of the given class if provided, else fetch the class
-    entity_class = f"?uri a {class_uri} ." if cls else f"?uri a ?cls_ ."
+    entity_class = "optional { " + (f"?uri a {class_uri} ." if cls else f"?uri a ?cls_ .") + " }"
     # Get the class label
     class_label = "optional { " + (f"{class_uri} rdfs:label ?class_label_ ." if cls else f"?cls_ rdfs:label ?class_label_ .") + " }"
     # Filter the result with the provided string
-    label_filter = f"FILTER(CONTAINS(LCASE(?label), '{label.lower()}')) ."
+    label_filter = f"FILTER(CONTAINS(LCASE(?label), '{label.lower()}')) ." if label else ""
+    # Limit
+    limit = f"LIMIT {limit}" if limit else ""
 
+    # Only if the graph is not default (None)
     graph_begin = "GRAPH " + ensure_uri(graph) + " {" if graph else ""
     graph_end = "}" if graph else ""
 
+    # Build the query
     text = """
         SELECT DISTINCT ?uri ?label (COALESCE(?cls_, '""" + (cls or 'Unknown') + """') as ?cls) (COALESCE(?class_label_, ?cls) as ?class_label)
         WHERE {
@@ -86,19 +142,33 @@ def list_entities(label: str, cls: str = None, limit: int = 20, graph = None) ->
             """ + class_label + """
             """ + graph_end + """
         }
-        LIMIT """ + str(limit) + """
+        """ + limit + """
     """
 
-    return query(text)
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return []
+    return response
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
-def list_entity_triples(entity: str, graph=None) -> bool | List[Triple]:
+def list_entity_triples(entity: str, graph=None) -> List[Triple]:
+    """
+    Get the list of triples linked to the Entity.
+    Make a union of all triples where the entity is subject, 
+    and all triples where entity is object.
+    Finally order by property ASC (alpha).
+    """
 
+    # Make sure the given entity is a valid URI
+    entity_uri = ensure_uri(entity)
+
+    # Only if the graph is not default (None)
     graph_begin = "GRAPH " + ensure_uri(graph) + " {" if graph else ""
     graph_end = "}" if graph else ""
 
-    entity_uri = ensure_uri(entity)
+    # Prepare the query
     text = """
         SELECT  ?subject (COALESCE(?subject_label_, 'No label') as ?subject_label) (COALESCE(?subject_class_, 'No class') as ?subject_class) (COALESCE(?subject_class_label_, ?subject_class) as ?subject_class_label)
                 ?predicate (COALESCE(?predicate_label_, ?predicate) as ?predicate_label)
@@ -147,14 +217,19 @@ def list_entity_triples(entity: str, graph=None) -> bool | List[Triple]:
         }
         ORDER BY ASC(?predicate)
     """
-
-    return query(text)
+    
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return []
+    return response
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
-def list_graphs() -> bool | List[Entity]:
+def list_graphs() -> List[Entity]:
     """List all graphs available in the dataset."""
 
+    # Prepare the query
     text = """
         SELECT DISTINCT ?uri ?label ?comment
         WHERE {
@@ -164,14 +239,22 @@ def list_graphs() -> bool | List[Entity]:
             }
         }
     """
-    return query(text)
+
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return []
+    return response
+
 
 @st.cache_data(ttl=60, show_spinner=False)
-def count_graph_triples(graph: str):
-    """Count how much triples there is in the selected dataset"""
+def count_graph_triples(graph: str) -> int:
+    """Count how much triples there is in the selected dataset/graph"""
 
+    # Make sure the given graph is a valid URI
     graph_uri = ensure_uri(graph)
 
+    # Prepare the query
     select = "SELECT (COUNT(*) as ?count)"
     where_begin = "WHERE {"
     where_end = "}"
@@ -179,6 +262,7 @@ def count_graph_triples(graph: str):
     graph_end = "}" if graph_uri else ''
     triples = "?s ?p ?o."
 
+    # Build the query
     text = f"""
     {select}
     {where_begin}
@@ -187,34 +271,39 @@ def count_graph_triples(graph: str):
         {graph_end}
     {where_end}
     """
-    return int(query(text)[0]['count'])
+
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return 0
+    return int(response[0]['count'])
 
 
-
-def insert(triples: List[tuple], graph:str="default") -> None:
+def insert(triples: List[tuple], graph: str = None) -> None:
     """
-    From a list of tuples containing the triples in ('subject', 'predicate', 'object')
-    format, insert them in the endpoint.
+    From a list of tuples containing the triples in tuple format
+    (('subject', 'predicate', 'object)), insert them in the endpoint,
+    in the given graph.
     """
-    
-    if graph != "default":
-        graph_uri = ensure_uri(graph)
-    else:
-        graph_uri = "default"
 
+    # Make sure the given graph is a valid URI
+    graph_uri = ensure_uri(graph)
+
+    # Prepare the query
     req_insert_begin = "INSERT DATA {"
     req_insert_end = "}"
-    req_graph_begin = "GRAPH " + graph_uri + " {" if graph_uri != "default" else ""
-    req_graph_end = "}" if graph_uri != "default" else ""
+    req_graph_begin = "GRAPH " + graph_uri + " {" if graph else ""
+    req_graph_end = "}" if graph else ""
 
-
+    # Since insert can be pretty huge, here we split 
+    # in "smaller insert" of maximum 10k triples.
     step_nb = 10000
-
     for i in range(0, len(triples), step_nb):
-            
+        
+        # Take only selected triples
         selected_triples = triples[i : i + step_nb]
         
-        # Prepare the request
+        # Prepare the query
         text_begin = f"""
         {req_insert_begin}
             {req_graph_begin}
@@ -224,7 +313,7 @@ def insert(triples: List[tuple], graph:str="default") -> None:
         {req_insert_end}
         """
 
-        # Generate all triples
+        # Generate triples
         texts_triples = []
         for triple in selected_triples:
             subject = ensure_uri(triple[0])
@@ -235,25 +324,25 @@ def insert(triples: List[tuple], graph:str="default") -> None:
         # Build the request text
         text = text_begin + "\n".join(texts_triples) + text_end
 
-        # Execute
+        # Insert the triples in the endpoint
         execute(text)
 
 
-def delete(triples: List[tuple], graph:str="default") -> None:
+def delete(triples: List[tuple], graph: str = None) -> None:
     """
     From a list of tuples containing the triples in ('subject', 'predicate', 'object')
     format, deleted from the endpoint.
+    triples can be raw triple, or rules with variables.
     """
 
-    if graph != "default":
-        graph_uri = ensure_uri(graph)
-    else:
-        graph_uri = "default"
+    # Make sure the given graph is a valid URI
+    graph_uri = ensure_uri(graph)
 
+    # Prepare the query
     req_insert_begin = "DELETE WHERE {"
     req_insert_end = "}"
-    req_graph_begin = "GRAPH " + graph_uri + " {" if graph_uri != "default" else ""
-    req_graph_end = "}" if graph_uri != "default" else ""
+    req_graph_begin = "GRAPH " + graph_uri + " {" if graph else ""
+    req_graph_end = "}" if graph else ""
 
     # Prepare the request
     text_begin = f"""

@@ -1,8 +1,8 @@
 import streamlit as st
 from tools.sparql_queries import list_graphs
 
-def read_endpoint_list() -> dict[str:str]:
-    """Put in session the content of the data/saved_endpoints file."""
+def __read_endpoint_list() -> dict[str:str]:
+    """Put in session the content of the logre/data/saved_endpoints file."""
 
     # Read the file content
     file = open('../data/saved_endpoints', 'r')
@@ -44,8 +44,8 @@ def menu() -> None:
 
     ### Endpoint Selection part ###
 
-    # Here we read and parse the disk, display endpoints, and allow user to choose which one he wants
-    read_endpoint_list()
+    # Read and parse disk, display endpoints, and allow user to choose which one he wants
+    __read_endpoint_list()
     endpoint_labels = list(map(lambda endpoint: endpoint['name'], st.session_state['all_endpoints']))
     endpoint_urls = list(map(lambda endpoint: endpoint['url'], st.session_state['all_endpoints']))
 
@@ -64,31 +64,35 @@ def menu() -> None:
 
     # If there is a selected endpoint, 
     if selected_label :
+
         # That is different that the one in session
         if 'endpoint' not in st.session_state or selected_label != st.session_state['endpoint']['name']:
+
             # Update the one in session (or set)
             selected_index = endpoint_labels.index(selected_label)
             selected_url = endpoint_urls[selected_index]
             st.session_state['endpoint'] = {'name': selected_label, 'url': selected_url}
             if 'all_graphs' in st.session_state:
                 del st.session_state['all_graphs']
+
             # Clear the cache
             st.cache_data.clear()
             st.cache_resource.clear()
             st.rerun()
 
-
-        # Fetch all graphs from the endpoint, and add the default one
+        # Fetch all graphs from the endpoint, and add the default one (at first position)
         if "all_graphs" not in st.session_state:
+
+            # Manually add Default graph
             st.session_state["all_graphs"] = [{
                 'uri': None,
                 'label': 'Default',
                 'comment': "Comment not set",
                 'activated': True
             }]
+
+            # Fetch and add other graphs
             graphs = list_graphs()
-            import json
-            print(json.dumps(graphs, indent=4))
             for i, graph in enumerate(graphs):
                 st.session_state["all_graphs"].append({
                     'uri': graph['uri'],
@@ -98,14 +102,14 @@ def menu() -> None:
                 })
 
 
-        # Allow user to activate/deactivate a graph (in queries)
+        # Allow user to activate/deactivate a graph
         st.sidebar.markdown('#### Endpoint graph List:')
         for i, graph in enumerate(st.session_state["all_graphs"]):
+            # Make the session match the GUI
             if st.sidebar.checkbox(graph['label'], value=graph['activated']):
                 if st.session_state['all_graphs'][i]['activated'] != True:
                     st.session_state['all_graphs'][i]['activated'] = True
                     st.rerun()
-
             else:
                 if st.session_state['all_graphs'][i]['activated'] != False:
                     st.session_state['all_graphs'][i]['activated'] = False
