@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.5.1 - Date 2025-01-18
+
+Delete triple
+Delete entity
+
 ## v1.5.0 - Date 2025-01-17
 
 Allow to create an entity

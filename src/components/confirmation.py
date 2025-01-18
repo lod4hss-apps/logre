@@ -17,7 +17,7 @@ def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
     """
     
     # Display information
-    st.markdown(text)
+    st.markdown(text, unsafe_allow_html=True)
     st.markdown('Do you confirm?')
 
     # Line with user commands: "Yes" and "No" buttons
@@ -29,7 +29,8 @@ def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
 
     if col2.button('Yes', type='primary'):
         # Call the callback with given keywords args
-        callback(**kwargs)
+        with st.spinner('Executing...'):
+            callback(**kwargs)
 
         # Finalization: validation message and reload
         st.success('Done.')
