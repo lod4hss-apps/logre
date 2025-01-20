@@ -226,8 +226,11 @@ def list_entity_triples(entity: str, graph=None) -> List[Triple]:
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
-def list_graphs() -> List[Entity]:
-    """List all graphs available in the dataset."""
+def list_graphs(_error_location) -> List[Entity]:
+    """
+    List all graphs available in the dataset.
+    Leading underscore for "_error_location" arg is to tell streamlit to not serialize the argument.
+    """
 
     # Prepare the query
     text = """
@@ -241,7 +244,7 @@ def list_graphs() -> List[Entity]:
     """
 
     # Ensure response is an array
-    response = query(text)
+    response = query(text, _error_location=_error_location)
     if not response:
         return []
     return response

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.5.2 - Date 2025-1-18
+
+Better message when endpoint is not selected
+
 ## v1.5.1 - Date 2025-01-18
 
 Delete triple

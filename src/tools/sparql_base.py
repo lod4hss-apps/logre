@@ -44,10 +44,11 @@ def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
     return obj
 
 
-def query(request: str) -> List[Dict[str, str]] | bool:
+def query(request: str, _error_location=None) -> List[Dict[str, str]] | bool:
     """
     Execute the given request against the in session endpoint.
     Request needs to be only SELECT: won't work if it is a INSERT or DELETE request.
+    Leading underscore for "_error_location" arg is to tell streamlit to not serialize the argument.
     """
 
     # Init the endpoint
@@ -68,10 +69,16 @@ def query(request: str) -> List[Dict[str, str]] | bool:
     try: 
         response = sparql_endpoint.queryAndConvert()["results"]["bindings"]
     except SPARQLExceptions.QueryBadFormed as error:
-        st.error(error.msg)
+        if _error_location:
+            _error_location.error(error.msg)
+        else:
+            st.error(error.msg)
         return False
     except HTTPError as error:
-        st.error(f"HTTP Error {error.code}: {error.reason}")
+        if _error_location:
+            _error_location.error(f"HTTP Error {error.code}: {error.reason}")
+        else:
+            st.error(f"HTTP Error {error.code}: {error.reason}")
         return False
     # and transform the object
     response = list(map(__handle_row, response))

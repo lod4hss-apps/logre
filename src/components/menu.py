@@ -38,6 +38,7 @@ def menu() -> None:
     st.sidebar.page_link("pages/endpoint-config.py", label="Endpoint configuration")
     st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor")
     st.sidebar.page_link("pages/explore.py", label="Explore")
+    # st.sidebar.page_link("pages/import-data.py", label="Import data")
 
 
     st.sidebar.divider()
@@ -92,7 +93,7 @@ def menu() -> None:
             }]
 
             # Fetch and add other graphs
-            graphs = list_graphs()
+            graphs = list_graphs(st.sidebar)
             for i, graph in enumerate(graphs):
                 st.session_state["all_graphs"].append({
                     'uri': graph['uri'],
