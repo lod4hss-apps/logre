@@ -15,6 +15,7 @@ def __get_prefixes() -> str:
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX owl: <http://www.w3.org/2002/07/owl#>
+        PREFIX shacl: <http://www.w3.org/ns/shacl#>
         PREFIX ontome: <https://ontome.net/ontology/>
         PREFIX infocean: <http://geovistory.org/information/>
 
@@ -30,6 +31,7 @@ def __replace_prefixes(uri: str):
     uri = uri.replace('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:')
     uri = uri.replace('http://www.w3.org/2000/01/rdf-schema#', 'rdfs:')
     uri = uri.replace('http://www.w3.org/2002/07/owl#', 'owl:')
+    uri = uri.replace('http://www.w3.org/ns/shacl#', 'shacl:')
     uri = uri.replace('https://ontome.net/ontology/', 'ontome:')
     uri = uri.replace('http://geovistory.org/information/', 'infocean:')
     return uri
@@ -57,6 +59,11 @@ def query(request: str, _error_location=None) -> List[Dict[str, str]] | bool:
         agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     )
     sparql_endpoint.setReturnFormat(JSON)
+
+    # If there is a user/password in session, take it
+    if 'endpoint-username' in st.session_state and 'endpoint-password' in st.session_state:
+        if st.session_state['endpoint-username'] is not None and st.session_state['endpoint-password'] is not None:
+            sparql_endpoint.setCredentials(st.session_state['endpoint-username'], st.session_state['endpoint-password'])
 
     # Prepare the query
     sparql_endpoint.setQuery(__get_prefixes() + request)
@@ -103,6 +110,11 @@ def execute(request: str) -> bool:
     sparql_endpoint.setQuery(__get_prefixes() + request)
     sparql_endpoint.method = "POST"
 
+    # If there is a user/password in session, take it
+    if 'endpoint-username' in st.session_state and 'endpoint-password' in st.session_state:
+        if st.session_state['endpoint-username'] is not None and st.session_state['endpoint-password'] is not None:
+            sparql_endpoint.setCredentials(st.session_state['endpoint-username'], st.session_state['endpoint-password'])
+
     # DEBUG
     print('==============')
     print(__get_prefixes() + request)
@@ -126,7 +138,7 @@ def execute(request: str) -> bool:
 
 
 def run(query_string: str) -> bool | List[Dict[str, str]]:
-    """ Wrapper of "query" and "execute" function."""
+    """Wrapper of "query" and "execute" function."""
     
     if 'delete' in query_string.lower() or 'insert' in query_string.lower():
         return execute(query_string)

@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## v1.5.2 - Date 2025-1-18
+## v1.6.0 - Date 2025-01-22
+
+Import turtle file in dedicated graph capabilities
+Add username and password management
+
+## v1.5.2 - Date 2025-01-18
 
 Better message when endpoint is not selected
 

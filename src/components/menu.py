@@ -38,7 +38,7 @@ def menu() -> None:
     st.sidebar.page_link("pages/endpoint-config.py", label="Endpoint configuration")
     st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor")
     st.sidebar.page_link("pages/explore.py", label="Explore")
-    # st.sidebar.page_link("pages/import-data.py", label="Import data")
+    st.sidebar.page_link("pages/import-data.py", label="Import data")
 
 
     st.sidebar.divider()

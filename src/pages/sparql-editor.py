@@ -11,6 +11,7 @@ default_query = """
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
+prefix shacl: <http://www.w3.org/ns/shacl#>
 PREFIX ontome: <https://ontome.net/ontology/>
 PREFIX infocean: <http://geovistory.org/information/>
 
@@ -164,7 +165,6 @@ if sparql_query['type'] == 'submit':
     else:
         result = sparql.run(sparql_query['text'])
     
-
         # If there is a result, display result and options:
         #       Option1: Save the query that gave this result
         #       Option2: Download the dataframe as a CSV

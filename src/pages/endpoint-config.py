@@ -91,10 +91,11 @@ def __dialog_create_graph():
 
         # Generate the graph name and uri
         name = to_snake_case(graph_name)
-        graph_uri = st.session_state['endpoint']['url'] + '/' + name
+        graph_uri = 'infocean:' + name
 
         # Create triples
         triple_name = (graph_uri, 'rdfs:label', f"'{graph_name}'")
+        graph_comment = graph_comment.replace('\n', ' ')
         triple_comment = (graph_uri, 'rdfs:comment', f"'{graph_comment}'")       
 
         # Insert triples
@@ -114,8 +115,12 @@ if 'endpoint-config-endpoints-list' not in st.session_state:
     st.session_state['endpoint-config-endpoints-list'] = False
 if 'endpoint-config-graph-list' not in st.session_state:
     st.session_state['endpoint-config-graph-list'] = False
-if 'endpoint-config-base-uri' not in st.session_state:
-    st.session_state['endpoint-config-base-uri'] = False
+if 'endpoint-config-credentials' not in st.session_state:
+    st.session_state['endpoint-config-credentials'] = False
+if 'endpoint-username' not in st.session_state:
+    st.session_state['endpoint-username'] = None
+if 'endpoint-password' not in st.session_state:
+    st.session_state['endpoint-password'] = None
 
 
 ##### The page #####
@@ -133,7 +138,7 @@ col1, col2, col3 = st.columns([5, 2, 2], vertical_alignment='bottom')
 col1.markdown('### Endpoints List')
 
 # Button to show/hide endpoint list
-if col2.button('Display endpoints'):
+if col2.button('Show endpoints'):
     st.session_state['endpoint-config-endpoints-list'] = True
 
 # If endpoint list should be shown
@@ -169,7 +174,7 @@ col1, col2, col3 = st.columns([5, 2, 2], vertical_alignment='bottom')
 col1.markdown('### Endpoint graphs')
 
 # Button to show/hide graph list
-if col2.button('Display graphs'):
+if col2.button('Show graphs'):
     st.session_state['endpoint-config-graph-list'] = True
 
 # If endpoint list should be shown
@@ -203,3 +208,39 @@ if st.session_state['endpoint-config-graph-list']:
         # Dialog opener to create a new graph
         if st.button('Create a graph'):
             __dialog_create_graph()
+
+
+st.divider()
+
+## Credential sections
+
+col1, col2, col3 = st.columns([5, 2, 2], vertical_alignment='bottom')
+col1.markdown('### Endpoint Credentials')
+
+# Button to show/hide graph list
+if col2.button('Show credentials'):
+    st.session_state['endpoint-config-credentials'] = True
+
+# If endpoint list should be shown
+if st.session_state['endpoint-config-credentials']:
+
+    # In case the user did not yet choose an endpoint
+    if 'endpoint' not in st.session_state:
+        st.warning('Please select an endpoint first')
+    else:
+    
+        # Command to hide again credentials
+        if col3.button('Hide credentials'):
+            st.session_state['endpoint-config-credentials'] = False
+            st.rerun()
+        
+        # User inputs
+        col1, col2, col3 = st.columns([6, 12, 1], vertical_alignment='bottom')
+        username = col1.text_input('Username', placeholder='Endpoint username', value=st.session_state['endpoint-username'])
+        password = col2.text_input('Password', placeholder='Endpoint password', value=st.session_state['endpoint-password'], type='password')
+
+        # Session attribution
+        if username:
+            st.session_state['endpoint-username'] = username
+        if password:
+            st.session_state['endpoint-password'] = password

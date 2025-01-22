@@ -28,11 +28,15 @@ def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
         st.rerun()
 
     if col2.button('Yes', type='primary'):
+        
         # Call the callback with given keywords args
         with st.spinner('Executing...'):
-            callback(**kwargs)
-
-        # Finalization: validation message and reload
-        st.success('Done.')
-        time.sleep(1)
-        st.rerun()
+            result = callback(**kwargs)
+        
+        # If there is an error, the error message is already handled, 
+        # thus, nothing to do especially not closing the dialog
+        if result != 'error':
+            # Finalization: validation message and reload
+            st.success('Done.')
+            time.sleep(2)
+            st.rerun()
