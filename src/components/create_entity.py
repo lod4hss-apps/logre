@@ -1,8 +1,8 @@
 import streamlit as st
 import uuid
 import time
-from tools.utils import ensure_uri
-from tools.sparql_queries import insert
+from lib.utils import ensure_uri
+from lib.sparql_queries import insert
 
 
 @st.dialog("Create a new Entity", width='large')

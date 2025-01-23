@@ -1,7 +1,7 @@
 from typing import List, TypedDict, Tuple
 import streamlit as st
-from tools.sparql_base import query, execute
-from tools.utils import ensure_uri
+from lib.sparql_base import query, execute
+from lib.utils import ensure_uri
 
 
 ##### Model #####

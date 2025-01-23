@@ -3,7 +3,7 @@ from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
 from code_editor import code_editor
-import tools.sparql_base as sparql
+import lib.sparql_base as sparql
 import pandas as pd
 
 # The default query that is shown on first load of the page

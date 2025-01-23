@@ -1,5 +1,5 @@
 import streamlit as st
-from tools.sparql_queries import list_used_classes, list_entities
+from lib.sparql_queries import list_used_classes, list_entities
 
 
 @st.dialog("Find an entity", width='large')

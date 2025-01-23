@@ -6,7 +6,7 @@ from components.confirmation import dialog_confirmation
 from components.find_entities import dialog_find_entity
 from components.create_entity import create_entity
 from components.create_triple import create_triple
-from tools.sparql_queries import list_entity_triples, delete
+from lib.sparql_queries import list_entity_triples, delete
 
 
 ##### Functions #####

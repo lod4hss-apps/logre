@@ -3,7 +3,7 @@ import streamlit as st
 from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
-from tools.utils import ensure_uri
+from lib.utils import ensure_uri
 import requests
 from urllib.parse import quote, urlencode
 

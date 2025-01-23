@@ -1,5 +1,5 @@
 import streamlit as st
-from tools.sparql_queries import list_graphs
+from lib.sparql_queries import list_graphs
 
 def __read_endpoint_list() -> dict[str:str]:
     """Put in session the content of the logre/data/saved_endpoints file."""

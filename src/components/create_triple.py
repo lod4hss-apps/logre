@@ -1,5 +1,5 @@
 import streamlit as st
-from tools.sparql_queries import list_entities, insert
+from lib.sparql_queries import list_entities, insert
 import time
 
 
