@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.6.3 - Date 2025-01-
+
+Make Credentials endpoint dependant
+
 ## v1.6.2 - Date 2025-01-23
 
 Update prefixes

@@ -67,10 +67,9 @@ def query(request: str, _error_location=None) -> List[Dict[str, str]] | bool:
     )
     sparql_endpoint.setReturnFormat(JSON)
 
-    # If there is a user/password in session, take it
-    if 'endpoint-username' in st.session_state and 'endpoint-password' in st.session_state:
-        if st.session_state['endpoint-username'] is not None and st.session_state['endpoint-password'] is not None:
-            sparql_endpoint.setCredentials(st.session_state['endpoint-username'], st.session_state['endpoint-password'])
+    # If there is a user/password in selected endpoint, take it
+    if st.session_state['endpoint']['username'] != '' or st.session_state['endpoint']['password'] != '':
+        sparql_endpoint.setCredentials(st.session_state['endpoint']['username'], st.session_state['endpoint']['password'])
 
     # Prepare the query
     sparql_endpoint.setQuery(__get_prefixes() + request)
@@ -117,11 +116,10 @@ def execute(request: str) -> bool:
     sparql_endpoint.setQuery(__get_prefixes() + request)
     sparql_endpoint.method = "POST"
 
-    # If there is a user/password in session, take it
-    if 'endpoint-username' in st.session_state and 'endpoint-password' in st.session_state:
-        if st.session_state['endpoint-username'] is not None and st.session_state['endpoint-password'] is not None:
-            sparql_endpoint.setCredentials(st.session_state['endpoint-username'], st.session_state['endpoint-password'])
-
+    # If there is a user/password in selected endpoint, take it
+    if st.session_state['endpoint']['username'] != '' or st.session_state['endpoint']['password'] != '':
+        sparql_endpoint.setCredentials(st.session_state['endpoint']['username'], st.session_state['endpoint']['password'])
+        
     # DEBUG
     print('==============')
     print(__get_prefixes() + request)

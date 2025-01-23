@@ -13,7 +13,7 @@ def __write_endpoint_list() -> None:
     # Transform the list of objects into a string
     content = ""
     for endpoint in st.session_state['all_endpoints']:
-        content += f"{endpoint['name']}: {endpoint['url']}\n"
+        content += f"Name: {endpoint['name']} ; Url: {endpoint['url']} ; Username: {endpoint['username'] or ''} ; Password: {endpoint['password'] or ''}\n"
 
     # Write the generated string on disk
     file = open('../data/saved_endpoints', 'w')
@@ -34,9 +34,13 @@ def __change_endpoint(index) -> None:
 
     name_key = f"endpoint-config-endpoint-name-{index}"
     url_key = f"endpoint-config-endpoint-url-{index}"
+    username_key = f"endpoint-config-endpoint-username-{index}"
+    password_key = f"endpoint-config-endpoint-password-{index}"
 
     st.session_state['all_endpoints'][index]['name'] = st.session_state[name_key]
     st.session_state['all_endpoints'][index]['url'] = st.session_state[url_key]
+    st.session_state['all_endpoints'][index]['username'] = st.session_state[username_key]
+    st.session_state['all_endpoints'][index]['password'] = st.session_state[password_key]
     __write_endpoint_list()
 
 
@@ -60,6 +64,8 @@ def __dialog_add_endpoint():
     # Formular
     endpoint_name = st.text_input('Endpoint name ❗️', value="", placeholder="Write an endpoint name")
     endpoint_url = st.text_input('Endpoint URL ❗️', value="", placeholder="Write an endpoint URL")
+    endpoint_username = st.text_input('Username', value="", placeholder="Write a username for this endpoint")
+    endpoint_password = st.text_input('Password', value="", placeholder="Write a password for this endpoint", type='password')
 
     st.text("")
 
@@ -67,7 +73,7 @@ def __dialog_add_endpoint():
     if st.button('Save') and endpoint_name and endpoint_url:
 
         # Add to the session, write on disk, and rerun the page
-        st.session_state['all_endpoints'].append({'name': endpoint_name, 'url': endpoint_url})
+        st.session_state['all_endpoints'].append({'name': endpoint_name, 'url': endpoint_url, 'username': endpoint_username, 'password': endpoint_password})
         __write_endpoint_list()
 
         # Finalization: validation message and reload
@@ -136,6 +142,7 @@ st.divider()
 
 col1, col2, col3 = st.columns([5, 2, 2], vertical_alignment='bottom')
 col1.markdown('### Endpoints List')
+st.text("")
 
 # Button to show/hide endpoint list
 if col2.button('Show endpoints'):
@@ -151,13 +158,19 @@ if st.session_state['endpoint-config-endpoints-list']:
 
     # Display all saved endpoints
     for i, endpoint in enumerate(st.session_state['all_endpoints']):
-        col1, col2, col3 = st.columns([6, 12, 1], vertical_alignment='bottom')
+        col1, col2, col3 = st.columns([6, 12, 1], vertical_alignment='center')
         col1.text_input('Name', value=endpoint['name'], key=f"endpoint-config-endpoint-name-{i}", on_change=__change_endpoint, kwargs={'index': i})
         col2.text_input('URL', value=endpoint['url'], key=f"endpoint-config-endpoint-url-{i}", on_change=__change_endpoint, kwargs={'index': i})
+        col1, col2, col3 = st.columns([6, 12, 1], vertical_alignment='center')
+        col1.text_input('Username', value=endpoint['username'], key=f"endpoint-config-endpoint-username-{i}", on_change=__change_endpoint, kwargs={'index': i})
+        col2.text_input('Password', value=endpoint['password'], key=f"endpoint-config-endpoint-password-{i}", on_change=__change_endpoint, kwargs={'index': i}, type='password')
 
         # Button to delete a saved endpoint
         if col3.button(f'🗑️', key=f"endpoint-config-{i}"):
             dialog_confirmation(f"You are about to delete \"{endpoint['name']}\" endpoint.", __delete_endpoint, index=i)
+
+        col1, col2, col3 = st.columns([3, 7, 3], vertical_alignment='center')
+        col2.divider()
 
     st.text("")
 
@@ -211,36 +224,3 @@ if st.session_state['endpoint-config-graph-list']:
 
 
 st.divider()
-
-## Credential sections
-
-col1, col2, col3 = st.columns([5, 2, 2], vertical_alignment='bottom')
-col1.markdown('### Endpoint Credentials')
-
-# Button to show/hide graph list
-if col2.button('Show credentials'):
-    st.session_state['endpoint-config-credentials'] = True
-
-# If endpoint list should be shown
-if st.session_state['endpoint-config-credentials']:
-
-    # In case the user did not yet choose an endpoint
-    if 'endpoint' not in st.session_state:
-        st.warning('Please select an endpoint first')
-    else:
-    
-        # Command to hide again credentials
-        if col3.button('Hide credentials'):
-            st.session_state['endpoint-config-credentials'] = False
-            st.rerun()
-        
-        # User inputs
-        col1, col2, col3 = st.columns([6, 12, 1], vertical_alignment='bottom')
-        username = col1.text_input('Username', placeholder='Endpoint username', value=st.session_state['endpoint-username'])
-        password = col2.text_input('Password', placeholder='Endpoint password', value=st.session_state['endpoint-password'], type='password')
-
-        # Session attribution
-        if username:
-            st.session_state['endpoint-username'] = username
-        if password:
-            st.session_state['endpoint-password'] = password

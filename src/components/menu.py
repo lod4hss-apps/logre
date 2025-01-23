@@ -16,10 +16,12 @@ def __read_endpoint_list() -> dict[str:str]:
         # If an error occurs here, it is because the file has the wrong format
         try:
             if raw_endpoint.strip() != "":
-                colon_index = raw_endpoint.index(':')
-                name = raw_endpoint[0:colon_index].strip()
-                url = raw_endpoint[colon_index+1:].strip()
-                endpoints.append({'name':name, 'url':url})
+                infos = raw_endpoint.split(';')
+                name = infos[0].replace('Name:', '').strip()
+                url = infos[1].replace('Url:', '').strip()
+                username = infos[2].replace('Username:', '').strip()
+                password = infos[3].replace('Password:', '').strip()
+                endpoints.append({'name': name, 'url': url, 'username': username, 'password': password})
         except Exception:
             st.error('File "data/saved_endpoints" is wrongly formatted. Correct it then reload the page.')
 
@@ -68,11 +70,12 @@ def menu() -> None:
 
         # That is different that the one in session
         if 'endpoint' not in st.session_state or selected_label != st.session_state['endpoint']['name']:
+            selected_endpoint = [endpoint for endpoint in st.session_state['all_endpoints'] if endpoint['name'] == selected_label][0]
 
             # Update the one in session (or set)
-            selected_index = endpoint_labels.index(selected_label)
-            selected_url = endpoint_urls[selected_index]
-            st.session_state['endpoint'] = {'name': selected_label, 'url': selected_url}
+            st.session_state['endpoint'] = selected_endpoint
+
+            # When a new endpoint is selected, all graphs needs to be cleansed.
             if 'all_graphs' in st.session_state:
                 del st.session_state['all_graphs']
 
