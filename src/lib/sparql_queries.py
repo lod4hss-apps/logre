@@ -1,4 +1,4 @@
-from typing import List, TypedDict, Tuple
+from typing import List, TypedDict, Dict
 import streamlit as st
 from lib.sparql_base import query, execute
 from lib.utils import ensure_uri
@@ -102,7 +102,7 @@ def list_used_properties(graph: str = None) -> List[Entity]:
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
-def list_entities(label: str = None, cls: str = None, limit: int = 20, graph = None) -> List[EntityWithClass]:
+def list_entities(label: str = None, cls: str = None, limit: int = None, graph = None) -> List[EntityWithClass]:
     """
     Fetch the list of entities on the endpoint with:
     Args:
@@ -119,7 +119,7 @@ def list_entities(label: str = None, cls: str = None, limit: int = 20, graph = N
     # Get the entity label
     entity_label = f"?uri rdfs:label ?label ."
     # Only result of the given class if provided, else fetch the class
-    entity_class = "optional { " + (f"?uri a {class_uri} ." if cls else f"?uri a ?cls_ .") + " }"
+    entity_class = f"?uri a {class_uri} ." if cls else "optional { ?uri a ?cls_ . }"
     # Get the class label
     class_label = "optional { " + (f"{class_uri} rdfs:label ?class_label_ ." if cls else f"?cls_ rdfs:label ?class_label_ .") + " }"
     # Filter the result with the provided string
@@ -370,3 +370,52 @@ def delete(triples: List[tuple], graph: str = None) -> None:
 
     # Execute
     execute(text)
+
+
+def get_objects_of(subject: str, property: str = None):
+    """
+    Fetch all objects of the given subject. 
+    If the property is mentioned, only filter of subject of the given property.
+    """
+
+    subject_uri = ensure_uri(subject)
+    property_uri = ensure_uri(property)
+
+    select_line = f"?object" if property_uri else "?property ?object"
+    query_line = f"{subject_uri} {property_uri} ?object" if property_uri else f"{subject_uri} ?property ?object"
+
+    text = """
+        SELECT """ + select_line + """
+        WHERE { """ + query_line + """ . }
+    """
+    
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return []
+    return response
+
+
+
+def get_subjects_of(object: str, property: str = None):
+    """
+    Fetch all subjects of the given object. 
+    If the property is mentioned, only filter of object of the given property.
+    """
+
+    object_uri = ensure_uri(object)
+    property_uri = ensure_uri(property)
+
+    select_line = f"?subject" if property_uri else "?subject ?property"
+    query_line = f"?subject {property_uri} {object_uri}" if property_uri else f"?subject ?property {object_uri}"
+
+    text = """
+        SELECT """ + select_line + """
+        WHERE { """ + query_line + """ . }
+    """
+    
+    # Ensure response is an array
+    response = query(text)
+    if not response:
+        return []
+    return response

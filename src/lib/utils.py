@@ -1,5 +1,7 @@
 import re
 import unicodedata
+import uuid
+import time
 
 def ensure_uri(supposed_uri: str) -> str:
     """
@@ -13,7 +15,7 @@ def ensure_uri(supposed_uri: str) -> str:
         return None
 
     # First check if the given URI has a prefix
-    prefixes = ["rdf", "rdfs", "owl", "ontome", "geov", "infocean"]
+    prefixes = ["xsd", "rdf", "rdfs", "owl", "sh", "crm", "sdh", "sdh-shortcut", "sdh-shacl", "ontome", "geov", "infocean"]
     for prefix in prefixes:
         if supposed_uri.startswith(prefix + ":"):
             return supposed_uri
@@ -65,3 +67,8 @@ def to_snake_case(text: str) -> str:
     snake_case_text = re.sub(r"\s+", "_", cleaned_text.strip()).lower()
 
     return snake_case_text
+
+
+def generate_uuid() -> str:
+    "Generate a uuid base on the current time"
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, str(time.time())))

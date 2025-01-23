@@ -107,7 +107,7 @@ def menu() -> None:
         st.sidebar.markdown('#### Endpoint graph List:')
         for i, graph in enumerate(st.session_state["all_graphs"]):
             # Make the session match the GUI
-            if st.sidebar.checkbox(graph['label'], value=graph['activated']):
+            if st.sidebar.checkbox(graph['label'], value=graph['activated'], key=f'graph-checkbox-{i}'):
                 if st.session_state['all_graphs'][i]['activated'] != True:
                     st.session_state['all_graphs'][i]['activated'] = True
                     st.rerun()

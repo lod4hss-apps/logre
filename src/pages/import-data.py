@@ -25,7 +25,7 @@ def upload_turtle_file(file: Any, graph_uri: str):
     response = requests.post(target_url, data=ttl_data, headers=headers)
 
     # Check response
-    if response.status_code != 200:
+    if response.status_code >= 400:
         st.error(f"Failed to upload file. Status code: {response.status_code}. Reason: {response.reason}. Message: {response.text}.")
         return 'error'
     else:

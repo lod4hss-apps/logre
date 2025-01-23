@@ -18,7 +18,8 @@ def __get_prefixes() -> str:
         PREFIX owl: <http://www.w3.org/2002/07/owl#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
-        PREFIX sdh: <https://sdhss.org/ontology/core/>.
+        PREFIX sdh: <https://sdhss.org/ontology/core/>
+        PREFIX sdh-shortcut: <https://sdhss.org/ontology/shortcuts/>
         PREFIX sdh-shacl: <https://sdhss.org/shacl/profiles/>
         PREFIX ontome: <https://ontome.net/ontology/>
         PREFIX infocean: <http://geovistory.org/information/>
@@ -38,6 +39,7 @@ def __replace_prefixes(uri: str):
     uri = uri.replace('http://www.w3.org/ns/shacl#', 'sh:')
     uri = uri.replace('http://www.cidoc-crm.org/cidoc-crm/', 'crm:')
     uri = uri.replace('https://sdhss.org/ontology/core/', 'sdh:')
+    uri = uri.replace('https://sdhss.org/ontology/shortcuts/', 'sdh-shortcut:')
     uri = uri.replace('https://sdhss.org/shacl/profiles/', 'sdh-shacl:')
     uri = uri.replace('https://ontome.net/ontology/', 'ontome:')
     uri = uri.replace('http://geovistory.org/information/', 'infocean:')
