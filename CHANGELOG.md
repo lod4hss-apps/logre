@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.6.2 - Date 2025-01-23
+
+Update prefixes
+
 ## v1.6.1 - Date 2025-01-23
 
 Rename folders

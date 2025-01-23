@@ -12,13 +12,16 @@ def __get_prefixes() -> str:
     """
 
     return f"""
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX owl: <http://www.w3.org/2002/07/owl#>
-        PREFIX shacl: <http://www.w3.org/ns/shacl#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+        PREFIX sdh: <https://sdhss.org/ontology/core/>.
+        PREFIX sdh-shacl: <https://sdhss.org/shacl/profiles/>
         PREFIX ontome: <https://ontome.net/ontology/>
         PREFIX infocean: <http://geovistory.org/information/>
-
     """
 
 
@@ -28,10 +31,14 @@ def __replace_prefixes(uri: str):
     displays a prefix instead of a full URI.
     """
 
+    uri = uri.replace('http://www.w3.org/2001/XMLSchema#', 'xsd:')
     uri = uri.replace('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:')
     uri = uri.replace('http://www.w3.org/2000/01/rdf-schema#', 'rdfs:')
     uri = uri.replace('http://www.w3.org/2002/07/owl#', 'owl:')
-    uri = uri.replace('http://www.w3.org/ns/shacl#', 'shacl:')
+    uri = uri.replace('http://www.w3.org/ns/shacl#', 'sh:')
+    uri = uri.replace('http://www.cidoc-crm.org/cidoc-crm/', 'crm:')
+    uri = uri.replace('https://sdhss.org/ontology/core/', 'sdh:')
+    uri = uri.replace('https://sdhss.org/shacl/profiles/', 'sdh-shacl:')
     uri = uri.replace('https://ontome.net/ontology/', 'ontome:')
     uri = uri.replace('http://geovistory.org/information/', 'infocean:')
     return uri
