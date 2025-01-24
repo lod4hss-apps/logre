@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## v1.6.3 - Date 2025-01-
+## v1.6.4 - Date 2025-01-24
+
+Update make file:
+- Add verbose recipes
+- Make python version easily changeable
+
+## v1.6.3 - Date 2025-01-23
 
 Make Credentials endpoint dependant
 
