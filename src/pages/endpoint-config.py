@@ -70,6 +70,7 @@ def __dialog_add_endpoint():
     endpoint_url = st.text_input('Endpoint URL ❗️', value="", placeholder="Write an endpoint URL")
     endpoint_username = st.text_input('Username', value="", placeholder="Write a username for this endpoint")
     endpoint_password = st.text_input('Password', value="", placeholder="Write a password for this endpoint", type='password')
+    endpoint_technology = st.selectbox('Technology', options=technologies, index=None, placeholder="Select a technology")
 
     st.text("")
 
@@ -77,7 +78,7 @@ def __dialog_add_endpoint():
     if st.button('Save') and endpoint_name and endpoint_url:
 
         # Add to the session, write on disk, and rerun the page
-        st.session_state['all_endpoints'].append({'name': endpoint_name, 'url': endpoint_url, 'username': endpoint_username, 'password': endpoint_password})
+        st.session_state['all_endpoints'].append({'name': endpoint_name, 'url': endpoint_url, 'username': endpoint_username, 'password': endpoint_password, 'technology': endpoint_technology})
         __write_endpoint_list()
 
         # Finalization: validation message and reload
