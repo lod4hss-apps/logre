@@ -7,13 +7,15 @@ from lib.sparql_queries import count_graph_triples, insert, delete
 from lib.utils import readable_number, to_snake_case
 
 
+technologies = ['Fuseki', 'Allegrograph']
+
 def __write_endpoint_list() -> None:
     """Write all endpoint URLs that are in session on disk."""
 
     # Transform the list of objects into a string
     content = ""
     for endpoint in st.session_state['all_endpoints']:
-        content += f"Name: {endpoint['name']} ; Url: {endpoint['url']} ; Username: {endpoint['username'] or ''} ; Password: {endpoint['password'] or ''}\n"
+        content += f"Name: {endpoint['name']} ; Url: {endpoint['url']} ; Username: {endpoint['username'] or ''} ; Password: {endpoint['password'] or ''} ; Technology: {endpoint['technology']}\n"
 
     # Write the generated string on disk
     file = open('../data/saved_endpoints', 'w')
@@ -36,11 +38,13 @@ def __change_endpoint(index) -> None:
     url_key = f"endpoint-config-endpoint-url-{index}"
     username_key = f"endpoint-config-endpoint-username-{index}"
     password_key = f"endpoint-config-endpoint-password-{index}"
+    technology_key = f"endpoint-config-endpoint-technology-{index}"
 
     st.session_state['all_endpoints'][index]['name'] = st.session_state[name_key]
     st.session_state['all_endpoints'][index]['url'] = st.session_state[url_key]
     st.session_state['all_endpoints'][index]['username'] = st.session_state[username_key]
     st.session_state['all_endpoints'][index]['password'] = st.session_state[password_key]
+    st.session_state['all_endpoints'][index]['technology'] = st.session_state[technology_key]
     __write_endpoint_list()
 
 
@@ -48,7 +52,7 @@ def __delete_graph(graph_uri) -> None:
     """Delete all statements of a given graph"""
 
     # The delete "where clause" triple
-    triple = (graph_uri, '?predicate', '?object')
+    triple = ('?subject', '?predicate', '?object')
 
     delete([triple], graph=graph_uri)
     del st.session_state['all_graphs']
@@ -158,15 +162,17 @@ if st.session_state['endpoint-config-endpoints-list']:
 
     # Display all saved endpoints
     for i, endpoint in enumerate(st.session_state['all_endpoints']):
-        col1, col2, col3 = st.columns([6, 12, 1], vertical_alignment='center')
+        col1, col2 = st.columns([6, 13], vertical_alignment='center')
         col1.text_input('Name', value=endpoint['name'], key=f"endpoint-config-endpoint-name-{i}", on_change=__change_endpoint, kwargs={'index': i})
         col2.text_input('URL', value=endpoint['url'], key=f"endpoint-config-endpoint-url-{i}", on_change=__change_endpoint, kwargs={'index': i})
-        col1, col2, col3 = st.columns([6, 12, 1], vertical_alignment='center')
+        col1, col2, col3 = st.columns([6, 6, 7], vertical_alignment='center')
         col1.text_input('Username', value=endpoint['username'], key=f"endpoint-config-endpoint-username-{i}", on_change=__change_endpoint, kwargs={'index': i})
         col2.text_input('Password', value=endpoint['password'], key=f"endpoint-config-endpoint-password-{i}", on_change=__change_endpoint, kwargs={'index': i}, type='password')
+        col3.selectbox('Endpoint technology', technologies, index=technologies.index(endpoint['technology']), key=f"endpoint-config-endpoint-technology-{i}", on_change=__change_endpoint, kwargs={'index': i})
 
         # Button to delete a saved endpoint
-        if col3.button(f'🗑️', key=f"endpoint-config-{i}"):
+        st.text('')
+        if st.button(f'Forget this endpoint', key=f"endpoint-config-{i}"):
             dialog_confirmation(f"You are about to delete \"{endpoint['name']}\" endpoint.", __delete_endpoint, index=i)
 
         col1, col2, col3 = st.columns([3, 7, 3], vertical_alignment='center')

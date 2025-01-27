@@ -3,10 +3,30 @@ import streamlit as st
 from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
-from lib.utils import ensure_uri
-import requests
-from urllib.parse import quote, urlencode
 
+
+def __get_import_url(graph_uri: str = ""):
+
+    technology = st.session_state['endpoint']['technology']
+    endpoint_url = st.session_state['endpoint']['url']
+
+    if technology == 'Allegrograph':
+        # If it is an Allegrograph endpoint
+        if graph_uri: 
+            graph_uri = graph_uri.replace('infocean:', 'http://geovistory.org/information/')
+            graph_uri = '%3C' + graph_uri.replace(':', '%3A').replace('/', '%2F') + '%3E'
+            allegrograph_base_url = endpoint_url.replace('/sparql', '')
+            return f"{allegrograph_base_url}/statements?context={graph_uri}"
+        else: 
+            return allegrograph_base_url
+    
+    elif technology == 'Fuseki':
+        # If it is a Fuseki endpoint
+        if graph_uri:
+            graph_uri = graph_uri.replace('infocean:', 'http://geovistory.org/information/')
+            return f"{endpoint_url}?graph={graph_uri}"
+        else: 
+            return endpoint_url
 
 
 def upload_turtle_file(file: Any, graph_uri: str):
@@ -14,15 +34,10 @@ def upload_turtle_file(file: Any, graph_uri: str):
     # The turtle data
     ttl_data = file.read().decode("utf-8")
 
-    # Upload to Fuseki
-    if graph_uri:
-        # We need to put back the full URL of the graph
-        graph_uri = graph_uri.replace('infocean:', 'http://geovistory.org/information/')
-        target_url = f"{st.session_state['endpoint']['url']}?graph={graph_uri}"
-    else:
-        target_url = f"{st.session_state['endpoint']['url']}"
+    # Upload
+    url = __get_import_url(graph_uri)
     headers = {"Content-Type": "text/turtle"}
-    response = requests.post(target_url, data=ttl_data, headers=headers)
+    response = requests.post(url, data=ttl_data, headers=headers, auth=(st.session_state['endpoint']['username'], st.session_state['endpoint']['password']))
 
     # Check response
     if response.status_code >= 400:

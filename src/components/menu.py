@@ -21,7 +21,8 @@ def __read_endpoint_list() -> dict[str:str]:
                 url = infos[1].replace('Url:', '').strip()
                 username = infos[2].replace('Username:', '').strip()
                 password = infos[3].replace('Password:', '').strip()
-                endpoints.append({'name': name, 'url': url, 'username': username, 'password': password})
+                technology = infos[4].replace('Technology:', '').strip()
+                endpoints.append({'name': name, 'url': url, 'username': username, 'password': password, 'technology': technology})
         except Exception:
             st.error('File "data/saved_endpoints" is wrongly formatted. Correct it then reload the page.')
 

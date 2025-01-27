@@ -50,6 +50,7 @@ def __read_saved_queries() -> dict[str:str]:
 
     print(queries_list)
 
+
 def __write_queries_list() -> None:
     """Write all queries that are in session memory on disk."""
 

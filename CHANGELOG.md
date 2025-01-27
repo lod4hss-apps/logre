@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.6.5 - Date 2025-01-27
+
+Add the option of "Technology" when setting an endpoint
+
 ## v1.6.4 - Date 2025-01-24
 
 Update make file:
