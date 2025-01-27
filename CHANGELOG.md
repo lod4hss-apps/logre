@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.6.6 - Date 2025-01-27
+
+Force usage of local pipenv in order to avoid conda lib to be accessed
+
 ## v1.6.5 - Date 2025-01-27
 
 Add the option of "Technology" when setting an endpoint
