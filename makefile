@@ -38,7 +38,7 @@ install:
 	@echo "[makefile] Activating environment $(PIPENV_NAME)..."
 	@source ./$(PIPENV_NAME)/bin/activate && \
 	echo "[makefile] Installing packages from $(REQUIREMENTS_FILE)..." && \
-	pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
+	${PYTHON} -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
 	@echo "[makefile] Initializing folder..."
 	@mkdir -p "./data"
 	@touch "./data/saved_endpoints"
@@ -64,7 +64,7 @@ install-verbose:
 start: update install
 	@echo "[makefile] Selecting environment $(PIPENV_NAME)..."
 	@source $(PIPENV_NAME)/bin/activate && \
-	cd src; $(PYTHON) -m streamlit run server.py
+	$(PYTHON) -m streamlit run src/server.py
 
 
 start-verbose: update-verbose install-verbose

@@ -2,6 +2,7 @@ import re
 import unicodedata
 import uuid
 import time
+import toml
 
 def ensure_uri(supposed_uri: str) -> str:
     """
@@ -15,7 +16,7 @@ def ensure_uri(supposed_uri: str) -> str:
         return None
 
     # First check if the given URI has a prefix
-    prefixes = ["xsd", "rdf", "rdfs", "owl", "sh", "crm", "sdh", "sdh-shortcut", "sdh-shacl", "ontome", "geov", "infocean"]
+    prefixes = ["xsd", "rdf", "rdfs", "owl", "sh", "crm", "sdh", "sdh-shortcut", "sdh-shacl", "ontome", "geov", "base"]
     for prefix in prefixes:
         if supposed_uri.startswith(prefix + ":"):
             return supposed_uri
@@ -72,3 +73,10 @@ def to_snake_case(text: str) -> str:
 def generate_uuid() -> str:
     "Generate a uuid base on the current time"
     return str(uuid.uuid5(uuid.NAMESPACE_DNS, str(time.time())))
+
+
+def parse_toml(file_content) -> dict:
+    return toml.loads(file_content)
+
+def stringify_toml(obj) -> str:
+    return toml.dumps(obj)

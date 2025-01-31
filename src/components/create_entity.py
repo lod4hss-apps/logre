@@ -44,18 +44,18 @@ def create_entity_() -> None:
         # Create the correct triples
         triples = []
         if label:
-            triples.append((f"infocean:{id}", "rdfs:label", f"'{label}'"))
+            triples.append((f"base:{id}", "rdfs:label", f"'{label}'"))
         if cls:
-            triples.append((f"infocean:{id}", "rdf:type", ensure_uri(cls)))
+            triples.append((f"base:{id}", "rdf:type", ensure_uri(cls)))
         if definition:
-            triples.append((f"infocean:{id}", "rdfs:comment", f"'{definition}'"))
+            triples.append((f"base:{id}", "rdfs:comment", f"'{definition}'"))
 
         # Insert triples
         insert(triples, graph['uri'])
 
         # And select
         st.session_state['selected_entity'] = {
-            'uri': f"infocean:{id}",
+            'uri': f"base:{id}",
             'display_label': f"{label} ({cls if cls else 'Unknown'})"
         }
     
@@ -88,7 +88,7 @@ def create_entity() -> None:
         property_nodes.sort(key=lambda obj: float(obj['order']))
 
         # Generate a uuid for the instance to create
-        new_uri = f"infocean:{generate_uuid()}"
+        new_uri = f"base:{generate_uuid()}"
 
         triples = [(new_uri, 'a', selected_class['uri'])]
         mandatories = []

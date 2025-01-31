@@ -4,7 +4,7 @@ from components.menu import menu
 
 
 def get_read_me_content() -> str:
-    readme_file = open('./README.md', 'r')
+    readme_file = open('./GETTING-STARTED.md', 'r')
     content = readme_file.read()
     readme_file.close()
     return content

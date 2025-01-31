@@ -1,38 +1,36 @@
-# LOcal GRaph Editor (LOGRE)
+# LOGRE (LOcal GRaph Editor)
 
-Licence: MIT
+Logre is an open source tool to work with graphs.
 
-## Introduction
+The idea behind the tool is to provide a simple GUI to visualize, edit, understand data in various SPARQL endpoints.
 
-Logre is a simple and intuitive open source graph editor that runs locally.
+It has been created initially for Geovistory projects, but thanks to its modularity, it can be used by any project.
 
-The idea behind this tool is to give a simple GUI for graph users.
+There is two ways of using Logre:
+- Locally (install it yourself on you computer, see *How to use/install* section)
+- On the deployed application (see []())
 
-## Getting started
+Both of those are exactly the same application, the difference is that the online version allows you to directly use it, without having to install anything.
 
-### Prerequisite
+
+## How to use/install
+
+**Prerequisite**
 
 To run Logre, you will need to have:
 - `make` (native on MacOS and Linux, for Windows users, install it with `winget install ezwinports.make`).
 - Python3.10 or newer; **May** also work with older version.
 
-### Install
+**Install**
 
 - Open a Terminal, and change directory to the place where you want to have your tool
 - Run `git clone https://github.com/geovistory/logre.git`
 - Run `cd logre`
-- Run `make install` (optional, when starting the tool, install is run anyways)
+- Run `make install` (optional: when starting the tool, install is run anyways)
 
-### Start
+**Start**
 
 - In your folder, simply run `make start`, this will update the dependencies, and start the GUI
 
-### Update
 
-- In your folder, simply run `make update`
-
-## Development
-
-Logre is developed iteratively, one small feature at a time.
-
-The list of coming features is present in the GitHub Repos: [Issues Section](https://github.com/geovistory/logre/issues)
+Happy Graph editing!

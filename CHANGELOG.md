@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.7.0 - Date 2025-01-31
+
+Make all the endpoint configuration handled in toml files, that needs to be uploaded/downloaded on the GUI.
+Deploy on Streamlit cloud
+
 ## v1.6.6 - Date 2025-01-27
 
 Force usage of local pipenv in order to avoid conda lib to be accessed

@@ -3,6 +3,7 @@ import streamlit as st
 from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
+import requests
 
 
 def __get_import_url(graph_uri: str = ""):
@@ -13,7 +14,7 @@ def __get_import_url(graph_uri: str = ""):
     if technology == 'Allegrograph':
         # If it is an Allegrograph endpoint
         if graph_uri: 
-            graph_uri = graph_uri.replace('infocean:', 'http://geovistory.org/information/')
+            graph_uri = graph_uri.replace('base:', 'http://geovistory.org/information/')
             graph_uri = '%3C' + graph_uri.replace(':', '%3A').replace('/', '%2F') + '%3E'
             allegrograph_base_url = endpoint_url.replace('/sparql', '')
             return f"{allegrograph_base_url}/statements?context={graph_uri}"
@@ -23,7 +24,7 @@ def __get_import_url(graph_uri: str = ""):
     elif technology == 'Fuseki':
         # If it is a Fuseki endpoint
         if graph_uri:
-            graph_uri = graph_uri.replace('infocean:', 'http://geovistory.org/information/')
+            graph_uri = graph_uri.replace('base:', 'http://geovistory.org/information/')
             return f"{endpoint_url}?graph={graph_uri}"
         else: 
             return endpoint_url

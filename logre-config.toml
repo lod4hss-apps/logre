@@ -1,0 +1,21 @@
+all_queries = []
+[[all_endpoints]]
+name = "Infocean"
+url = "https://fuseki-yellow.geovistory.org/information-ocean"
+technology = "Fuseki"
+base_uri = "http://geovistory.org/information/"
+model_uri = "base:model"
+model_lang = "SHACL"
+username = ""
+password = ""
+
+[[all_endpoints]]
+name = "Allegrograph"
+url = "https://ag1z2eharc0r3drq.allegrograph.cloud/repositories/dataset"
+technology = "Allegrograph"
+username = "admin"
+password = "Iw8Rjw9qveLHlRVIkn5Tgx"
+base_uri = "http://www.example.com/"
+model_uri = "base:model"
+model_lang = "SHACL"
+

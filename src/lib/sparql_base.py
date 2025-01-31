@@ -22,7 +22,7 @@ def __get_prefixes() -> str:
         PREFIX sdh-shortcut: <https://sdhss.org/ontology/shortcuts/>
         PREFIX sdh-shacl: <https://sdhss.org/shacl/profiles/>
         PREFIX ontome: <https://ontome.net/ontology/>
-        PREFIX infocean: <http://geovistory.org/information/>
+        PREFIX base: <{st.session_state['endpoint']['base_uri']}>
     """
 
 
@@ -42,7 +42,7 @@ def __replace_prefixes(uri: str):
     uri = uri.replace('https://sdhss.org/ontology/shortcuts/', 'sdh-shortcut:')
     uri = uri.replace('https://sdhss.org/shacl/profiles/', 'sdh-shacl:')
     uri = uri.replace('https://ontome.net/ontology/', 'ontome:')
-    uri = uri.replace('http://geovistory.org/information/', 'infocean:')
+    uri = uri.replace(st.session_state['endpoint']['base_uri'], 'base:')
     return uri
 
 
@@ -52,6 +52,7 @@ def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
     obj: Dict[str, str] = {}
     for key in row.keys():
         obj[key] = __replace_prefixes(row[key]["value"])
+        # obj[key] = row[key]["value"]
     return obj
 
 

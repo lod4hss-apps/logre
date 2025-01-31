@@ -10,7 +10,7 @@ def list_available_classes() -> List[Dict[str, str]]:
     text = """
         SELECT ?node ?uri ?label
         WHERE {
-            GRAPH infocean:model {
+            GRAPH base:model {
                 ?node a sh:NodeShape .
                 ?node rdfs:label ?label .
                 ?node sh:targetClass ?uri .
@@ -30,7 +30,7 @@ def list_properties_of_node(node: str):
     text = """ 
         SELECT ?propertyNode ?uri (COALESCE(?label_, ?uri) as ?label) (COALESCE(?datatype_, '') as ?datatype) (COALESCE(?class_, COALESCE(?inverseClass_, '')) as ?class) (COALESCE(?order_, 'inf') as ?order) (COALESCE(?minCount_, '0') as ?minCount) (COALESCE(?maxCount_, 'inf') as ?maxCount) (COALESCE(?inverseUri_, '') as ?inverseUri)
         WHERE {
-            GRAPH infocean:model {
+            GRAPH base:model {
                 """ + ensure_uri(node) + """ sh:property ?propertyNode .
                 ?propertyNode sh:path ?uri .
                 optional { ?uri sh:inversePath ?inverseUri_ . }
