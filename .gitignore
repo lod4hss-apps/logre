@@ -1,3 +1,4 @@
 pipenv_logre
 __pycache__
 data
+.DS_Store

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.7.1 - Date 2025-01-31
+
+Bug corrections
+
 ## v1.7.0 - Date 2025-01-31
 
 Make all the endpoint configuration handled in toml files, that needs to be uploaded/downloaded on the GUI.
