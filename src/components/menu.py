@@ -1,6 +1,6 @@
 import streamlit as st
 from lib.sparql_queries import list_graphs
-from lib.utils import parse_toml
+from lib.utils import load_config
 
 
 def menu() -> None:
@@ -24,12 +24,7 @@ def menu() -> None:
         config_file = st.sidebar.file_uploader('Set a configuration:', 'toml', accept_multiple_files=False)
 
         if config_file:
-            config = parse_toml(config_file.getvalue().decode("utf-8"))
-            st.session_state['configuration'] = True
-            if 'all_endpoints' in config:
-                st.session_state['all_endpoints'] = config['all_endpoints']
-            if 'all_queries' in config:
-                st.session_state['all_queries'] = config['all_queries']
+            load_config(config_file.getvalue().decode("utf-8"))
             st.rerun()
 
     else:

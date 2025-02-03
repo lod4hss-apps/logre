@@ -1,4 +1,6 @@
 import streamlit as st
+import os
+from lib.utils import load_config
 
 
 def init(layout='centered') -> None:
@@ -18,8 +20,16 @@ def init(layout='centered') -> None:
         file.close()
         st.session_state['VERSION'] = version
 
+    # If there is a local config, load it
+    if os.path.exists('./logre-config.toml'):
+        file = open('./logre-config.toml', 'r')
+        content = file.read()
+        file.close()
+        load_config(content)
 
     # Session state initialization
     if 'configuration' not in st.session_state: st.session_state['configuration'] = False
     if 'all_queries' not in st.session_state: st.session_state['all_queries'] = []
     if 'all_endpoints' not in st.session_state: st.session_state['all_endpoints'] = []
+
+

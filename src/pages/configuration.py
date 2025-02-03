@@ -1,10 +1,10 @@
 import streamlit as st
-import time
+import time, toml
 from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
 from lib.sparql_queries import count_graph_triples, insert, delete
-from lib.utils import readable_number, to_snake_case, stringify_toml
+from lib.utils import readable_number, to_snake_case,
 
 
 # Contants
@@ -20,7 +20,7 @@ def __prepare_configuration():
         'all_endpoints': st.session_state['all_endpoints']
     }
 
-    return stringify_toml(config)
+    return toml.dumps(config)
 
 
 def __delete_endpoint(index) -> None:

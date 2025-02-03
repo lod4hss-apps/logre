@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.7.2 - Date 2025-02-03
+
+Allows to directly load a configuration if it has one present on disk ("logre-config.toml")
+
 ## v1.7.1 - Date 2025-01-31
 
 Bug corrections
