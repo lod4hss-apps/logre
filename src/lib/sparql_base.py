@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
 from urllib.error import HTTPError
-
+from urllib.error import URLError
 
 def __get_prefixes() -> str:
     """
@@ -96,6 +96,10 @@ def query(request: str, _error_location=None) -> List[Dict[str, str]] | bool:
         else:
             st.error(f"HTTP Error {error.code}: {error.reason}")
         return False
+    except URLError as error:
+        _error_location.error(f"URL Error: {error.reason}")
+        return False
+
     # and transform the object
     response = list(map(__handle_row, response))
 

@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.7.3 - Date 2025-02-04
+
+Change list_graph query
+
 ## v1.7.2 - Date 2025-02-03
 
 Allows to directly load a configuration if it has one present on disk ("logre-config.toml")

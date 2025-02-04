@@ -4,7 +4,7 @@ from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
 from lib.sparql_queries import count_graph_triples, insert, delete
-from lib.utils import readable_number, to_snake_case,
+from lib.utils import readable_number, to_snake_case
 
 
 # Contants

@@ -233,15 +233,43 @@ def list_graphs(_error_location) -> List[Entity]:
     """
 
     # Prepare the query
+    # text = """
+    #     SELECT DISTINCT ?uri ?label ?comment 
+    #     WHERE {
+    #         GRAPH ?uri {
+    #             optional { ?uri rdfs:label ?label . }
+    #             optional { ?uri rdfs:comment ?comment . }
+    #         }
+    #     }
+    # """
+
     text = """
-        SELECT DISTINCT ?uri ?label ?comment
+        SELECT DISTINCT ?uri (CONCAT(COALESCE(?name, ?last_part), ' (', STR(?number), ')') as ?label) ?comment
         WHERE {
-            GRAPH ?uri {
-                optional { ?uri rdfs:label ?label . }
-                optional { ?uri rdfs:comment ?comment . }
+        {
+            SELECT ?uri ?name (COUNT(*) as ?number) 
+            WHERE {
+                GRAPH ?uri { 
+                    ?s ?p ?o 
+                }
+                OPTIONAL {?uri rdfs:label ?name .}
+                OPTIONAL {?uri rdfs:comment ?comment .}
+            }
+            GROUP BY ?uri  ?name
+        }
+        UNION
+        {
+            SELECT (URI('http://my.org/default') as ?uri) (COUNT(*) as ?number) ('DEFAULT' as ?name) ('Default graph' as ?comment)
+            WHERE {
+                { ?s ?p ?o }
             }
         }
+        ### noter qu'en Python il faut *2 de antislashes par rapport à SPARQL
+        # en SPARQL \\/ 
+        BIND (replace(str(?uri), "^(.*)(\\\\/)", "") as ?last_part)  
+        }
     """
+    
 
     # Ensure response is an array
     response = query(text, _error_location=_error_location)
