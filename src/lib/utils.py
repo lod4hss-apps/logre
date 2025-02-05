@@ -5,7 +5,7 @@ import time
 import toml
 import streamlit as st
 
-def ensure_uri(supposed_uri: str) -> str:
+def ensure_uri(supposed_uri: str) -> str | None:
     """
     Make sure that the given URI has the correct format.
     Knows a list of prefixes.

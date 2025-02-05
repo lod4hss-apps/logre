@@ -26,7 +26,7 @@ To run Logre, you will need to have:
 - Open a Terminal, and change directory to the place where you want to have your tool
 - Run `git clone https://github.com/geovistory/logre.git`
 - Run `cd logre`
-- Run `make install` (optional: when starting the tool, install is run anyways)
+- Run `make install` (optional: when starting the tool, the install process runs anyway)
 
 **Start**
 

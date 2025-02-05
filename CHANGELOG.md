@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.7.4 - Date 2025-02-04
+
+Refactor SPARQL Queries
+Correction on how default graph is handled
+When run locally, configuration is saved on disk on modification
+When run locally, download button disapears
+Put base:shacl as a default model graph
+
 ## v1.7.3 - Date 2025-02-04
 
 Change list_graph query

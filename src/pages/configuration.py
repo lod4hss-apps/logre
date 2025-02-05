@@ -1,10 +1,11 @@
 import streamlit as st
-import time, toml
+import time, toml, os
 from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
 from lib.sparql_queries import count_graph_triples, insert, delete
 from lib.utils import readable_number, to_snake_case
+from lib.schema import Triple
 
 
 # Contants
@@ -34,7 +35,7 @@ def __delete_graph(graph_uri) -> None:
     """Delete all statements of a given graph"""
 
     # The delete "where clause" triple
-    triple = ('?subject', '?predicate', '?object')
+    triple = Triple('?subject', '?predicate', '?object')
 
     delete([triple], graph=graph_uri)
     del st.session_state['all_graphs']
@@ -52,7 +53,7 @@ def __dialog_endpoint(endpoint=None, index=None):
     url = endpoint['url'] if endpoint else ""
     technology = technologies.index(endpoint['technology']) if endpoint else 0
     base_uri = endpoint['base_uri'] if endpoint else "http://www.example.org/"
-    model_uri = endpoint['model_uri'] if endpoint else "base:default"
+    model_uri = endpoint['model_uri'] if endpoint else "base:shacl"
     model_lang = model_langs.index(endpoint['model_lang']) if endpoint else 0
     username = endpoint['username'] if endpoint else ""
     password = endpoint['password'] if endpoint else ""
@@ -62,8 +63,8 @@ def __dialog_endpoint(endpoint=None, index=None):
     endpoint_url = st.text_input('Endpoint URL ❗️', value=url, placeholder="Write an endpoint URL")
     endpoint_technology = st.selectbox('Technology ❗️', options=technologies, index=technology, placeholder="Select a technology")
     endpoint_base_uri = st.text_input('Endpoint base URI ❗️', value=base_uri, help="This is the base URI that will be given to new nodes in the endpoint (plus a UUID).")
-    endpoint_model_uri = st.text_input('Select the graph in which the ontologycal model lies ❗️', value=model_uri, help="This should be the URI (or shortcut) of the graph containing the ontologycal model.")
     endpoint_model_lang = st.selectbox('Select the model language ❗️', options=model_langs, index=model_lang)
+    endpoint_model_uri = st.text_input('Select the graph in which the ontologycal model lies ❗️', value=model_uri, help="This should be the URI (or shortcut) of the graph containing the ontologycal model.")
     endpoint_username = st.text_input('Username', value=username, placeholder="Write a username for this endpoint")
     endpoint_password = st.text_input('Password', value=password, placeholder="Write a password for this endpoint", type='password')
 
@@ -72,6 +73,7 @@ def __dialog_endpoint(endpoint=None, index=None):
     # User commands: name and url are mandatory
     if st.button('Save') and endpoint_name and endpoint_url and endpoint_technology and endpoint_base_uri and endpoint_model_uri and endpoint_model_lang:
         
+        # Parse all the form information into a single object
         new_endpoint = {
             'name': endpoint_name,
             'url': endpoint_url,
@@ -83,11 +85,23 @@ def __dialog_endpoint(endpoint=None, index=None):
             'password': endpoint_password,
         }
 
+        # Update the endpoint, or add it to the list
         if endpoint:
             st.session_state['all_endpoints'][index] = new_endpoint
         else:
             st.session_state['all_endpoints'].append(new_endpoint)
 
+        # In case there is a config present update it on disk
+        if os.path.exists('./logre-config.toml'):
+            obj = {
+                'all_endpoints': st.session_state['all_endpoints'],
+                'all_queries': st.session_state['all_queries']
+            }
+            file = open('./logre-config.toml', 'w')
+            toml.dump(obj, file)
+            file.close()
+
+        # Reset the session variable: There is a configuration, but no endpoint selected
         st.session_state['configuration'] = True
         if 'endpoint' in st.session_state:
             del st.session_state['endpoint']
@@ -116,9 +130,9 @@ def __dialog_create_graph():
         graph_uri = 'base:' + name
 
         # Create triples
-        triple_name = (graph_uri, 'rdfs:label', f"'{graph_name}'")
+        triple_name = Triple(graph_uri, 'rdfs:label', f"'{graph_name}'")
         graph_comment = graph_comment.replace('\n', ' ')
-        triple_comment = (graph_uri, 'rdfs:comment', f"'{graph_comment}'")       
+        triple_comment = Triple(graph_uri, 'rdfs:comment', f"'{graph_comment}'")       
 
         # Insert triples
         insert([triple_name, triple_comment], graph=graph_uri)
@@ -153,7 +167,7 @@ menu()
 
 col1, col2 = st.columns([6, 2], vertical_alignment='center')
 col1.title("Endpoint configuration")
-if st.session_state['configuration']:
+if st.session_state['configuration'] and not os.path.exists('./logre-config.toml'):
     col2.download_button('Download', data=__prepare_configuration(), file_name='logre-config.toml')
 
 st.divider()
@@ -215,11 +229,12 @@ if st.session_state['config-endpoints-list']:
 
 st.divider()
 
+
 ## Graphs Section
 
 if 'endpoint' in st.session_state:
 
-
+    # Title and boxes for graph actions (show/hide graph list)
     col1, col2, col3 = st.columns([5, 2, 2], vertical_alignment='bottom')
     col1.markdown('### Endpoint graphs')
 
@@ -242,7 +257,7 @@ if 'endpoint' in st.session_state:
 
             st.text("")
 
-            # Display all saved endpoints
+            # Display all graphs in sessions
             for i, graph in enumerate(st.session_state['all_graphs']):
                 col1, col2, col3, col4 = st.columns([3, 2, 5, 2], vertical_alignment='bottom')
                 col1.markdown(graph['label'])

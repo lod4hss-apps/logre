@@ -1,5 +1,6 @@
 import streamlit as st
 from lib.sparql_queries import list_entities, insert
+from lib.schema import Triple
 import time
 
 
@@ -52,7 +53,7 @@ def create_triple() -> None:
         object = [entity['uri'] for entity in entities if entity['display_label'] == object_label][0]
         
         # Generate the triple and insert it in the graph
-        triple = (subject, property, object)
+        triple = Triple(subject, property, object)
         insert([triple], graph_to_write['uri'])
 
         # Finalization: validation message and reload

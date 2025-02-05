@@ -4,10 +4,11 @@ import time
 from lib.utils import ensure_uri, generate_uuid
 from lib.sparql_queries import insert, list_entities, get_objects_of, get_subjects_of
 from lib.sparql_shacl import list_available_classes, list_properties_of_node
+from lib.schema import Triple
 
 
 @st.dialog("Create a new Entity", width='large')
-def create_entity_() -> None:
+def create_entity() -> None:
     """
     Dialog function allowing the user to create a new entity.
     User can fill the label, the class and the definition.
@@ -44,11 +45,11 @@ def create_entity_() -> None:
         # Create the correct triples
         triples = []
         if label:
-            triples.append((f"base:{id}", "rdfs:label", f"'{label}'"))
+            triples.append(Triple(f"base:{id}", "rdfs:label", f"'{label}'"))
         if cls:
-            triples.append((f"base:{id}", "rdf:type", ensure_uri(cls)))
+            triples.append(Triple(f"base:{id}", "rdf:type", ensure_uri(cls)))
         if definition:
-            triples.append((f"base:{id}", "rdfs:comment", f"'{definition}'"))
+            triples.append(Triple(f"base:{id}", "rdfs:comment", f"'{definition}'"))
 
         # Insert triples
         insert(triples, graph['uri'])
@@ -68,7 +69,7 @@ def create_entity_() -> None:
 
 
 @st.dialog("Create a new Entity", width='large')
-def create_entity() -> None:
+def create_entity_() -> None:
     """
     Dialog function allowing the user to create a new entity.
     The formular is deducted from the SHACL taken from the Model graph.
@@ -90,7 +91,7 @@ def create_entity() -> None:
         # Generate a uuid for the instance to create
         new_uri = f"base:{generate_uuid()}"
 
-        triples = [(new_uri, 'a', selected_class['uri'])]
+        triples = [Triple(new_uri, 'a', selected_class['uri'])]
         mandatories = []
 
         # Construct the formular
@@ -111,13 +112,13 @@ def create_entity() -> None:
             if property['datatype'] == 'xsd:string':
                 input_str = col2.text_input('Fill object (Literal)' + suffix, key=f'create-entity-field-{i}')
                 if input_str:
-                    triples.append((new_uri, property['uri'], f"'{input_str}'"))
+                    triples.append(Triple(new_uri, property['uri'], f"'{input_str}'"))
 
             # Field: If object should be a HTML
             elif property['datatype'] == 'rdf:HTML':
                 input_html = col2.text_area('Fill object (HTML)' + suffix, key=f'create-entity-field-{i}')
                 if input_html:
-                    triples.append((new_uri, property['uri'], f"'{input_html}'"))
+                    triples.append(Triple(new_uri, property['uri'], f"'{input_html}'"))
 
             # Field: If object (or inverse Object) should be an instance of class
             elif property['datatype'] == '' and property['class'] != '':
@@ -146,9 +147,9 @@ def create_entity() -> None:
 
 
                     if way == "outgoing":
-                        triples.append((selected_object['uri'], property['uri'], new_uri))
+                        triples.append(Triple(selected_object['uri'], property['uri'], new_uri))
                     else:
-                        triples.append((new_uri, property['uri'], selected_object['uri']))
+                        triples.append(Triple(new_uri, property['uri'], selected_object['uri']))
 
 
         if st.button('Create'):

@@ -69,7 +69,7 @@ def menu() -> None:
                 st.session_state["all_graphs"] = [{
                     'uri': None,
                     'label': 'Default',
-                    'comment': "Comment not set",
+                    'comment': "No comment",
                     'activated': True
                 }]
 
@@ -78,8 +78,8 @@ def menu() -> None:
                 for i, graph in enumerate(graphs):
                     st.session_state["all_graphs"].append({
                         'uri': graph['uri'],
-                        'label': graph['label'] if 'label' in graph else "Unknown label",
-                        'comment': graph['comment'] if 'comment' in graph else "Comment not set",
+                        'label': graph['label'],
+                        'comment': graph['comment'],
                         'activated': False
                     })
 

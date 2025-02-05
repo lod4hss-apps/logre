@@ -21,7 +21,7 @@ def init(layout='centered') -> None:
         st.session_state['VERSION'] = version
 
     # If there is a local config, load it
-    if os.path.exists('./logre-config.toml'):
+    if os.path.exists('./logre-config.toml') and 'all_endpoints' not in st.session_state:
         file = open('./logre-config.toml', 'r')
         content = file.read()
         file.close()

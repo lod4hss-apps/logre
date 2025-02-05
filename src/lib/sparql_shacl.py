@@ -12,7 +12,7 @@ def list_available_classes() -> List[Dict[str, str]]:
         WHERE {
             GRAPH base:model {
                 ?node a sh:NodeShape .
-                ?node rdfs:label ?label .
+                ?node sh:name ?label .
                 ?node sh:targetClass ?uri .
             }
         }
@@ -36,7 +36,7 @@ def list_properties_of_node(node: str):
                 optional { ?uri sh:inversePath ?inverseUri_ . }
                 optional { ?uri sh:class ?inverseClass_ . }
 
-                optional { ?propertyNode rdfs:label ?label_ . }
+                optional { ?propertyNode sh:name ?label_ . }
                 optional { ?propertyNode sh:datatype ?datatype_ . }
                 optional { ?propertyNode sh:class ?class_ .}
                 optional { ?propertyNode sh:order ?order_ . }

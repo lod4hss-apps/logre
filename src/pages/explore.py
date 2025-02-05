@@ -7,6 +7,7 @@ from components.find_entities import dialog_find_entity
 from components.create_entity import create_entity
 from components.create_triple import create_triple
 from lib.sparql_queries import list_entity_triples, delete
+from lib.schema import Triple
 
 
 ##### Functions #####
@@ -14,8 +15,8 @@ from lib.sparql_queries import list_entity_triples, delete
 def delete_entity(entity_uri: str):
     """Loop through all graphs (even those not activated) in order to delete all triples related to the given entity."""
 
-    triples_outgoing = (entity_uri, '?predicate', '?object')
-    triples_incoming = ('?subject', '?predicate', entity_uri)
+    triples_outgoing = Triple(entity_uri, '?predicate', '?object')
+    triples_incoming = Triple('?subject', '?predicate', entity_uri)
 
     for graph in st.session_state['all_graphs']:
         delete([triples_outgoing], graph=graph['uri'])
@@ -26,8 +27,8 @@ def delete_entity(entity_uri: str):
 def delete_from_graph(entity_uri: str, graph_uri: str):
     """Delete all triples of a given entity in a given graph."""
 
-    triples_outgoing = (entity_uri, '?predicate', '?object')
-    triples_incoming = ('?subject', '?predicate', entity_uri)
+    triples_outgoing = Triple(entity_uri, '?predicate', '?object')
+    triples_incoming = Triple('?subject', '?predicate', entity_uri)
 
     delete([triples_outgoing], graph=graph_uri)
     delete([triples_incoming], graph=graph_uri)
