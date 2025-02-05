@@ -4,7 +4,7 @@ from components.init import init
 from components.menu import menu
 from components.confirmation import dialog_confirmation
 from lib.sparql_queries import count_graph_triples, insert, delete
-from lib.utils import readable_number, to_snake_case
+from lib.utils import readable_number, to_snake_case, ensure_uri
 from lib.schema import Triple
 
 
@@ -31,13 +31,19 @@ def __delete_endpoint(index) -> None:
     st.rerun()
 
 
-def __delete_graph(graph_uri) -> None:
+def __delete_graph(graph: str) -> None:
     """Delete all statements of a given graph"""
 
-    # The delete "where clause" triple
-    triple = Triple('?subject', '?predicate', '?object')
+    graph_uri = ensure_uri(graph)
 
+    # The delete "where clause" triple: delete all triples from the graph
+    triple = Triple('?subject', '?predicate', '?object')
     delete([triple], graph=graph_uri)
+
+    # Also, from the default graph, delete the label and the comment about the graph (and all other predicates)
+    triple = Triple(graph_uri, '?p', '?o')
+    delete([triple])
+
     del st.session_state['all_graphs']
     st.rerun()
 
@@ -129,13 +135,18 @@ def __dialog_create_graph():
         name = to_snake_case(graph_name)
         graph_uri = 'base:' + name
 
-        # Create triples
+        # Create triples in default graph
         triple_name = Triple(graph_uri, 'rdfs:label', f"'{graph_name}'")
         graph_comment = graph_comment.replace('\n', ' ')
         triple_comment = Triple(graph_uri, 'rdfs:comment', f"'{graph_comment}'")       
 
+        # Also, we in order to make the graph visible in queries, it needs to have at least one triple
+        # So here it creates a dummy triple. This solution is in test, let see in the future if this triple is disturbing or not
+        dummy_triple = Triple('_:dummy1', 'base:dummyPredicate', '_:dummy2')
+
         # Insert triples
-        insert([triple_name, triple_comment], graph=graph_uri)
+        insert([triple_name, triple_comment])
+        insert([dummy_triple], graph=graph_uri)
         # And reset the graphs that are in session, to that, on rerun, they a newly fetched
         del st.session_state['all_graphs']
         
@@ -266,7 +277,7 @@ if 'endpoint' in st.session_state:
 
                 # Button to cleanse a graph
                 if col4.button('🗑️', key=f"config-graph-{i}"):
-                    dialog_confirmation(f'You are about to delete the graph "{graph["label"]}".', __delete_graph, graph_uri=graph['uri'])
+                    dialog_confirmation(f'You are about to delete the graph "{graph["label"]}".', __delete_graph, graph=graph['uri'])
 
             st.text("")
 

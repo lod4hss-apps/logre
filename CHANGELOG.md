@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.7.5 - Date 2025-02-04
+
+Solve the issue where when creating a graph, its label and comment were previously written in the newly graph.
+Now those triples are inserted in the default Graph.
+Also, when creating a graph, it needs to have at least one triple in it. So, on graph creation via Logre, it create a dummy triple.
+Also handle those things on deletion.
+
 ## v1.7.4 - Date 2025-02-04
 
 Refactor SPARQL Queries

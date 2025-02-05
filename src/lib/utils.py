@@ -17,7 +17,7 @@ def ensure_uri(supposed_uri: str) -> str | None:
         return None
 
     # First check if the given URI has a prefix
-    prefixes = ["xsd", "rdf", "rdfs", "owl", "sh", "crm", "sdh", "sdh-shortcut", "sdh-shacl", "ontome", "geov", "base"]
+    prefixes = ["xsd", "rdf", "rdfs", "owl", "sh", "crm", "sdh", "sdh-shortcut", "sdh-shacl", "ontome", "geov", "base", "_"]
     for prefix in prefixes:
         if supposed_uri.startswith(prefix + ":"):
             return supposed_uri
