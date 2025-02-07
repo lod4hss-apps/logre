@@ -9,6 +9,9 @@ def dialog_find_entity() -> None:
     If an entity is selected, set this entity in the session (as 'selected_entity') and close the dialog.
     """
 
+    graph = st.session_state['all_graphs'][st.session_state['activated_graph_index']]
+    st.markdown(f"**Graph: *{graph['label']}***")
+
     # If the user did not yet choose an endpoint, display a message and do nothing else
     if 'endpoint' not in st.session_state:
         st.warning('You must first choose an endpoint')
@@ -17,14 +20,13 @@ def dialog_find_entity() -> None:
     # First, begin to load all the used classes on the endpoint
     # This is to speed up the search with class filtering
     classes = []
-    selected_graphs = [graph for graph in st.session_state['all_graphs'] if graph['activated']]
-    for graph in selected_graphs:
-        with st.spinner(f'Fetching all classes from graph {graph["label"]}...'):
-            classes += list_used_classes(graph['uri'])
+
+    with st.spinner(f'Fetching all classes from graph {graph["label"]}...'):
+        classes += list_used_classes(graph['uri'])
 
     # If no classes has been found on the endpoint
     if len(classes) == 0: 
-        st.info("Nothing is listed as a class on this endpoint")
+        st.info("No entity having a class found on this graph")
         return
 
     # User commands: Select a class, and type an entity name
@@ -39,11 +41,10 @@ def dialog_find_entity() -> None:
         selected_class = None
 
     # If there is something written in the label, find similar entities
-    if label:
+    if label or selected_class:
         with st.spinner("Fetching corresponding entities from endpoint"):
             entities = []
-            for graph in selected_graphs:
-                entities += list_entities(label, selected_class['uri'] if selected_class is not None else None, graph=graph['uri'], limit=None)
+            entities += list_entities(label, selected_class['uri'] if selected_class is not None else None, graph=graph['uri'], limit=20)
 
             # If some entities match: display them with a select option
             st.divider()
@@ -58,7 +59,9 @@ def dialog_find_entity() -> None:
                 if st.button(display_label, type='tertiary', key=f"find_entity_{i}"):
                     st.session_state['selected_entity'] = {
                         'uri': entity['uri'],
-                        'display_label': display_label
+                        'display_label': display_label,
+                        'class_uri': entity['cls'],
+                        'class_label': entity['class_label'],
                     }
                     st.rerun()
 

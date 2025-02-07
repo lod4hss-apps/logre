@@ -42,3 +42,10 @@ class TripleDetailed(Triple):
     object_class: str
     object_class_label: str
     isliteral: str
+
+
+class SHACLclass(TypedDict):
+    node: str # NodeShape uri. Corresponds to "information about a class"
+    uri: str # Class URI eg Person, Birth, ...
+    name: str # Label (sh:name) given to the class
+

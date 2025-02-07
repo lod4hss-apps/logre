@@ -10,7 +10,7 @@ from lib.schema import Triple
 
 # Contants
 technologies = ['Fuseki', 'Allegrograph']
-model_langs = ['SHACL']
+model_langs = ['No ontology', 'SHACL']
 
 
 def __prepare_configuration():
@@ -70,52 +70,56 @@ def __dialog_endpoint(endpoint=None, index=None):
     endpoint_technology = st.selectbox('Technology ❗️', options=technologies, index=technology, placeholder="Select a technology")
     endpoint_base_uri = st.text_input('Endpoint base URI ❗️', value=base_uri, help="This is the base URI that will be given to new nodes in the endpoint (plus a UUID).")
     endpoint_model_lang = st.selectbox('Select the model language ❗️', options=model_langs, index=model_lang)
-    endpoint_model_uri = st.text_input('Select the graph in which the ontologycal model lies ❗️', value=model_uri, help="This should be the URI (or shortcut) of the graph containing the ontologycal model.")
+    endpoint_model_uri = st.text_input('Select the graph in which the ontologycal model lies', value=model_uri, help="This should be the URI (or shortcut) of the graph containing the ontologycal model.")
     endpoint_username = st.text_input('Username', value=username, placeholder="Write a username for this endpoint")
     endpoint_password = st.text_input('Password', value=password, placeholder="Write a password for this endpoint", type='password')
 
     st.text("")
 
     # User commands: name and url are mandatory
-    if st.button('Save') and endpoint_name and endpoint_url and endpoint_technology and endpoint_base_uri and endpoint_model_uri and endpoint_model_lang:
+    if st.button('Save') :
+        if endpoint_name and endpoint_url and endpoint_technology and endpoint_base_uri and endpoint_model_lang:
         
-        # Parse all the form information into a single object
-        new_endpoint = {
-            'name': endpoint_name,
-            'url': endpoint_url,
-            'technology': endpoint_technology,
-            'base_uri': endpoint_base_uri,
-            'model_uri': endpoint_model_uri,
-            'model_lang': endpoint_model_lang,
-            'username': endpoint_username,
-            'password': endpoint_password,
-        }
-
-        # Update the endpoint, or add it to the list
-        if endpoint:
-            st.session_state['all_endpoints'][index] = new_endpoint
-        else:
-            st.session_state['all_endpoints'].append(new_endpoint)
-
-        # In case there is a config present update it on disk
-        if os.path.exists('./logre-config.toml'):
-            obj = {
-                'all_endpoints': st.session_state['all_endpoints'],
-                'all_queries': st.session_state['all_queries']
+            # Parse all the form information into a single object
+            new_endpoint = {
+                'name': endpoint_name,
+                'url': endpoint_url,
+                'technology': endpoint_technology,
+                'base_uri': endpoint_base_uri,
+                'model_uri': endpoint_model_uri,
+                'model_lang': endpoint_model_lang,
+                'username': endpoint_username,
+                'password': endpoint_password,
             }
-            file = open('./logre-config.toml', 'w')
-            toml.dump(obj, file)
-            file.close()
 
-        # Reset the session variable: There is a configuration, but no endpoint selected
-        st.session_state['configuration'] = True
-        if 'endpoint' in st.session_state:
-            del st.session_state['endpoint']
+            # Update the endpoint, or add it to the list
+            if endpoint:
+                st.session_state['all_endpoints'][index] = new_endpoint
+            else:
+                st.session_state['all_endpoints'].append(new_endpoint)
+
+            # In case there is a config present update it on disk
+            if os.path.exists('./logre-config.toml'):
+                obj = {
+                    'all_endpoints': st.session_state['all_endpoints'],
+                    'all_queries': st.session_state['all_queries']
+                }
+                file = open('./logre-config.toml', 'w')
+                toml.dump(obj, file)
+                file.close()
+
+            # Reset the session variable: There is a configuration, but no endpoint selected
+            st.session_state['configuration'] = True
+            if 'endpoint' in st.session_state:
+                del st.session_state['endpoint']
+            
+            # Finalization: validation message and reload
+            st.success('Endpoint saved')
+            time.sleep(1)
+            st.rerun()
         
-        # Finalization: validation message and reload
-        st.success('Endpoint saved')
-        time.sleep(1)
-        st.rerun()
+        else:
+            st.warning('You need to fill all mandatory fields')
 
 
 @st.dialog('Create a graph')

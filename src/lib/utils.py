@@ -71,9 +71,21 @@ def to_snake_case(text: str) -> str:
     return snake_case_text
 
 
-def generate_uuid() -> str:
+def generate_id() -> str:
     "Generate a uuid base on the current time"
-    return str(uuid.uuid5(uuid.NAMESPACE_DNS, str(time.time())))
+
+    timestamp_ms = int(time.time() * 1000)
+    BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+    if timestamp_ms == 0: 
+        return BASE64_ALPHABET[0]
+    
+    result = ""
+    while timestamp_ms:
+        timestamp_ms, remainder = divmod(timestamp_ms, 62)
+        result = BASE64_ALPHABET[remainder] + result
+
+    return result
 
 
 def load_config(file_content) -> None:

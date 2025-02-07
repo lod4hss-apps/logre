@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.8.0 - Date 2025-02-07
+
+Pretty big update:
+- Entity creation formular (with SHACL)
+- Entity card (with SHACL)
+- Entity triples
+- Entity update (on SHACL card)
+
+Also changed how graph are selected (radio instead of checkbox to avoid multiple graph selection)
+
 ## v1.7.5 - Date 2025-02-04
 
 Solve the issue where when creating a graph, its label and comment were previously written in the newly graph.

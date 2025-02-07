@@ -93,9 +93,7 @@ def list_used_classes(graph: str = None) -> List[Entity]:
     response = query(text)
 
     # Ensure an array is returned
-    if not response:
-        return []
-    return response
+    return response or []
 
 
 @st.cache_data(ttl='1d', show_spinner=False)
@@ -126,9 +124,7 @@ def list_used_properties(graph: str = None) -> List[Entity]:
     response = query(text)
 
     # Ensure an array is returned
-    if not response:
-        return []
-    return response
+    return response or []
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
@@ -181,9 +177,7 @@ def list_entities(label: str = None, cls: str = None, limit: int = None, graph =
     response = query(text)
 
     # Ensure an array is returned
-    if not response:
-        return []
-    return response
+    return response or []
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
@@ -260,11 +254,120 @@ def list_entity_triples(entity: str, graph=None) -> List[Triple]:
         ORDER BY ASC(?predicate)
     """
     
-    # Ensure response is an array
+    # Execute the query
     response = query(text)
-    if not response:
-        return []
-    return response
+
+    # Ensure an array is returned
+    return response or []
+
+
+def get_outgoing_triples_raw(subject: str, graph=None) -> List[TripleDetailed]:
+    """
+    Get the list of outgoing triples for the entity in the graph.
+    Labels are RDF
+    """
+
+    # Make sure the given subject entity is a valid URI
+    subject_uri = ensure_uri(subject)
+    graph_uri = ensure_uri(graph)
+
+    # Prepare the query
+    text = """
+        SELECT
+            ('""" + subject_uri + """' as ?subject)
+            (COALESCE(?subject_label_, 'No label') as ?subject_label) 
+            (COALESCE(?subject_class_, 'No class') as ?subject_class) 
+            (COALESCE(?subject_class_label_, ?subject_class) as ?subject_class_label)
+            ?predicate 
+            (COALESCE(?predicate_label_, ?predicate) as ?predicate_label)
+            ?object 
+            (COALESCE(?object_label_, ?object) as ?object_label) 
+            (COALESCE(?object_class_, 'No class') as ?object_class) 
+            (COALESCE(?object_class_label_, ?object_class) as ?object_class_label)
+            (isLiteral(?object) as ?object_literal)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
+                """ + subject_uri + """ ?predicate ?object . 
+                optional { """ + subject_uri + """ rdfs:label ?subject_label_ . }
+                optional { 
+                    """ + subject_uri + """ a ?subject_class_ .
+                    optional {
+                        ?subject_class_ rdfs:label ?subject_class_label_ .
+                    }
+                }
+                optional { ?predicate rdfs:label ?predicate_label_ . }
+                optional { ?object rdfs:label ?object_label_ . }
+                optional { 
+                    ?object a ?object_class_ .
+                    optional {
+                        ?object_class_ rdfs:label ?object_class_label_ .
+                    }
+                }
+            """ + ("}" if graph else "") + """
+        }
+    """
+
+    # Execute the query
+    response = query(text)
+
+    # Ensure an array is returned
+    return response or []
+
+
+def get_incoming_triples_raw(object: str, graph=None) -> List[TripleDetailed]:
+    """
+    Get the list of triples linked to the Entity.
+    Make a union of all triples where the entity is subject, 
+    and all triples where entity is object.
+    Finally order by property ASC (alpha).
+    """
+
+    # Make sure the given subject entity is a valid URI
+    object_uri = ensure_uri(object)
+    graph_uri = ensure_uri(graph)
+
+    # Prepare the query
+    text = """
+        SELECT
+            ?subject
+            (COALESCE(?subject_label_, 'No label') as ?subject_label) 
+            (COALESCE(?subject_class_, 'No class') as ?subject_class) 
+            (COALESCE(?subject_class_label_, ?subject_class) as ?subject_class_label)
+            ?predicate 
+            (COALESCE(?predicate_label_, ?predicate) as ?predicate_label)
+            ('""" + object_uri + """' as ?object) 
+            (COALESCE(?object_label_, ?object) as ?object_label) 
+            (COALESCE(?object_class_, 'No class') as ?object_class) 
+            (COALESCE(?object_class_label_, ?object_class) as ?object_class_label)
+            (isLiteral(?object) as ?object_literal)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
+                ?subject ?predicate """ + object_uri + """ . 
+                optional { ?subject rdfs:label ?subject_label_ . }
+                optional { 
+                    ?subject a ?subject_class_ .
+                    optional {
+                        ?subject_class_ rdfs:label ?subject_class_label_ .
+                    }
+                }
+                optional { ?predicate rdfs:label ?predicate_label_ . }
+                optional { """ + object_uri + """ rdfs:label ?object_label_ . }
+                optional { 
+                    """ + object_uri + """ a ?object_class_ .
+                    optional {
+                        ?object_class_ rdfs:label ?object_class_label_ .
+                    }
+                }
+            """ + ("}" if graph else "") + """
+        }
+    """
+
+    # Execute the query
+    response = query(text)
+
+    # Ensure an array is returned
+    return response or []
+
 
 
 @st.cache_data(ttl="1d", show_spinner=False)
@@ -287,11 +390,11 @@ def list_graphs(_error_location) -> List[Entity]:
         }
     """    
 
-    # Ensure response is an array
+    # Execute the query
     response = query(text, _error_location=_error_location)
-    if not response:
-        return []
-    return response
+    
+    # Ensure an array is returned
+    return response or []
 
 
 @st.cache_data(ttl=60, show_spinner=False)
@@ -319,11 +422,15 @@ def count_graph_triples(graph: str) -> int:
     {where_end}
     """
 
-    # Ensure response is an array
+    # Execute the query
     response = query(text)
-    if not response:
-        return 0
+
+    # Make sure a number is answered
+    if not response: return 0
     return int(response[0]['count'])
+
+
+
 
 
 def get_objects_of(subject: str, property: str = None):
@@ -343,11 +450,11 @@ def get_objects_of(subject: str, property: str = None):
         WHERE { """ + query_line + """ . }
     """
     
-    # Ensure response is an array
+    # Execute the query
     response = query(text)
-    if not response:
-        return []
-    return response
+
+    # Ensure an array is returned
+    return response or []
 
 
 
@@ -368,8 +475,9 @@ def get_subjects_of(object: str, property: str = None):
         WHERE { """ + query_line + """ . }
     """
     
-    # Ensure response is an array
+    # Execute the query
     response = query(text)
-    if not response:
-        return []
-    return response
+
+    # Ensure an array is returned
+    return response or []
+
