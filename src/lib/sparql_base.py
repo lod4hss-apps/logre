@@ -1,144 +1,121 @@
 from typing import Dict, List
 import streamlit as st
-import pandas as pd
 from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
 from urllib.error import HTTPError
 from urllib.error import URLError
-
-def __get_prefixes() -> str:
-    """
-    Gives the string prefixes needed for the queries.
-    This function exists to avoid to have prefixes in spreaded places.
-    """
-
-    return f"""
-        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX owl: <http://www.w3.org/2002/07/owl#>
-        PREFIX sh: <http://www.w3.org/ns/shacl#>
-        PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
-        PREFIX sdh: <https://sdhss.org/ontology/core/>
-        PREFIX sdh-shortcut: <https://sdhss.org/ontology/shortcuts/>
-        PREFIX sdh-shacl: <https://sdhss.org/shacl/profiles/>
-        PREFIX ontome: <https://ontome.net/ontology/>
-        PREFIX base: <{st.session_state['endpoint']['base_uri']}>
-    """
-
-
-def __replace_prefixes(uri: str):
-    """
-    This function allows to have short and concise query results,
-    displays a prefix instead of a full URI.
-    """
-
-    uri = uri.replace('http://www.w3.org/2001/XMLSchema#', 'xsd:')
-    uri = uri.replace('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'rdf:')
-    uri = uri.replace('http://www.w3.org/2000/01/rdf-schema#', 'rdfs:')
-    uri = uri.replace('http://www.w3.org/2002/07/owl#', 'owl:')
-    uri = uri.replace('http://www.w3.org/ns/shacl#', 'sh:')
-    uri = uri.replace('http://www.cidoc-crm.org/cidoc-crm/', 'crm:')
-    uri = uri.replace('https://sdhss.org/ontology/core/', 'sdh:')
-    uri = uri.replace('https://sdhss.org/ontology/shortcuts/', 'sdh-shortcut:')
-    uri = uri.replace('https://sdhss.org/shacl/profiles/', 'sdh-shacl:')
-    uri = uri.replace('https://ontome.net/ontology/', 'ontome:')
-    uri = uri.replace(st.session_state['endpoint']['base_uri'], 'base:')
-    return uri
-
+from lib.prefixes import get_sparql_prefixes, shorten_uri
+import lib.state as state
+from schema import Triple, EndpointTechnology
+from lib.utils import ensure_uri
 
 def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
     """Transform an object coming from a SPARQL query (through SPARQLWrapper) into a dictionnary for better use."""
 
     obj: Dict[str, str] = {}
     for key in row.keys():
-        obj[key] = __replace_prefixes(row[key]["value"])
+        obj[key] = shorten_uri(row[key]["value"])
         # obj[key] = row[key]["value"]
     return obj
 
 
-def query(request: str, _error_location=None) -> List[Dict[str, str]] | bool:
+def query(request: str, caller: str = None, add_prefix: bool = True) -> List[Dict[str, str]] | bool:
     """
     Execute the given request against the in session endpoint.
-    Request needs to be only SELECT: won't work if it is a INSERT or DELETE request.
-    Leading underscore for "_error_location" arg is to tell streamlit to not serialize the argument.
+    Request needs to be only SELECT: won't work if it is an INSERT or a DELETE request.
     """
+
+    # From session state
+    endpoint = state.get_endpoint()
 
     # Init the endpoint
     sparql_endpoint = SPARQLWrapper(
-        st.session_state['endpoint']['url'],
+        endpoint.url,
         agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     )
     sparql_endpoint.setReturnFormat(JSON)
 
     # If there is a user/password in selected endpoint, take it
-    if st.session_state['endpoint']['username'] != '' or st.session_state['endpoint']['password'] != '':
-        sparql_endpoint.setCredentials(st.session_state['endpoint']['username'], st.session_state['endpoint']['password'])
+    if endpoint.username != '' or endpoint.password != '':
+        sparql_endpoint.setCredentials(endpoint.username, endpoint.password)
 
     # Prepare the query
-    sparql_endpoint.setQuery(__get_prefixes() + request)
+    text = get_sparql_prefixes() + request if add_prefix else request
+    sparql_endpoint.setQuery(text)
 
     # DEBUG
     print('==============')
-    print(__get_prefixes() + request)
+    print(text)
 
     # Execute the query, handles errors,
     try: 
         response = sparql_endpoint.queryAndConvert()["results"]["bindings"]
     except SPARQLExceptions.QueryBadFormed as error:
-        if _error_location:
-            _error_location.error(error.msg)
-        else:
-            st.error(error.msg)
+        msg = error.msg
+        if caller: msg += f' Called by <{caller}>'
+        st.error(msg)
         return False
     except HTTPError as error:
-        if _error_location:
-            _error_location.error(f"HTTP Error {error.code}: {error.reason}")
-        else:
-            st.error(f"HTTP Error {error.code}: {error.reason}")
+        msg = f"HTTP Error {error.code}: {error.reason}."
+        if caller: msg += f' Called by <{caller}>'
+        st.error(msg)
         return False
     except URLError as error:
-        _error_location.error(f"URL Error: {error.reason}")
+        msg = f"URL Error: {error.reason}"
+        if caller: msg += f' Called by <{caller}>'
+        st.error(msg)
         return False
 
     # and transform the object
     response = list(map(__handle_row, response))
 
-    # If the answer is empty, return an actual empty array
-    if response == [{}]: 
-        return []
-    
+    # Make sure to always return an array if there was no error, 
+    # Event if there is no rows to return
+    if response == [{}]: return []
     return response
 
 
-def execute(request: str) -> bool:
+def execute(request: str, caller: str = None, add_prefix: bool = True) -> bool:
     """
     Execute the given request against the previously set endpoint.
     Request needs to be only INSERTs or DELETEs.
     """
+
+    # From session state
+    endpoint = state.get_endpoint()
     
     # Init the endpoint
-    sparql_endpoint = SPARQLWrapper(st.session_state['endpoint']['url'])
+    sparql_endpoint = SPARQLWrapper(st.session_state['endpoint'].url)
         
     # Prepare the query
-    sparql_endpoint.setQuery(__get_prefixes() + request)
+    text = get_sparql_prefixes() + request if add_prefix else request
+    sparql_endpoint.setQuery(text)
     sparql_endpoint.method = "POST"
 
     # If there is a user/password in selected endpoint, take it
-    if st.session_state['endpoint']['username'] != '' or st.session_state['endpoint']['password'] != '':
-        sparql_endpoint.setCredentials(st.session_state['endpoint']['username'], st.session_state['endpoint']['password'])
+    if endpoint.username != '' or endpoint.password != '':
+        sparql_endpoint.setCredentials(endpoint.username, endpoint.password)
         
     # DEBUG
     print('==============')
-    print(__get_prefixes() + request)
+    print(text)
 
     # Execute the query
     try: 
         sparql_endpoint.query()
     except SPARQLExceptions.QueryBadFormed as error:
-        st.error(error.msg)
+        msg = error.msg
+        if caller: msg += f' Called by <{caller}>'
+        st.error(msg)
         return False
     except HTTPError as error:
-        st.error(f"HTTP Error {error.code}: {error.reason}")
+        msg = f"HTTP Error {error.code}: {error.reason}."
+        if caller: msg += f' Called by <{caller}>'
+        st.error(msg)
+        return False
+    except URLError as error:
+        msg = f"URL Error: {error.reason}"
+        if caller: msg += f' Called by <{caller}>'
+        st.error(msg)
         return False
 
     # The idea behind clearing the cache at this place is to make sure that executed 
@@ -149,13 +126,86 @@ def execute(request: str) -> bool:
     return True
 
 
-def run(query_string: str) -> bool | List[Dict[str, str]]:
+def run(query_string: str, add_prefix: bool = True) -> bool | List[Dict[str, str]]:
     """Wrapper of "query" and "execute" function."""
     
     if 'delete' in query_string.lower() or 'insert' in query_string.lower():
-        return execute(query_string)
+        return execute(query_string, add_prefix=add_prefix)
     elif 'select' in query_string.lower():
-        return query(query_string)
+        return query(query_string, add_prefix=add_prefix)
     else:
         st.error('Query error: Only "SELECT", "INSERT", "DELETE" are supported.')
         return False
+
+
+
+def insert(triples: List[Triple] | Triple, graph: str = None) -> None:
+    """
+    From a list (or unique) of Triple instances, insert them (it) 
+    in the endpoint, in the given graph.
+    """
+
+    # Special use case for allegrograph: tt allows multiple same triples to exist simultaneously.
+    # So on inserting, we first delete the existing, to be sure
+    if state.get_endpoint().technology == EndpointTechnology.ALLEGROGRAPH:
+        delete(triples, graph)
+
+    # If only a single triple is given, transform is into a list
+    if isinstance(triples, Triple):
+        triples = [triples]
+
+    # Make sure the given graph is a valid URI
+    graph_uri = ensure_uri(graph)
+
+    # Since insert can be pretty huge, here we split them
+    # in "smaller insert" of maximum 10k triples.
+
+    chunk_size = 1000
+    chunked_triples = [triples[i: i + chunk_size] for i in range(0, len(triples), chunk_size)]
+    
+    for small_triples in chunked_triples:
+        # Transform the triples into strings
+        triples_str = '\n'.join(map(lambda triple: triple.to_sparql(), small_triples))
+
+        # Prepare the query
+        text = """
+            INSERT DATA {
+                """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
+                """ + triples_str + """
+                """ + ("}" if graph else "") + """
+            }
+        """
+
+        # Insert the triples in the endpoint
+        execute(text)
+
+
+def delete(triples: List[Triple] | Triple, graph: str = None) -> None:
+    """
+    From a list (or unique) of Triple instances, delete them (it) 
+    from the endpoint, from the given graph.
+    Triples can here be either full URIs, or variables (to make deletion rules)
+    """
+
+    # If only a single triple is given, transform is into a list
+    if isinstance(triples, Triple):
+        triples = [triples]
+        
+    # Make sure the given graph is a valid URI
+    graph_uri = ensure_uri(graph)
+
+    # Transform the triples into strings
+    triples_str = '\n'.join(map(lambda triple: triple.to_sparql(), triples))
+
+    # Prepare query
+    text = """
+        DELETE WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
+                """ + triples_str + """
+            """ + ("}" if graph else "") + """
+        }
+    """
+
+    # Execute
+    execute(text)
+ 

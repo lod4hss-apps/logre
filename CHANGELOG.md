@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.8.1 - Date 2025-02-12
+
+Full refactoring of the application
+- Rework a lot of pieces
+- Changed the GUI
+- Solve bugs
+
 ## v1.8.0 - Date 2025-02-07
 
 Pretty big update:

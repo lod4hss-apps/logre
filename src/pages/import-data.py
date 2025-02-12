@@ -2,24 +2,40 @@ from typing import Any
 import streamlit as st
 from components.init import init
 from components.menu import menu
-from components.confirmation import dialog_confirmation
+from components.dialog_confirmation import dialog_confirmation
 import requests
+import lib.state as state
+from schema import EndpointTechnology
+
+all_file_formats = ['Turtle (eg <name.ttl>)', 'CSV (eg <name.csv>)']
+all_file_types = ['ttl', 'csv']
 
 
 def __get_import_url(graph_uri: str = ""):
 
-    technology = st.session_state['endpoint']['technology']
-    endpoint_url = st.session_state['endpoint']['url']
+    technology = endpoint.technology
+    endpoint_url = endpoint.url
 
-    if technology == 'Allegrograph':
-        # If it is an Allegrograph endpoint
+    # Allegrograph endpoint
+    if technology == EndpointTechnology.ALLEGROGRAPH.value:
+        
+        # If in the Allegrograph endpoint, there is the trailing '/sparql', remove it: 
+        # import does not work on this URL
+        allegrograph_base_url = endpoint_url.replace('/sparql', '')
+
+        # In a dedicated graph, create the correct URL
         if graph_uri: 
-            graph_uri = graph_uri.replace('base:', 'http://geovistory.org/information/')
+            graph_uri = graph_uri.replace('base:', endpoint.base_uri)
+            # Make the graph URI URL compatible
             graph_uri = '%3C' + graph_uri.replace(':', '%3A').replace('/', '%2F') + '%3E'
-            allegrograph_base_url = endpoint_url.replace('/sparql', '')
-            return f"{allegrograph_base_url}/statements?context={graph_uri}"
+
+            # Create and return  the import URL
+            url = f"{allegrograph_base_url}/statements?context={graph_uri}"
         else: 
-            return allegrograph_base_url
+            # If it is in the default graph, nothing is needed to do
+            url = f"{allegrograph_base_url}/statements"
+
+        return url
     
     elif technology == 'Fuseki':
         # If it is a Fuseki endpoint
@@ -30,7 +46,7 @@ def __get_import_url(graph_uri: str = ""):
             return endpoint_url
 
 
-def upload_turtle_file(file: Any, graph_uri: str):
+def __upload_turtle_file(file: Any, graph_uri: str):
 
     # The turtle data
     ttl_data = file.read().decode("utf-8")
@@ -38,15 +54,20 @@ def upload_turtle_file(file: Any, graph_uri: str):
     # Upload
     url = __get_import_url(graph_uri)
     headers = {"Content-Type": "text/turtle"}
-    response = requests.post(url, data=ttl_data, headers=headers, auth=(st.session_state['endpoint']['username'], st.session_state['endpoint']['password']))
+    authentication = (endpoint.username, endpoint.password)
+    response = requests.post(url, data=ttl_data, headers=headers, auth=authentication)
 
     # Check response
     if response.status_code >= 400:
         st.error(f"Failed to upload file. Status code: {response.status_code}. Reason: {response.reason}. Message: {response.text}.")
         return 'error'
     else:
+        # We clear the cache, because it needs to refetch the needed information: 
+        # If for example, imported data is the model, we need to fetch it on next occasion
+        # Which won't happen if the cache is not cleared.
         st.cache_data.clear()
-        del st.session_state['all_graphs']
+
+    state.set_toast('Data inserted', ':material/file_upload:')
 
 
 
@@ -55,36 +76,51 @@ def upload_turtle_file(file: Any, graph_uri: str):
 init()
 menu()
 
-if "endpoint" not in st.session_state:
-    st.warning('You must first chose an endpoint in the menu before accessing explore page')
+# From state
+endpoint = state.get_endpoint()
+all_graphs = state.get_graphs()
+
+# Title
+st.title("Import data")
+st.text('')
+
+# Can't import anything if there is no endpoint
+if not endpoint:
+
+    st.warning('You need to select an endpoint first (menu on the left).')
 
 else:
 
     col1, col2 = st.columns([1, 1])
 
     # Graph selection
-    graphs_labels = [graph['label'] for graph in st.session_state['all_graphs']]
-    graph_label = col1.selectbox('Select the graph in which to import data', graphs_labels)  
+    graphs_labels = [graph.label for graph in all_graphs]
+    graph_label = col1.selectbox('Select the graph in which to import data', options=graphs_labels, index=None)  
 
-    # Fetch the graph URI
+    # Fetch the graph
     if graph_label:
-        selected_graph = [graph for graph in st.session_state['all_graphs'] if graph['label'] == graph_label][0]
+        graph_index = graphs_labels.index(graph_label)
+        selected_graph = all_graphs[graph_index]
 
     # File format selection
-    all_formats = ['Turtle (e.g. name.ttl)']
-    format = col2.selectbox('Select the file format', options=all_formats, disabled=(graph_label is None))
-    if format == all_formats[0]:
-        file_type = 'ttl'
+    format = col2.selectbox('Select the file format', options=all_file_formats, disabled=(graph_label is None))
+    if format:
+        format_index = all_file_formats.index(format)
+        file_type = all_file_types[format_index]
 
-    # File uploader
-    file = st.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None))
-    st.text('')
 
-    if file and file_type == 'ttl' and st.button('Upload'):
-        dialog_confirmation(
-            f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
-            callback=upload_turtle_file, 
-            file=file,
-            graph_uri=selected_graph['uri']
-        )
+    if file_type == "csv":
+        st.write('Coming soon')
+    else :
 
+        # File uploader
+        file = st.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None or graph_label is None))
+        st.text('')
+
+        if graph_label and format and file and file_type == 'ttl' and st.button('Upload'):
+            dialog_confirmation(
+                f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
+                callback=__upload_turtle_file, 
+                file=file,
+                graph_uri=selected_graph.uri
+            )

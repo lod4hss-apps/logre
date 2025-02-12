@@ -37,6 +37,4 @@ def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
         # thus, nothing to do especially not closing the dialog
         if result != 'error':
             # Finalization: validation message and reload
-            st.success('Done.')
-            time.sleep(2)
             st.rerun()

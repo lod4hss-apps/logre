@@ -1,9 +1,7 @@
 import re
 import unicodedata
-import uuid
 import time
-import toml
-import streamlit as st
+
 
 def ensure_uri(supposed_uri: str) -> str | None:
     """
@@ -23,7 +21,7 @@ def ensure_uri(supposed_uri: str) -> str | None:
             return supposed_uri
 
     # Then check if it is a value
-    if supposed_uri.startswith("'") and supposed_uri.endswith("'"):
+    if (supposed_uri.startswith("'") and supposed_uri.endswith("'")) or (supposed_uri.startswith('"') and supposed_uri.endswith('"')):
         return supposed_uri
     
     # If there is the "a" keyword, keep it
@@ -85,16 +83,5 @@ def generate_id() -> str:
         timestamp_ms, remainder = divmod(timestamp_ms, 62)
         result = BASE64_ALPHABET[remainder] + result
 
-    return result
+    return result[::-1]
 
-
-def load_config(file_content) -> None:
-    """From a file content, parse it as configuration and set it in session"""
-
-    config = toml.loads(file_content)
-
-    st.session_state['configuration'] = True
-    if 'all_endpoints' in config:
-        st.session_state['all_endpoints'] = config['all_endpoints']
-    if 'all_queries' in config:
-        st.session_state['all_queries'] = config['all_queries']

@@ -3,7 +3,7 @@ from components.init import init
 from components.menu import menu
 
 
-def get_read_me_content() -> str:
+def get_getting_started_content() -> str:
     readme_file = open('./GETTING-STARTED.md', 'r')
     content = readme_file.read()
     readme_file.close()
@@ -15,4 +15,4 @@ def get_read_me_content() -> str:
 init()
 menu()
 
-st.markdown(get_read_me_content())
+st.markdown(get_getting_started_content())

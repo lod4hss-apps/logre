@@ -2,387 +2,26 @@ from typing import List, TypedDict, Dict
 import streamlit as st
 from lib.sparql_base import query, execute
 from lib.utils import ensure_uri
-from lib.schema import Entity, EntityDetailed, Triple, TripleDetailed
+from lib.schema import EntityDetailed, TripleDetailed
+from schema import Graph, Triple, OntologyFramework, Entity
+import lib.state as state
+from lib.sparql_noframework import get_noframework_ontology
+from lib.sparql_shacl import get_shacl_ontology
+from schema.ontology import Ontology
+from schema import DisplayTriple
+import pandas as pd
 
-
-def insert(triples: List[Triple], graph: str = None) -> None:
-    """
-    From a list of tuples containing the triples in tuple format
-    (('subject', 'predicate', 'object)), insert them in the endpoint,
-    in the given graph.
-    """
-
-    # Make sure the given graph is a valid URI
-    graph_uri = ensure_uri(graph)
-
-    # Since insert can be pretty huge, here we split 
-    # in "smaller insert" of maximum 10k triples.
-    step_nb = 10000
-    for i in range(0, len(triples), step_nb):
-        
-        # Take only selected triples
-        selected_triples = triples[i : i + step_nb]
-
-        # Transform the triples into strings
-        triples_str = '\n'.join(map(lambda triple: triple.to_sparql(), selected_triples))
-        
-        # Prepare the query
-        text = """
-            INSERT DATA {
-                """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
-                """ + triples_str + """
-                """ + ("}" if graph else "") + """
-            }
-        """
-
-        # Insert the triples in the endpoint
-        execute(text)
-
-
-def delete(triples: List[Triple], graph: str = None) -> None:
-    """
-    From a list of tuples containing the triples in ('subject', 'predicate', 'object')
-    format, deleted from the endpoint.
-    triples can be raw triple, or rules with variables.
-    """
-
-    # Make sure the given graph is a valid URI
-    graph_uri = ensure_uri(graph)
-
-    # Transform the triples into strings
-    triples_str = '\n'.join(map(lambda triple: triple.to_sparql(), triples))
-
-    # Prepare query
-    text = """
-        DELETE WHERE {
-            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
-                """ + triples_str + """
-            """ + ("}" if graph else "") + """
-        }
-    """
-
-    # Execute
-    execute(text)
- 
 
 @st.cache_data(ttl="1d", show_spinner=False)
-def list_used_classes(graph: str = None) -> List[Entity]:
-    """
-    List all classes available on the endpoint and graph, if specified. 
-    Does not look at the ontology, but on how classes are used
-    (ie: objects of 'subject a object' triples).
-    """
-
-    # Make sure the given graph is a valid URI
-    graph_uri = ensure_uri(graph)
+def list_graphs() -> List[Graph]:
+    """List all graphs available in the SPARQL endpoint."""
 
     # Prepare the query
     text = """
         SELECT DISTINCT 
             ?uri 
             (COALESCE(?label_, ?uri) as ?label)
-        WHERE { 
-            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
-                ?s a ?uri .
-                optional { ?uri rdfs:label ?label_ . }
-            """ + ("}" if graph else "") + """
-        }
-    """
-
-    # Execute on the endpoint
-    response = query(text)
-
-    # Ensure an array is returned
-    return response or []
-
-
-@st.cache_data(ttl='1d', show_spinner=False)
-def list_used_properties(graph: str = None) -> List[Entity]:
-    """
-    List all properties available on the endpoint and graph. 
-    Does not look at the ontology, but on how properties are used 
-    (ie: properties of 'subject property object' triples).
-    """
-
-    # Make sure the given graph is a valid URI
-    graph_uri = ensure_uri(graph)
-
-    # Prepare the query
-    text = """
-        SELECT DISTINCT 
-            ?uri 
-            (COALESCE(?label_, ?uri) as ?label)
-        WHERE { 
-            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
-                ?subject ?uri ?object .
-                optional { ?uri rdfs:label ?label_ . }
-            """ + ("}" if graph else "") + """
-        }
-    """
-
-    # Execute on the endpoint
-    response = query(text)
-
-    # Ensure an array is returned
-    return response or []
-
-
-@st.cache_data(ttl="1d", show_spinner=False)
-def list_entities(label: str = None, cls: str = None, limit: int = None, graph = None) -> List[EntityDetailed]:
-    """
-    Fetch the list of entities on the endpoint with:
-    Args:
-        label (str): the text that should be included in entity's rdfs:label. If None, fetch all entities.
-        cls (str): entity's class. Filter by the given class, if specified
-        limit (int): max number of retrived entities. If None, no limit is applied
-    """
-
-    # Make sure the given class is a valid URI
-    class_uri = ensure_uri(cls)
-    # Make sure the given graph is a valid URI
-    graph_uri = ensure_uri(graph)
-
-    # Create parts of the request, depending on args:
-
-    # Get the entity label
-    entity_label = f"?uri rdfs:label ?label ."
-    # Only result of the given class if provided, else fetch the class
-    entity_class = f"?uri a {class_uri} ." if cls else "optional { ?uri a ?cls_ . }"
-    # Get the class label
-    class_label = "optional { " + (f"{class_uri} rdfs:label ?class_label_ ." if cls else f"?cls_ rdfs:label ?class_label_ .") + " }"
-    # Filter the result with the provided string
-    label_filter = f"FILTER(CONTAINS(LCASE(?label), '{label.lower()}')) ." if label else ""
-    # Limit
-    limit = f"LIMIT {limit}" if limit else ""
-
-    # Build the query
-    text = """
-        SELECT DISTINCT 
-            ?uri 
-            ?label 
-            (COALESCE(?cls_, '""" + (cls or 'Unknown') + """') as ?cls) 
-            (COALESCE(?class_label_, ?cls) as ?class_label)
-        WHERE {
-            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
-                """ + entity_class + """
-                """ + label_filter + """
-                """ + entity_label + """
-                """ + class_label + """
-            """ + ("}" if graph else "") + """
-        }
-        """ + limit + """
-    """
-
-    # Execute on the endpoint
-    response = query(text)
-
-    # Ensure an array is returned
-    return response or []
-
-
-@st.cache_data(ttl="1d", show_spinner=False)
-def list_entity_triples(entity: str, graph=None) -> List[Triple]:
-    """
-    Get the list of triples linked to the Entity.
-    Make a union of all triples where the entity is subject, 
-    and all triples where entity is object.
-    Finally order by property ASC (alpha).
-    """
-
-    # Make sure the given entity is a valid URI
-    entity_uri = ensure_uri(entity)
-
-    # Only if the graph is not default (None)
-    graph_begin = "GRAPH " + ensure_uri(graph) + " {" if graph else ""
-    graph_end = "}" if graph else ""
-
-    # Prepare the query
-    text = """
-        SELECT  
-            ?subject 
-            (COALESCE(?subject_label_, 'No label') as ?subject_label) 
-            (COALESCE(?subject_class_, 'No class') as ?subject_class) 
-            (COALESCE(?subject_class_label_, ?subject_class) as ?subject_class_label)
-            ?predicate 
-            (COALESCE(?predicate_label_, ?predicate) as ?predicate_label)
-            ?object 
-            (COALESCE(?object_label_, ?object) as ?object_label) 
-            (COALESCE(?object_class_, 'No class') as ?object_class) 
-            (COALESCE(?object_class_label_, ?object_class) as ?object_class_label)
-            (isLiteral(?object) as ?object_literal)
-        WHERE {
-            """ + graph_begin + """
-            {
-                """ + entity_uri + """ ?predicate ?object . 
-                optional { """ + entity_uri + """ rdfs:label ?subject_label_ . }
-                optional { 
-                    """ + entity_uri + """ a ?subject_class_ .
-                    optional {
-                        ?subject_class_ rdfs:label ?subject_class_label_ .
-                    }
-                }
-                optional { ?predicate rdfs:label ?predicate_label_ . }
-                optional { ?object rdfs:label ?object_label_ . }
-                optional { 
-                    ?object a ?object_class_ .
-                    optional {
-                        ?object_class_ rdfs:label ?object_class_label_ .
-                    }
-                }
-            }
-            UNION
-            {
-                ?subject ?predicate """ + entity_uri + """ . 
-                optional { ?subject rdfs:label ?subject_label_ . }
-                optional { 
-                    ?subject a ?subject_class_ .
-                    optional {
-                        ?subject_class_ rdfs:label ?subject_class_label_ .
-                    }
-                }
-                optional { ?predicate rdfs:label ?predicate_label_ . }
-                optional { """ + entity_uri + """ rdfs:label ?object_label_ . }
-                optional { 
-                    """ + entity_uri + """ a ?object_class_ .
-                    optional {
-                        ?object_class_ rdfs:label ?object_class_label_ .
-                    }
-                }
-            }
-            """ + graph_end + """
-        }
-        ORDER BY ASC(?predicate)
-    """
-    
-    # Execute the query
-    response = query(text)
-
-    # Ensure an array is returned
-    return response or []
-
-
-def get_outgoing_triples_raw(subject: str, graph=None) -> List[TripleDetailed]:
-    """
-    Get the list of outgoing triples for the entity in the graph.
-    Labels are RDF
-    """
-
-    # Make sure the given subject entity is a valid URI
-    subject_uri = ensure_uri(subject)
-    graph_uri = ensure_uri(graph)
-
-    # Prepare the query
-    text = """
-        SELECT
-            ('""" + subject_uri + """' as ?subject)
-            (COALESCE(?subject_label_, 'No label') as ?subject_label) 
-            (COALESCE(?subject_class_, 'No class') as ?subject_class) 
-            (COALESCE(?subject_class_label_, ?subject_class) as ?subject_class_label)
-            ?predicate 
-            (COALESCE(?predicate_label_, ?predicate) as ?predicate_label)
-            ?object 
-            (COALESCE(?object_label_, ?object) as ?object_label) 
-            (COALESCE(?object_class_, 'No class') as ?object_class) 
-            (COALESCE(?object_class_label_, ?object_class) as ?object_class_label)
-            (isLiteral(?object) as ?object_literal)
-        WHERE {
-            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
-                """ + subject_uri + """ ?predicate ?object . 
-                optional { """ + subject_uri + """ rdfs:label ?subject_label_ . }
-                optional { 
-                    """ + subject_uri + """ a ?subject_class_ .
-                    optional {
-                        ?subject_class_ rdfs:label ?subject_class_label_ .
-                    }
-                }
-                optional { ?predicate rdfs:label ?predicate_label_ . }
-                optional { ?object rdfs:label ?object_label_ . }
-                optional { 
-                    ?object a ?object_class_ .
-                    optional {
-                        ?object_class_ rdfs:label ?object_class_label_ .
-                    }
-                }
-            """ + ("}" if graph else "") + """
-        }
-    """
-
-    # Execute the query
-    response = query(text)
-
-    # Ensure an array is returned
-    return response or []
-
-
-def get_incoming_triples_raw(object: str, graph=None) -> List[TripleDetailed]:
-    """
-    Get the list of triples linked to the Entity.
-    Make a union of all triples where the entity is subject, 
-    and all triples where entity is object.
-    Finally order by property ASC (alpha).
-    """
-
-    # Make sure the given subject entity is a valid URI
-    object_uri = ensure_uri(object)
-    graph_uri = ensure_uri(graph)
-
-    # Prepare the query
-    text = """
-        SELECT
-            ?subject
-            (COALESCE(?subject_label_, 'No label') as ?subject_label) 
-            (COALESCE(?subject_class_, 'No class') as ?subject_class) 
-            (COALESCE(?subject_class_label_, ?subject_class) as ?subject_class_label)
-            ?predicate 
-            (COALESCE(?predicate_label_, ?predicate) as ?predicate_label)
-            ('""" + object_uri + """' as ?object) 
-            (COALESCE(?object_label_, ?object) as ?object_label) 
-            (COALESCE(?object_class_, 'No class') as ?object_class) 
-            (COALESCE(?object_class_label_, ?object_class) as ?object_class_label)
-            (isLiteral(?object) as ?object_literal)
-        WHERE {
-            """ + ("GRAPH " + graph_uri + " {" if graph else "") + """
-                ?subject ?predicate """ + object_uri + """ . 
-                optional { ?subject rdfs:label ?subject_label_ . }
-                optional { 
-                    ?subject a ?subject_class_ .
-                    optional {
-                        ?subject_class_ rdfs:label ?subject_class_label_ .
-                    }
-                }
-                optional { ?predicate rdfs:label ?predicate_label_ . }
-                optional { """ + object_uri + """ rdfs:label ?object_label_ . }
-                optional { 
-                    """ + object_uri + """ a ?object_class_ .
-                    optional {
-                        ?object_class_ rdfs:label ?object_class_label_ .
-                    }
-                }
-            """ + ("}" if graph else "") + """
-        }
-    """
-
-    # Execute the query
-    response = query(text)
-
-    # Ensure an array is returned
-    return response or []
-
-
-
-@st.cache_data(ttl="1d", show_spinner=False)
-def list_graphs(_error_location) -> List[Entity]:
-    """
-    List all graphs available in the dataset.
-    Leading underscore for "_error_location" arg is to tell streamlit to not serialize the argument.
-    """
-
-    # Prepare the query
-    text = """
-        SELECT DISTINCT 
-            ?uri 
-            (COALESCE(?label_, ?uri) as ?label)
-            (COALESCE(?comment_, 'No comment') as ?comment)
+            (COALESCE(?comment_, '') as ?comment)
         WHERE {
             GRAPH ?uri { ?s ?p ?o . }
             optional { ?uri rdfs:label ?label_ . }
@@ -391,10 +30,12 @@ def list_graphs(_error_location) -> List[Entity]:
     """    
 
     # Execute the query
-    response = query(text, _error_location=_error_location)
+    response = query(text, caller='sparql_queries.list_graphs')
     
-    # Ensure an array is returned
-    return response or []
+    # Transform list of objects into list of graphs
+    if response: return list(map(lambda obj: Graph.from_dict(obj), response))
+    # And ensure a list is returned
+    else: return []
 
 
 @st.cache_data(ttl=60, show_spinner=False)
@@ -430,54 +71,281 @@ def count_graph_triples(graph: str) -> int:
     return int(response[0]['count'])
 
 
+def get_ontology() -> Ontology:
 
+    # From state
+    framework = state.get_endpoint().ontology_framework
 
+    if framework == OntologyFramework.SHACL.value:
+        return get_shacl_ontology()
+    
+    return get_noframework_ontology()
+    
 
-def get_objects_of(subject: str, property: str = None):
+def find_entities(label_filter: str = None, class_filter: str = None, limit: int = None) -> List[Entity]:
     """
-    Fetch all objects of the given subject. 
-    If the property is mentioned, only filter of subject of the given property.
+    Fetch the list of entities on the endpoint with:
+    Args:
+        label (str): the text that should be included in entity's rdfs:label. If None, fetch all entities.
+        cls (str): entity's class. Filter by the given class, if specified
+        limit (int): max number of retrived entities. If None, no limit is applied
     """
 
-    subject_uri = ensure_uri(subject)
-    property_uri = ensure_uri(property)
+    # From state
+    graph = state.get_graph()
 
-    select_line = f"?object" if property_uri else "?property ?object"
-    query_line = f"{subject_uri} {property_uri} ?object" if property_uri else f"{subject_uri} ?property ?object"
+    # Make sure the given class is a valid URI
+    class_uri = ensure_uri(class_filter)
 
     text = """
-        SELECT """ + select_line + """
-        WHERE { """ + query_line + """ . }
+        SELECT
+            (?uri_ as ?uri)
+            (COALESCE(?label_, '') as ?label)
+            (COALESCE(?comment_, '') as ?comment)
+            (COALESCE(?class_uri_, '""" + (class_uri if class_uri else "No Class URI")  + """') as ?class_uri)
+        WHERE {
+            """ + ("GRAPH " + ensure_uri(graph.uri) + " {" if graph.uri else "") + """
+                ?uri_ a """ + (class_uri if class_uri else "?class_uri_")  + """ .
+                OPTIONAL { ?uri_ rdfs:label ?label_ . }
+                OPTIONAL { ?uri_ rdfs:comment ?comment_ . }
+            """ + ("}" if graph.uri else "") + """
+            """ + (f"FILTER(CONTAINS(LCASE(?label_), '{label_filter.lower()}')) ." if label_filter else "") + """
+        }
+        """ + (f"LIMIT {limit}" if limit else "") + """
     """
-    
-    # Execute the query
+
+
+    # Execute on the endpoint
     response = query(text)
 
-    # Ensure an array is returned
-    return response or []
+    # If there is no result, there is no point to go forward
+    if not response: 
+        return []
+
+    # For each retrieved entity, look for the class label in the ontology, 
+    # then transform into instances of "Entity"
+    ontology = get_ontology()
+    classes = list(map(lambda cls: {**cls, 'class_label': ontology.get_class_name(cls['class_uri'])}, response))
+    entities = list(map(lambda cls: Entity.from_dict(cls), classes))
+    
+    return entities
 
 
+def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
+    """Fetch all relevant triples (according to the ontology) from the given graph about the given entity."""
 
-def get_subjects_of(object: str, property: str = None):
-    """
-    Fetch all subjects of the given object. 
-    If the property is mentioned, only filter of object of the given property.
-    """
+    # Make sure the given entity is a valid URI
+    entity_uri = ensure_uri(entity.uri)
+    graph_uri = ensure_uri(graph.uri)
 
-    object_uri = ensure_uri(object)
-    property_uri = ensure_uri(property)
+    # Fetch only the wanted properties
+    ontology = get_ontology()
+    classes_dict = ontology.get_classes_named_dict()
+    properties_dict = ontology.get_properties_named_dict()
+    wanted_properties = [ensure_uri(prop.uri) for prop in ontology.properties]
 
-    select_line = f"?subject" if property_uri else "?subject ?property"
-    query_line = f"?subject {property_uri} {object_uri}" if property_uri else f"?subject ?property {object_uri}"
-
+    # Prepare the query (Outgoing properties)
     text = """
-        SELECT """ + select_line + """
-        WHERE { """ + query_line + """ . }
+        SELECT DISTINCT
+            ('""" + entity.uri + """' as ?subject_uri)
+            ('""" + entity.label + """' as ?subject_label)
+            ('""" + entity.class_uri + """' as ?subject_class_uri)
+            ('""" + (entity.comment or '') + """' as ?subject_comment)
+            ?predicate_uri
+            ?object_uri
+            (COALESCE(?object_label_, '') as ?object_label)
+            (COALESCE(?object_class_uri_, '') as ?object_class_uri)
+            (isLiteral(?object_uri) as ?object_is_literal)
+            (COALESCE(?object_comment_, '') as ?object_comment)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                """ + entity_uri + """ ?predicate_uri ?object_uri . 
+                OPTIONAL { ?object_uri rdfs:label ?object_label_ . }
+                OPTIONAL { ?object_uri a ?object_class_uri_ . }
+                OPTIONAL { ?object_uri rdfs:comment ?object_comment_ . }
+                VALUES ?predicate_uri { """ + ' '.join(wanted_properties) + """ }
+            """ + ("}" if graph_uri else "") + """
+        }
     """
-    
-    # Execute the query
-    response = query(text)
 
-    # Ensure an array is returned
-    return response or []
+    # Execute the request (Outgoing properties)
+    outgoing_props = query(text)
 
+
+    # Prepare que query (Incoming properties)
+    text = """
+        SELECT DISTINCT
+            ?subject_uri
+            (COALESCE(?subject_label_, '') as ?subject_label)
+            (COALESCE(?subject_class_uri_, '') as ?subject_class_uri)
+            (COALESCE(?subject_comment_, '') as ?subject_comment)
+            ?predicate_uri
+            ('""" + entity.uri + """' as ?object_uri)
+            ('""" + entity.label + """' as ?object_label)
+            ('""" + entity.class_uri + """' as ?object_class_uri)
+            ('""" + (entity.comment or '') + """' as ?object_comment)
+            ('false' as ?object_is_literal)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                ?subject_uri ?predicate_uri """ + entity_uri + """ . 
+                ?subject_uri rdfs:label ?subject_label_ .
+                OPTIONAL { ?subject_uri a ?subject_class_uri_ . }
+                OPTIONAL { ?subject_uri rdfs:comment ?subject_comment_ . }
+                VALUES ?predicate_uri { """ + ' '.join(wanted_properties) + """ }
+            """ + ("}" if graph_uri else "") + """
+        }
+    """
+
+    # Execute the request (Incoming properties)
+    incoming_props = query(text)
+
+    # Merge the data (left joins)
+    display_triples_list = [{
+        # Get attributes from left list
+        **triple, 
+        # Merge the information about the subject class from the ontology (first right list)
+        **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
+        # Merge the information about the object class from the ontology (second right list)
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}) ,
+        # Merge the information about the predicate from the ontology (third right list)
+        **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
+    } for triple in outgoing_props + incoming_props]
+
+    # Convert into list of DisplayTriples instances
+    display_triples = list(map(lambda triple: DisplayTriple.from_dict(triple), display_triples_list))
+
+    # Sort on predicate order
+    display_triples.sort(key=lambda item: item.predicate.order)
+
+    return display_triples
+
+
+
+def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
+    """Fetch all outgoing triples from the given graph about the given entity."""
+
+    # Make sure the given entity is a valid URI
+    entity_uri = ensure_uri(entity.uri)
+    graph_uri = ensure_uri(graph.uri)
+
+    # Fetch only the wanted properties
+    ontology = get_ontology()
+    classes_dict = ontology.get_classes_named_dict()
+    properties_dict = ontology.get_properties_named_dict()
+
+    # Prepare the query (Outgoing properties)
+    text = """
+        SELECT DISTINCT
+            ('""" + entity.uri + """' as ?subject_uri)
+            ('""" + entity.label + """' as ?subject_label)
+            ('""" + entity.class_uri + """' as ?subject_class_uri)
+            ('""" + (entity.comment or '') + """' as ?subject_comment)
+            ?predicate_uri
+            ?object_uri
+            (COALESCE(?object_label_, '') as ?object_label)
+            (COALESCE(?object_class_uri_, '') as ?object_class_uri)
+            (isLiteral(?object_uri) as ?object_is_literal)
+            (COALESCE(?object_comment_, '') as ?object_comment)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                """ + entity_uri + """ ?predicate_uri ?object_uri . 
+                OPTIONAL { ?object_uri rdfs:label ?object_label_ . }
+                OPTIONAL { ?object_uri a ?object_class_uri_ . }
+                OPTIONAL { ?object_uri rdfs:comment ?object_comment_ . }
+            """ + ("}" if graph_uri else "") + """
+        }
+    """
+
+    # Execute the request (Outgoing properties)
+    outgoing_props = query(text)
+
+    # Merge the data (left joins)
+    display_triples_list = [{
+        # Get attributes from left list
+        **triple, 
+        # Merge the information about the subject class from the ontology (first right list)
+        **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
+        # Merge the information about the object class from the ontology (second right list)
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}) ,
+        # Merge the information about the predicate from the ontology (third right list)
+        **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
+    } for triple in outgoing_props]
+
+    # Here, since we are making a left join, some of the triples are not in the onotlogy, so we need to make sure that some information are set
+    display_triples_list = [{
+        **triple, 
+        "predicate_order": triple["predicate_order"] if "predicate_order" in triple and triple["predicate_order"] is not None else 1000000000000000000
+    } for triple in display_triples_list]
+
+    # Convert into list of DisplayTriples instances
+    display_triples = list(map(lambda triple: DisplayTriple.from_dict(triple), display_triples_list))
+
+    # Sort on predicate order
+    display_triples.sort(key=lambda item: item.predicate.order)
+
+    return display_triples
+
+
+def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
+    """Fetch all incoming triples from the given graph about the given entity."""
+
+    # Make sure the given entity is a valid URI
+    entity_uri = ensure_uri(entity.uri)
+    graph_uri = ensure_uri(graph.uri)
+
+    # Fetch only the wanted properties
+    ontology = get_ontology()
+    classes_dict = ontology.get_classes_named_dict()
+    properties_dict = ontology.get_properties_named_dict()
+
+    # Prepare the query (Outgoing properties)
+    text = """
+        SELECT DISTINCT
+            ?subject_uri
+            (COALESCE(?subject_label_, 'No label') as ?subject_label)
+            (COALESCE(?subject_class_uri_, '') as ?subject_class_uri)
+            (COALESCE(?subject_comment_, '') as ?subject_comment)
+            ?predicate_uri
+            ('""" + entity.uri + """' as ?object_uri)
+            ('""" + entity.label + """' as ?object_label)
+            ('""" + entity.class_uri + """' as ?object_class_uri)
+            ('""" + (entity.comment or '') + """' as ?object_comment)
+            ('false' as ?object_is_literal)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                ?subject_uri ?predicate_uri """ + entity_uri + """ . 
+                ?subject_uri rdfs:label ?subject_label_ .
+                OPTIONAL { ?subject_uri a ?subject_class_uri_ . }
+                OPTIONAL { ?subject_uri rdfs:comment ?subject_comment_ . }
+            """ + ("}" if graph_uri else "") + """
+        }
+    """
+
+    # Execute the request (Outgoing properties)
+    outgoing_props = query(text)
+
+    # Merge the data (left joins)
+    display_triples_list = [{
+        # Get attributes from left list
+        **triple, 
+        # Merge the information about the subject class from the ontology (first right list)
+        **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
+        # Merge the information about the object class from the ontology (second right list)
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}) ,
+        # Merge the information about the predicate from the ontology (third right list)
+        **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
+    } for triple in outgoing_props]
+
+    # Here, since we are making a left join, some of the triples are not in the onotlogy, so we need to make sure that some information are set
+    display_triples_list = [{
+        **triple, 
+        "predicate_order": triple["predicate_order"] if "predicate_order" in triple and triple["predicate_order"] is not None else 1000000000000000000
+    } for triple in display_triples_list]
+
+    # Convert into list of DisplayTriples instances
+    display_triples = list(map(lambda triple: DisplayTriple.from_dict(triple), display_triples_list))
+
+    # Sort on predicate order
+    display_triples.sort(key=lambda item: item.predicate.order)
+
+    return display_triples

@@ -1,9 +1,10 @@
 import streamlit as st
 import os
-from lib.utils import load_config
+from typing import Literal
+import lib.state as state
 
 
-def init(layout='centered') -> None:
+def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
     """Initialization function that runs on each page. Has to be the first thing to be called."""
 
     # Tab/page infos
@@ -18,18 +19,24 @@ def init(layout='centered') -> None:
         file = open('./VERSION', 'r')
         version = file.read()
         file.close()
-        st.session_state['VERSION'] = version
+        state.set_version(version)
 
     # If there is a local config, load it
-    if os.path.exists('./logre-config.toml') and 'all_endpoints' not in st.session_state:
+    if os.path.exists('./logre-config.toml') and not state.get_endpoints():
         file = open('./logre-config.toml', 'r')
         content = file.read()
         file.close()
-        load_config(content)
+        state.load_config(content, 'local')
 
-    # Session state initialization
-    if 'configuration' not in st.session_state: st.session_state['configuration'] = False
-    if 'all_queries' not in st.session_state: st.session_state['all_queries'] = []
-    if 'all_endpoints' not in st.session_state: st.session_state['all_endpoints'] = []
+    # State initialization
+    if not state.get_queries(): state.set_queries([])
+    if not state.get_endpoints(): state.set_endpoints([])
 
+    # Toasts
+    text, icon = state.get_toast()
+    if text: 
+        st.toast(text, icon=icon if icon else ':material/info:')
+        state.clear_toast()
 
+    # On each page load, clear the confirmation
+    state.clear_confirmation()
