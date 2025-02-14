@@ -7,7 +7,7 @@ import requests
 import lib.state as state
 from schema import EndpointTechnology
 
-all_file_formats = ['Turtle (eg <name.ttl>)', 'CSV (eg <name.csv>)']
+all_file_formats = ['Turtle (.ttl)', 'Spreadsheet (.csv)']
 all_file_types = ['ttl', 'csv']
 
 

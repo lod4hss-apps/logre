@@ -1,12 +1,13 @@
-from typing import Dict, List
+from typing import Dict, List, Literal, Any
 import streamlit as st
-from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
+from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions, TURTLE, CSV
 from urllib.error import HTTPError
 from urllib.error import URLError
 from lib.prefixes import get_sparql_prefixes, shorten_uri
 import lib.state as state
-from schema import Triple, EndpointTechnology
+from schema import Triple, EndpointTechnology, Graph, Endpoint
 from lib.utils import ensure_uri
+import pandas as pd
 
 def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
     """Transform an object coming from a SPARQL query (through SPARQLWrapper) into a dictionnary for better use."""
@@ -63,6 +64,8 @@ def query(request: str, caller: str = None, add_prefix: bool = True) -> List[Dic
         msg = f"URL Error: {error.reason}"
         if caller: msg += f' Called by <{caller}>'
         st.error(msg)
+    except Exception as error:
+        msg = f"An error occured: {str(error)}"
         return False
 
     # and transform the object
@@ -84,7 +87,7 @@ def execute(request: str, caller: str = None, add_prefix: bool = True) -> bool:
     endpoint = state.get_endpoint()
     
     # Init the endpoint
-    sparql_endpoint = SPARQLWrapper(st.session_state['endpoint'].url)
+    sparql_endpoint = SPARQLWrapper(endpoint.url)
         
     # Prepare the query
     text = get_sparql_prefixes() + request if add_prefix else request
@@ -208,4 +211,35 @@ def delete(triples: List[Triple] | Triple, graph: str = None) -> None:
 
     # Execute
     execute(text)
- 
+
+
+def download_graph(graph: Graph, export_format: Literal['ttl', 'csv']) -> tuple[str | Any, str]:
+    """Fetches the named graph and returns content + filename."""
+
+    # Force the right format
+    graph_uri = ensure_uri(graph.uri)
+
+    # From session state
+    endpoint = state.get_endpoint()
+
+    # Final file name
+    file_name = f"logre-{endpoint.name}-graph-{graph.label}".lower()
+    if "ttl" in export_format: file_name += ".ttl"
+    else: file_name += ".csv"
+
+    # Prepare the query
+    if export_format == 'ttl':
+        if graph_uri: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{graph.uri}> {{ ?s ?p ?o }} }}"
+        else: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ ?s ?p ?o }}"
+    else:
+        if graph_uri: text = f"SELECT * WHERE {{ GRAPH <{graph.uri}> {{ ?s ?p ?o }} }}"
+        else: text = f"SELECT * WHERE {{ ?s ?p ?o }}"
+
+    # Prepare que query maker
+    sparql = SPARQLWrapper(endpoint.url)
+    sparql.setQuery(text)
+    sparql.setReturnFormat(TURTLE if "ttl" in export_format else CSV)
+
+    # Create a file out of it and return it, with its name
+    result = sparql.query().convert()
+    return result.decode(), file_name

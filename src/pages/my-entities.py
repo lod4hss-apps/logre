@@ -132,7 +132,10 @@ else:
             dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
 
 
-        col2.text('')
+        if i != len(outgoing_triples) - 1:
+            col2.divider()
+        # col2.text('')
+        # col2.text('')
 
     tab2.divider()
 

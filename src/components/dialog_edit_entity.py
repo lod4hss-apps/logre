@@ -204,7 +204,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
 
 
     # Validation, edition, and display
-    if st.button('Edit', icon=":material/edit:"):
+    if st.button('Save', icon=":material/save:"):
         entity = Entity(
             uri=entity.uri, 
             label=new_entity_label.strip() if new_entity_label.strip() != '' else entity.label, # This might have changed
