@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 
 class Graph(BaseModel):
     """A Graph object."""

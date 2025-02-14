@@ -1,13 +1,12 @@
 from typing import Dict, List, Literal, Any
-import streamlit as st
+from urllib.error import URLError, HTTPError
 from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions, TURTLE, CSV
-from urllib.error import HTTPError
-from urllib.error import URLError
+import streamlit as st
+from schema import Triple, EndpointTechnology, Graph
 from lib.prefixes import get_sparql_prefixes, shorten_uri
-import lib.state as state
-from schema import Triple, EndpointTechnology, Graph, Endpoint
 from lib.utils import ensure_uri
-import pandas as pd
+import lib.state as state
+
 
 def __handle_row(row: Dict[str, dict]) -> Dict[str, str]:
     """Transform an object coming from a SPARQL query (through SPARQLWrapper) into a dictionnary for better use."""

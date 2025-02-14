@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import BaseModel
 from .entity import Entity
 from .predicate import Predicate

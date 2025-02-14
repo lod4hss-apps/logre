@@ -1,11 +1,10 @@
 from typing import List
 import streamlit as st
-import lib.state as state
+from schema import Entity, Triple
 from lib.sparql_queries import find_entities, get_ontology
 from lib.sparql_base import insert
-from schema import Entity
 from lib.utils import generate_id
-from schema import Triple
+import lib.state as state
 from components.dialog_triple_info import dialog_triple_info
 
 def __create_entity(entity: Entity, triples: List[Triple]) -> None:

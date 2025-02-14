@@ -1,11 +1,8 @@
-from typing import List, Dict, Tuple
+from typing import List
 import streamlit as st
-import pandas as pd
-from lib.sparql_base import query, execute
-from lib.utils import ensure_uri
-from lib.schema import SHACLclass, TripleDetailed
-import lib.state as state
 from schema import OntologyClass, OntologyProperty, Ontology
+from lib.sparql_base import query
+import lib.state as state
 
 
 @st.cache_data(ttl='1d', show_spinner=False)

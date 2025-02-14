@@ -1,7 +1,7 @@
 import streamlit as st
-import lib.state as state
 from schema import Query
 from lib.configuration import save_config
+import lib.state as state
 
 @st.dialog('Save query')
 def dialog_queries_save(text: str) -> None:

@@ -1,15 +1,12 @@
-from typing import List, TypedDict, Dict
+from typing import List
 import streamlit as st
-from lib.sparql_base import query, execute
+from schema import Graph, OntologyFramework, Entity
+from schema import DisplayTriple, Ontology
+from lib.sparql_base import query
 from lib.utils import ensure_uri
-from lib.schema import EntityDetailed, TripleDetailed
-from schema import Graph, Triple, OntologyFramework, Entity
-import lib.state as state
 from lib.sparql_noframework import get_noframework_ontology
 from lib.sparql_shacl import get_shacl_ontology
-from schema.ontology import Ontology
-from schema import DisplayTriple
-import pandas as pd
+import lib.state as state
 
 
 @st.cache_data(ttl="1d", show_spinner=False)

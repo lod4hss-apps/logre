@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class EndpointTechnology(Enum):
     NONE = 'None'
     FUSEKI = 'Fuseki'

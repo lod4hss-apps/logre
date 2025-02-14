@@ -1,7 +1,7 @@
 import streamlit as st
-import lib.state as state
-from lib.configuration import save_config
 import pyperclip
+from lib.configuration import save_config
+import lib.state as state
 
 
 @st.dialog('Saved queries', width='large')

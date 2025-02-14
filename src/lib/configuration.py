@@ -1,6 +1,5 @@
-import os
-import lib.state as state
 import toml
+import lib.state as state
 
 CONFIG_PATH = './logre-config.toml'
 

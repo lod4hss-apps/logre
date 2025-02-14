@@ -1,24 +1,18 @@
+from typing import Literal
 import streamlit as st
-import time, toml, os
+from schema import Triple, EndpointTechnology, OntologyFramework, Endpoint, Graph
+from lib.sparql_base import delete
+from lib.sparql_queries import count_graph_triples
+from lib.utils import readable_number, ensure_uri
+from lib.configuration import save_config, get_config_toml, CONFIG_PATH
+import lib.state as state
 from components.init import init
 from components.menu import menu
 from components.dialog_confirmation import dialog_confirmation
 from components.dialog_download_graph import dialog_download_graph
-from lib.sparql_base import insert, delete
-from lib.sparql_queries import count_graph_triples
-from lib.utils import readable_number, to_snake_case, ensure_uri
-from schema import Triple
-import lib.state as state
-from schema import EndpointTechnology, OntologyFramework, Endpoint
-from lib.configuration import save_config
 from components.dialog_config_endpoint import dialog_config_endpoint
 from components.dialog_config_graph import dialog_config_graph
-from lib.configuration import get_config_toml, CONFIG_PATH
-from schema import Graph
-from lib.sparql_base import download_graph
-import pandas as pd
-from SPARQLWrapper import SPARQLWrapper, TURTLE, CSV
-from typing import Literal
+
 
 # Contants
 technologies = [e.value for e in EndpointTechnology]

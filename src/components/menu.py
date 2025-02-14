@@ -1,7 +1,6 @@
-from typing import List
 import streamlit as st
-from lib.sparql_queries import list_graphs
 from schema import Graph
+from lib.sparql_queries import list_graphs
 import lib.state as state
 from components.dialog_find_entity import dialog_find_entity
 from components.dialog_create_entity import dialog_create_entity
@@ -40,8 +39,7 @@ def menu() -> None:
     col2.markdown(f"<small>v{version}</small>", unsafe_allow_html=True)
 
     # Page links
-    st.sidebar.page_link("pages/home.py", label="Home")
-    st.sidebar.page_link("pages/getting-started.py", label="Getting started")
+    st.sidebar.page_link("pages/documentation.py", label="Documentation")
     st.sidebar.page_link("pages/configuration.py", label="Configuration")
     st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not config)
     st.sidebar.page_link("pages/import-data.py", label="Import data", disabled=not config)

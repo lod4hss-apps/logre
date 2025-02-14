@@ -1,9 +1,8 @@
 import streamlit as st
 from schema import Triple
-import time
-import lib.state as state
 from lib.sparql_queries import find_entities, get_ontology
 from lib.sparql_base import insert
+import lib.state as state
 
 @st.dialog("Create a new Triple", width='large')
 def dialog_create_triple() -> None:

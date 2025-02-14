@@ -1,10 +1,10 @@
 from typing import List
 import streamlit as st
-import lib.state as state
 from lib.sparql_queries import find_entities, get_ontology
 from lib.sparql_base import insert, delete
-from schema import Entity
-from schema import Triple, DisplayTriple
+import lib.state as state
+from schema import Entity, Triple, DisplayTriple
+
 
 def __edit_entity(entity: Entity, triples_to_create: List[Triple], triples_to_delete: List[Triple]) -> None:
 
@@ -23,7 +23,6 @@ def __edit_entity(entity: Entity, triples_to_create: List[Triple], triples_to_de
     # Finalization: validation message and load the created entity
     state.set_toast('Entity Updated', ':material/done:')
     st.switch_page("pages/my-entities.py")
-
 
 
 @st.dialog('Edit an entity', width='large')

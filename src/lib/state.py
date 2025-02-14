@@ -1,7 +1,7 @@
 from typing import List, Any, Literal
+import toml
 from streamlit import session_state as state
 from schema import Query, Endpoint, Graph, Entity, OntologyProperty
-import toml
 
 
 def get_element(key) -> Any:

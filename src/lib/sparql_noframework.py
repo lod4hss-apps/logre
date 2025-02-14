@@ -1,11 +1,7 @@
-from typing import List, Dict, Tuple
-import streamlit as st
-import pandas as pd
-from lib.sparql_base import query, execute
-from lib.utils import ensure_uri
-from lib.schema import SHACLclass, TripleDetailed
-import lib.state as state
+from typing import List
 from schema import OntologyClass, OntologyProperty, Ontology
+from lib.sparql_base import query
+import lib.state as state
 
 
 def get_noframework_classes() -> List[OntologyClass]:

@@ -1,5 +1,5 @@
 
-# Getting started
+# Get started
 
 The full text will come soon
 

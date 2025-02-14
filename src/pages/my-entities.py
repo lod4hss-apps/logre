@@ -1,16 +1,13 @@
 import streamlit as st
+from schema import Triple, Graph, DisplayTriple
+from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples
+from lib.sparql_base import delete
+import lib.state as state
 from components.init import init
 from components.menu import menu
-import lib.state as state
-from components.dialog_find_entity import dialog_find_entity
-from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples
-import pandas as pd
 from components.dialog_entity_info import dialog_entity_info
 from components.dialog_triple_info import dialog_triple_info
-from components.dialog_create_entity import dialog_create_entity
 from components.dialog_edit_entity import dialog_edit_entity
-from schema import Triple, Graph, DisplayTriple
-from lib.sparql_base import delete
 from components.dialog_confirmation import dialog_confirmation
 
 def __delete_triple(display_triple: DisplayTriple, graph: Graph=None):

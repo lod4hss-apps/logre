@@ -1,6 +1,5 @@
-import streamlit as st
-import time
 from typing import Callable
+import streamlit as st
 
 
 @st.dialog("Confirmation")

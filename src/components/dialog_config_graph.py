@@ -1,6 +1,6 @@
 import streamlit as st
-from lib.utils import to_snake_case
 from schema import Triple
+from lib.utils import to_snake_case
 from lib.sparql_base import insert
 import lib.state as state
 

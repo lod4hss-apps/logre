@@ -1,13 +1,13 @@
+import pandas as pd
+from code_editor import code_editor
 import streamlit as st
+from lib.prefixes import get_sparql_prefixes
+import lib.sparql_base as sparql
+import lib.state as state
 from components.init import init
 from components.menu import menu
 from components.dialog_queries_save import dialog_queries_save
 from components.dialog_queries_load import dialog_queries_load
-from code_editor import code_editor
-import lib.sparql_base as sparql
-import pandas as pd
-import lib.state as state
-from lib.prefixes import get_sparql_prefixes
 
 
 ##### The page #####

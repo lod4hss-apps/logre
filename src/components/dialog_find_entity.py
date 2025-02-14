@@ -1,12 +1,11 @@
 import streamlit as st
-import lib.state as state
 from lib.sparql_queries import find_entities, get_ontology
-from schema import Entity
+import lib.state as state
 
 
 @st.dialog('Find an entity', width='large')
 def dialog_find_entity() -> None:
-
+    """Dialog function to allow user to find an entity and select it."""
     
     ontology = get_ontology()
 

@@ -2,9 +2,10 @@ import streamlit as st
 from schema import Entity
 from lib.prefixes import explicits_uri
 
+
 @st.dialog('Entity information')
 def dialog_entity_info(entity: Entity) -> None:
-    
+    """Simple dialog to display basic information about an entity."""
 
     # URI
     col1, col2 = st.columns([1, 3])

@@ -1,6 +1,6 @@
-from schema.enums import EndpointTechnology, OntologyFramework
 from typing import Optional
 from pydantic import BaseModel
+from schema.enums import EndpointTechnology, OntologyFramework
 
 
 class Endpoint(BaseModel):
