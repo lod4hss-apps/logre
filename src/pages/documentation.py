@@ -15,11 +15,8 @@ def format_filename(filename: str) -> str:
 folder = Path('./documentation')
 contents = {format_filename(f.name) : f.read_text() for f in folder.iterdir()}
 
-
 init()
 menu()
-
-
 
 # Read me
 with st.expander('README'):
@@ -32,18 +29,3 @@ with st.expander('README'):
 for name, content in contents.items():
     with st.expander(name):
         st.markdown(content)
-
-
-# # Getting started
-# with st.expander('Get started'):
-#     getting_started_file = open('./GETTING-STARTED.md', 'r')
-#     content = getting_started_file.read()
-#     getting_started_file.close()
-#     st.markdown(content)
-
-# # Change log
-# with st.expander('Change Log'):
-#     chane_log_file = open('./CHANGELOG.md', 'r')
-#     content = chane_log_file.read()
-#     chane_log_file.close()
-#     st.markdown(content)

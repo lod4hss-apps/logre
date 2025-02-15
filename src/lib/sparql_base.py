@@ -1,6 +1,6 @@
 from typing import Dict, List, Literal, Any
 from urllib.error import URLError, HTTPError
-from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions, TURTLE, CSV
+from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions, TURTLE
 import streamlit as st
 from schema import Triple, EndpointTechnology, Graph
 from lib.prefixes import get_sparql_prefixes, shorten_uri
@@ -212,7 +212,7 @@ def delete(triples: List[Triple] | Triple, graph: str = None) -> None:
     execute(text)
 
 
-def download_graph(graph: Graph, export_format: Literal['ttl', 'csv']) -> tuple[str | Any, str]:
+def download_graph(graph: Graph) -> str:
     """Fetches the named graph and returns content + filename."""
 
     # Force the right format
@@ -221,24 +221,15 @@ def download_graph(graph: Graph, export_format: Literal['ttl', 'csv']) -> tuple[
     # From session state
     endpoint = state.get_endpoint()
 
-    # Final file name
-    file_name = f"logre-{endpoint.name}-graph-{graph.label}".lower()
-    if "ttl" in export_format: file_name += ".ttl"
-    else: file_name += ".csv"
-
     # Prepare the query
-    if export_format == 'ttl':
-        if graph_uri: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{graph.uri}> {{ ?s ?p ?o }} }}"
-        else: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ ?s ?p ?o }}"
-    else:
-        if graph_uri: text = f"SELECT * WHERE {{ GRAPH <{graph.uri}> {{ ?s ?p ?o }} }}"
-        else: text = f"SELECT * WHERE {{ ?s ?p ?o }}"
+    if graph_uri: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{graph.uri}> {{ ?s ?p ?o }} }}"
+    else: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ ?s ?p ?o }}"
 
     # Prepare que query maker
     sparql = SPARQLWrapper(endpoint.url)
     sparql.setQuery(text)
-    sparql.setReturnFormat(TURTLE if "ttl" in export_format else CSV)
+    sparql.setReturnFormat(TURTLE)
 
     # Create a file out of it and return it, with its name
     result = sparql.query().convert()
-    return result.decode(), file_name
+    return result.decode()

@@ -1,9 +1,9 @@
 from typing import List
 import streamlit as st
 from schema import Graph, OntologyFramework, Entity
-from schema import DisplayTriple, Ontology
+from schema import DisplayTriple, Ontology, OntologyClass
 from lib.sparql_base import query
-from lib.utils import ensure_uri
+from lib.utils import ensure_uri, to_snake_case
 from lib.sparql_noframework import get_noframework_ontology
 from lib.sparql_shacl import get_shacl_ontology
 import lib.state as state
@@ -346,3 +346,41 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
     display_triples.sort(key=lambda item: item.predicate.order)
 
     return display_triples
+
+
+def get_all_instances_of_class(cls: OntologyClass): 
+    """List all instances with all properties (from the ontology) of a given class."""
+
+    # From state
+    graph = state.get_graph()
+    graph_uri = ensure_uri(graph.uri)
+
+    # Get the ontology properties of this class
+    ontology = get_ontology()
+    properties_outgoing = [prop for prop in ontology.properties if prop.domain_class_uri == cls.uri]
+    
+    # Prepare the query: make all lines from the query
+    properties_outgoing_names = [f"(COALESCE(?{to_snake_case(prop.label)}_, '') as ?{to_snake_case(prop.label)})" for prop in properties_outgoing]
+    properties_outgoing_names_str = '\n            '.join(properties_outgoing_names)
+    triples_outgoings = [f"optional {{ ?instance {prop.uri} ?{to_snake_case(prop.label)}_ . }}" for prop in properties_outgoing]
+    triples_outgoings_str = '\n                '.join(triples_outgoings)
+    
+
+
+    # Build the query
+    text = f"""
+        SELECT
+            (?instance as ?uri)
+            {properties_outgoing_names_str}
+        WHERE {{
+            {'GRAPH ' + graph_uri + '{' if graph_uri else ''}
+                ?instance rdf:type {cls.uri} .
+                {triples_outgoings_str}
+            {'}' if graph_uri else ''}
+        }}
+    """
+
+    # Execute the query
+    instances = query(text)
+
+    return instances

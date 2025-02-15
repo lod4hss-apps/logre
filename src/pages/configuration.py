@@ -184,13 +184,13 @@ st.divider()
 
 ### ENDPOINTS ###
 
-col1, col2, col3, col4 = st.columns([2, 2, 2, 2], vertical_alignment='bottom')
+col1, col2, col3, col4 = st.columns([4, 1, 1, 2], vertical_alignment='bottom')
 col1.markdown('### Endpoints')
 
 st.text("")
 
-col2.button('Show list', on_click=__show_endpoint_list, icon=':material/visibility:', key='config-btn-show-endpoints')
-col3.button('Hide list', on_click=__hide_endpoint_list, icon=':material/visibility_off:', key='config-btn-hide-endpoints')
+col2.button('Show', on_click=__show_endpoint_list, icon=':material/visibility:', key='config-btn-show-endpoints', type='tertiary')
+col3.button('Hide', on_click=__hide_endpoint_list, icon=':material/visibility_off:', key='config-btn-hide-endpoints', type='tertiary')
 col4.button('Add new', on_click=dialog_config_endpoint, icon=':material/add:', key='config-btn-add-endpoint')
 
 __endpoint_list()
@@ -205,11 +205,11 @@ st.divider()
 if endpoint:
 
     # Title and boxes for graph actions (show/hide graph list)
-    col1, col2, col3, col4 = st.columns([2, 2, 2, 2], vertical_alignment='bottom')
+    col1, col2, col3, col4 = st.columns([4, 1, 1, 2], vertical_alignment='bottom')
     col1.markdown('### Graphs')
 
-    col2.button('Show list', on_click=__show_graph_list, icon=':material/visibility:', key='config-btn-show-graphs')
-    col3.button('Hide list', on_click=__hide_graph_list, icon=':material/visibility_off:', key='config-btn-hide-graphs')
+    col2.button('Show', on_click=__show_graph_list, icon=':material/visibility:', key='config-btn-show-graphs', type='tertiary')
+    col3.button('Hide', on_click=__hide_graph_list, icon=':material/visibility_off:', key='config-btn-hide-graphs', type='tertiary')
     col4.button('Add new', on_click=dialog_config_graph, icon=':material/add:', key='config-btn-add-graph')
 
     __graph_list()

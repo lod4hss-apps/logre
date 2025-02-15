@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## v1.8.2 - Date
 
-- Allow possibility to download a graph as CSV or TTL
+- Allow possibility to download a graph as TTL
+- Allow possibility to download all entities listed in the ontology as a CSV, all bundled into a zip file
 - Change the documentation pages into one single page named "Documentation"
 - Move all documentation files in a documentation folder at logre root
 - Clean part of the code
