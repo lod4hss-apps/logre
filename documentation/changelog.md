@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.8.2 - Date
+
+- Allow possibility to download a graph as CSV or TTL
+- Change the documentation pages into one single page named "Documentation"
+- Move all documentation files in a documentation folder at logre root
+- Clean part of the code
+
 ## v1.8.1 - Date 2025-02-12
 
 Full refactoring of the application
