@@ -42,7 +42,7 @@ def menu() -> None:
     st.sidebar.page_link("pages/documentation.py", label="Documentation")
     st.sidebar.page_link("pages/configuration.py", label="Configuration")
     st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not config)
-    st.sidebar.page_link("pages/import-data.py", label="Import data", disabled=not config)
+    st.sidebar.page_link("pages/import.py", label="Import", disabled=not config)
     st.sidebar.page_link("pages/my-entities.py", label="My entities", disabled=not config)
 
     st.sidebar.divider()

@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Change the documentation pages into one single page named "Documentation"
 - Move all documentation files in a documentation folder at logre root
 - Clean part of the code
+- Allow to upload an ontology which is in the ./ontologies folder
 
 ## v1.8.1 - Date 2025-02-12
 

@@ -1,4 +1,5 @@
 from typing import Any
+from pathlib import Path
 import streamlit as st
 from components.init import init
 from components.menu import menu
@@ -9,6 +10,13 @@ from schema import EndpointTechnology
 
 all_file_formats = ['Turtle (.ttl)', 'Spreadsheet (.csv)']
 all_file_types = ['ttl', 'csv']
+
+
+def format_filename(filename: str) -> str:
+    """Transform a filename in a usable title in the page"""
+    name = filename[0:filename.rindex(".")] # Remove extension
+    name = name.replace("-", " ").replace("_", " ")  # Replace separators
+    return name.title()
 
 
 def __get_import_url(graph_uri: str = ""):
@@ -46,10 +54,7 @@ def __get_import_url(graph_uri: str = ""):
             return endpoint_url
 
 
-def __upload_turtle_file(file: Any, graph_uri: str):
-
-    # The turtle data
-    ttl_data = file.read().decode("utf-8")
+def __upload_turtle_file(ttl_data: str, graph_uri: str):
 
     # Upload
     url = __get_import_url(graph_uri)
@@ -81,7 +86,7 @@ endpoint = state.get_endpoint()
 all_graphs = state.get_graphs()
 
 # Title
-st.title("Import data")
+st.title("Import")
 st.text('')
 
 # Can't import anything if there is no endpoint
@@ -91,11 +96,16 @@ if not endpoint:
 
 else:
 
-    col1, col2 = st.columns([1, 1])
+    graphs_labels = [graph.label for graph in all_graphs]
+    tab_data, tab_ontologies = st.tabs(['Data', 'Ontologies'])
+
+    ### TAB DATA ### 
+    
+    tab_data.text('')
+    col1, col2 = tab_data.columns([1, 1])
 
     # Graph selection
-    graphs_labels = [graph.label for graph in all_graphs]
-    graph_label = col1.selectbox('Select the graph in which to import data', options=graphs_labels, index=None)  
+    graph_label = col1.selectbox('Select the graph', options=graphs_labels, index=None, key='import-data-graph-selection')  
 
     # Fetch the graph
     if graph_label:
@@ -108,19 +118,56 @@ else:
         format_index = all_file_formats.index(format)
         file_type = all_file_types[format_index]
 
-
     if file_type == "csv":
-        st.write('Coming soon')
+        tab_data.write('Coming soon')
     else :
 
         # File uploader
-        file = st.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None or graph_label is None))
-        st.text('')
+        file = tab_data.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None or graph_label is None))
+        tab_data.text('')
 
-        if graph_label and format and file and file_type == 'ttl' and st.button('Upload'):
+        if graph_label and format and file and file_type == 'ttl' and tab_data.button('Upload data', icon=':material/upload:'):
             dialog_confirmation(
                 f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
                 callback=__upload_turtle_file, 
-                file=file,
+                ttl_data=file.read().decode("utf-8"),
                 graph_uri=selected_graph.uri
             )
+
+
+    ### TAB ONTOLOGIES ###
+    
+    tab_data.text('')
+    col1, col2 = tab_ontologies.columns([1, 1])
+
+    # Loop through all ontologies files
+    folder = Path('./ontologies')
+    files = [{ 'name': format_filename(f.name), 'path': f.name } for f in folder.iterdir()]
+    onto_names = [file['name'] for file in files]
+    onto_paths = [file['path'] for file in files]
+    
+    # Graph selection
+    graph_label = col1.selectbox('Select the graph', options=graphs_labels, index=None, key='import-ontology-graph-selection')  
+
+    # Fetch the graph
+    if graph_label:
+        graph_index = graphs_labels.index(graph_label)
+        selected_graph = all_graphs[graph_index]
+
+    # Ontology selection
+    ontology_name = col2.selectbox('Choose an ontology', options=onto_names, disabled=(graph_label is None), index=None)
+    if ontology_name:
+        onto_index = all_file_formats.index(format)
+        onto_path = './ontologies/' + onto_paths[onto_index]
+        f = open(onto_path, 'r')
+        file_content = f.read()
+        f.close()
+
+        if graph_label and file_content and tab_ontologies.button('Upload ontology', icon=':material/upload:'):
+            dialog_confirmation(
+                f'You are about to upload the ontology named **{ontology_name.upper()}** into **{graph_label.upper()}**.', 
+                callback=__upload_turtle_file, 
+                ttl_data=file_content,
+                graph_uri=selected_graph.uri
+            )
+

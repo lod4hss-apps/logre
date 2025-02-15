@@ -9,7 +9,6 @@ def format_filename(filename: str) -> str:
     name = filename[0:filename.rindex(".")] # Remove extension
     name = name.replace("-", " ").replace("_", " ")  # Replace separators
     return name.title()
-    # return name.capitalize() if name.isupper() else name.title()
 
 # Fetch all files in the folder ./documentation
 folder = Path('./documentation')
