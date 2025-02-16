@@ -1,11 +1,11 @@
-@prefix sdh-shacl: <https://sdhss.org/shacl/profiles/>. 
+@prefix sdh-shacl: <https://sdhss.org/shacl/profiles/> . 
 @prefix sh: <http://www.w3.org/ns/shacl#> .  
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: 	<http://www.w3.org/2000/01/rdf-schema#> .  
-@prefix sdh-short: <https://sdhss.org/ontology/shortcuts/P1>.
-@prefix sdh: <https://sdhss.org/ontology/core/>.
-@prefix crm: <http://www.cidoc-crm.org/cidoc-crm/>. 
+@prefix sdh-short: <https://sdhss.org/ontology/shortcuts/P1> .
+@prefix sdh: <https://sdhss.org/ontology/core/> .
+@prefix crm: <http://www.cidoc-crm.org/cidoc-crm/> . 
 
 
 sdh-shacl:sdh_C13_Shape a sh:NodeShape;
