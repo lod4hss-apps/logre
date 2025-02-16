@@ -138,7 +138,6 @@ else:
     ### TAB ONTOLOGIES ###
     
     tab_data.text('')
-    col1, col2 = tab_ontologies.columns([1, 1])
 
     # Loop through all ontologies files
     folder = Path('./ontologies')
@@ -147,27 +146,32 @@ else:
     onto_paths = [file['path'] for file in files]
     
     # Graph selection
-    graph_label = col1.selectbox('Select the graph', options=graphs_labels, index=None, key='import-ontology-graph-selection')  
+    has_onto_graph = endpoint.ontology_uri != ''
+    if has_onto_graph:
+        selected_graph_uri = endpoint.ontology_uri
+    else:
+        graph_label = tab_ontologies.selectbox('Select the graph', options=graphs_labels, index=None, key='import-ontology-graph-selection')  
 
-    # Fetch the graph
-    if graph_label:
-        graph_index = graphs_labels.index(graph_label)
-        selected_graph = all_graphs[graph_index]
+        # Fetch the graph
+        if graph_label:
+            graph_index = graphs_labels.index(graph_label)
+            selected_graph_uri = all_graphs[graph_index].uri
 
     # Ontology selection
-    ontology_name = col2.selectbox('Choose an ontology', options=onto_names, disabled=(graph_label is None), index=None)
+    ontology_name = tab_ontologies.selectbox('Choose an ontology', options=onto_names, index=None)
     if ontology_name:
         onto_index = all_file_formats.index(format)
         onto_path = './ontologies/' + onto_paths[onto_index]
         f = open(onto_path, 'r')
         file_content = f.read()
         f.close()
+        tab_ontologies.text('')
 
-        if graph_label and file_content and tab_ontologies.button('Upload ontology', icon=':material/upload:'):
+        if file_content and tab_ontologies.button('Upload ontology', icon=':material/upload:'):
             dialog_confirmation(
-                f'You are about to upload the ontology named **{ontology_name.upper()}** into **{graph_label.upper()}**.', 
+                f'You are about to upload the ontology named **{ontology_name.upper()}** into **{selected_graph_uri}**.', 
                 callback=__upload_turtle_file, 
                 ttl_data=file_content,
-                graph_uri=selected_graph.uri
+                graph_uri=selected_graph_uri
             )
 
