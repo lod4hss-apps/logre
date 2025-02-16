@@ -1,11 +1,22 @@
 from typing import List
 import pandas as pd, io, zipfile
 import streamlit as st
-from schema import Graph
+from schema import Graph, OntologyProperty
 from lib.sparql_base import download_graph
 from lib.sparql_queries import get_ontology, get_all_instances_of_class
 from lib.utils import to_snake_case
 import lib.state as state
+
+
+def __get_uri_of_property(class_uri: str, property_label: str):
+    """From a property label and a class, get the URI of it, looking at the ontology."""
+
+    all_properties = get_ontology().properties
+    selection = [prop for prop in all_properties if prop.domain_class_uri == class_uri]
+    target = [prop for prop in selection if to_snake_case(prop.label) == property_label]
+
+    if len(target): return f"{target[0].order}-{target[0].uri}"
+    else: return ""
 
 
 def get_all_class_dataframes() -> List[dict[str, str]]:
@@ -17,14 +28,34 @@ def get_all_class_dataframes() -> List[dict[str, str]]:
     # For each class, fetch all instances of this class
     data = []
     for cls in all_classes:
+        # Get all instances of this class
         instances = get_all_instances_of_class(cls)
-        data.append({'name': to_snake_case(cls.label) + '.csv', 'df': pd.DataFrame(data=instances)})
+
+        # Format the information
+        name = to_snake_case(cls.label) + '.csv'
+        df = pd.DataFrame(data=instances)
+
+        # Rename all columns: add the properties URI
+        new_cols = []
+        for col in df.columns:
+            if col == "uri":
+                new_cols.append("0-uri")
+            else:
+                new_cols.append(f"{__get_uri_of_property(cls.uri, col)}-{col}")
+        df.columns = new_cols
+
+        # Make the column order same as the ontology
+        df = df[sorted(new_cols)]
+        df.columns = [col[2:] for col in df.columns]
+
+        # Save the result
+        data.append({'name': name, 'df': df})
 
     return data
 
 
 def build_zip_file(dfs: List[dict[str, str]]):
-    """Transform the result of the endpoint extract into one single zip file"""
+    """Transform the result of the endpoint extract into one single zip file."""
 
     zip_buffer = io.BytesIO()
     
