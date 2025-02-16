@@ -23,12 +23,12 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
     password = endpoint.password if endpoint else ""
 
     # Formular
-    endpoint_name = st.text_input('Endpoint name ❗️', value=name)
-    endpoint_url = st.text_input('Endpoint URL ❗️', value=url)
-    endpoint_base_uri = st.text_input('Endpoint base URI ❗️', value=base_uri, help="This is the base URI that will be given to new nodes in the endpoint (plus an ID).")
-    endpoint_technology = st.selectbox('Technology', options=technologies, index=technology)
-    endpoint_ontological_framework = st.selectbox('Select the ontological framework', options=frameworks, index=framework_index)
-    endpoint_ontology_uri = st.text_input('Select the graph in which the ontologycal model lies', value=ontology_uri, help="This should be the URI (or shortcut) of the graph containing the ontologycal model; e.g. base:shacl>")
+    endpoint_name = st.text_input('Endpoint name ❗️', value=name, help="Name your endpoint, this is just for you, to recognize it in the list.")
+    endpoint_url = st.text_input('Endpoint URL ❗️', value=url, help="If the endpoint is local, it is propably something like 'http://localhost:9999/', otherwise, see with your endpoint provider.")
+    endpoint_base_uri = st.text_input('Endpoint base URI ❗️', value=base_uri, help="Base URI that will be given to new nodes in the endpoint (plus an ID).")
+    endpoint_technology = st.selectbox('Technology', options=technologies, index=technology, help="Is your endpoint a Fuseki server? Allegrograph server?")
+    endpoint_ontological_framework = st.selectbox('Select the ontological framework', options=frameworks, index=framework_index, help="Only those in the list are supported as of now.")
+    endpoint_ontology_uri = st.text_input('Select the graph in which the ontologycal model lies', value=ontology_uri, help="URI (or shortcut) of the graph containing the ontologycal model; e.g. base:shac.")
     endpoint_username = st.text_input('Username', value=username)
     endpoint_password = st.text_input('Password', value=password, type='password')
 
