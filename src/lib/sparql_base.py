@@ -1,9 +1,9 @@
-from typing import Dict, List, Literal, Any
+from typing import Dict, List
 from urllib.error import URLError, HTTPError
-from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions, TURTLE
+from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
 import streamlit as st
-from schema import Triple, EndpointTechnology, Graph
-from lib.prefixes import get_sparql_prefixes, shorten_uri
+from schema import Triple, EndpointTechnology
+from lib.prefixes import get_prefixes_str, shorten_uri
 from lib.utils import ensure_uri
 import lib.state as state
 
@@ -39,7 +39,7 @@ def query(request: str, caller: str = None, add_prefix: bool = True) -> List[Dic
         sparql_endpoint.setCredentials(endpoint.username, endpoint.password)
 
     # Prepare the query
-    text = get_sparql_prefixes() + request if add_prefix else request
+    text = get_prefixes_str() + request if add_prefix else request
     sparql_endpoint.setQuery(text)
 
     # DEBUG
@@ -53,16 +53,19 @@ def query(request: str, caller: str = None, add_prefix: bool = True) -> List[Dic
         msg = error.msg
         if caller: msg += f' Called by <{caller}>'
         st.error(msg)
+        print(error)
         return False
     except HTTPError as error:
         msg = f"HTTP Error {error.code}: {error.reason}."
         if caller: msg += f' Called by <{caller}>'
         st.error(msg)
+        print(error)
         return False
     except URLError as error:
         msg = f"URL Error: {error.reason}"
         if caller: msg += f' Called by <{caller}>'
         st.error(msg)
+        print(error)
     except Exception as error:
         msg = f"An error occured: {str(error)}"
         return False
@@ -89,7 +92,7 @@ def execute(request: str, caller: str = None, add_prefix: bool = True) -> bool:
     sparql_endpoint = SPARQLWrapper(endpoint.url)
         
     # Prepare the query
-    text = get_sparql_prefixes() + request if add_prefix else request
+    text = get_prefixes_str() + request if add_prefix else request
     sparql_endpoint.setQuery(text)
     sparql_endpoint.method = "POST"
 
@@ -108,16 +111,19 @@ def execute(request: str, caller: str = None, add_prefix: bool = True) -> bool:
         msg = error.msg
         if caller: msg += f' Called by <{caller}>'
         st.error(msg)
+        print(error)
         return False
     except HTTPError as error:
         msg = f"HTTP Error {error.code}: {error.reason}."
         if caller: msg += f' Called by <{caller}>'
         st.error(msg)
+        print(error)
         return False
     except URLError as error:
         msg = f"URL Error: {error.reason}"
         if caller: msg += f' Called by <{caller}>'
         st.error(msg)
+        print(error)
         return False
 
     # The idea behind clearing the cache at this place is to make sure that executed 
@@ -133,15 +139,15 @@ def run(query_string: str, add_prefix: bool = True) -> bool | List[Dict[str, str
     
     if 'delete' in query_string.lower() or 'insert' in query_string.lower():
         return execute(query_string, add_prefix=add_prefix)
-    elif 'select' in query_string.lower():
+    elif 'select' in query_string.lower() or 'construct' in query_string.lower():
         return query(query_string, add_prefix=add_prefix)
     else:
-        st.error('Query error: Only "SELECT", "INSERT", "DELETE" are supported.')
+        st.error('Query error: Only "SELECT", "CONSTRUCT", "INSERT", "DELETE" are supported.')
         return False
 
 
 
-def insert(triples: List[Triple] | Triple, graph: str = None) -> None:
+def insert(triples: List[Triple] | Triple, graph: str = None, delete_before=True) -> None:
     """
     From a list (or unique) of Triple instances, insert them (it) 
     in the endpoint, in the given graph.
@@ -149,7 +155,7 @@ def insert(triples: List[Triple] | Triple, graph: str = None) -> None:
 
     # Special use case for allegrograph: tt allows multiple same triples to exist simultaneously.
     # So on inserting, we first delete the existing, to be sure
-    if state.get_endpoint().technology == EndpointTechnology.ALLEGROGRAPH:
+    if delete_before and state.get_endpoint().technology == EndpointTechnology.ALLEGROGRAPH:
         delete(triples, graph)
 
     # If only a single triple is given, transform is into a list
@@ -210,26 +216,3 @@ def delete(triples: List[Triple] | Triple, graph: str = None) -> None:
 
     # Execute
     execute(text)
-
-
-def download_graph(graph: Graph) -> str:
-    """Fetches the named graph and returns content + filename."""
-
-    # Force the right format
-    graph_uri = ensure_uri(graph.uri)
-
-    # From session state
-    endpoint = state.get_endpoint()
-
-    # Prepare the query
-    if graph_uri: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ GRAPH <{graph.uri}> {{ ?s ?p ?o }} }}"
-    else: text = f"CONSTRUCT {{ ?s ?p ?o }} WHERE {{ ?s ?p ?o }}"
-
-    # Prepare que query maker
-    sparql = SPARQLWrapper(endpoint.url)
-    sparql.setQuery(text)
-    sparql.setReturnFormat(TURTLE)
-
-    # Create a file out of it and return it, with its name
-    result = sparql.query().convert()
-    return result.decode()

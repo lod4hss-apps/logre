@@ -160,7 +160,7 @@ else:
     # Ontology selection
     ontology_name = tab_ontologies.selectbox('Choose an ontology', options=onto_names, index=None)
     if ontology_name:
-        onto_index = all_file_formats.index(format)
+        onto_index = onto_names.index(ontology_name)
         onto_path = './ontologies/' + onto_paths[onto_index]
         f = open(onto_path, 'r')
         file_content = f.read()

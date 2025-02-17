@@ -1,3 +1,4 @@
+from typing import Literal
 from schema import Prefix, EndpointTechnology
 import lib.state as state
 
@@ -15,7 +16,7 @@ prefixes = [
 ]
 
 
-def get_sparql_prefixes() -> str:
+def get_prefixes_str(format: Literal['sparql', 'turtle'] = 'sparql') -> str:
     """
     Transform the list of prefixes into a valid SPARQL.
     Done to avoid to put manually all prefixes everywhere.
@@ -24,12 +25,15 @@ def get_sparql_prefixes() -> str:
     all_prefixes = prefixes + [Prefix(short='base', url=state.get_endpoint().base_uri)]
 
     # Transform to list of string
-    prefixes_str = list(map(lambda p: p.to_sparql(), all_prefixes))
+    prefixes_str = list(map(lambda p: p.to_sparql() if format == 'sparql' else p.to_turtle(), all_prefixes))
+
+    import streamlit as st
 
     # In case we are in Allegrograph, we would like to shortcut the default graph behavior of Allegrograph
     endpoint_technology = state.get_endpoint().technology
-    if endpoint_technology == EndpointTechnology.ALLEGROGRAPH:
-        prefixes_str = ["PREFIX franzOption_defaultDatasetBehavior: <franz:rdf>"] + prefixes_str
+    if endpoint_technology == EndpointTechnology.ALLEGROGRAPH or endpoint_technology.value == EndpointTechnology.ALLEGROGRAPH.value:
+        franz_rdf = Prefix(short='franzOption_defaultDatasetBehavior', url='franz:rdf')
+        if format == 'sparql': prefixes_str = [franz_rdf.to_sparql()] + prefixes_str
 
     # Transform into a single string
     return '\n'.join(prefixes_str)

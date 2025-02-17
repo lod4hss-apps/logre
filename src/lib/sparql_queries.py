@@ -6,6 +6,7 @@ from lib.sparql_base import query
 from lib.utils import ensure_uri, to_snake_case
 from lib.sparql_noframework import get_noframework_ontology
 from lib.sparql_shacl import get_shacl_ontology
+from lib.prefixes import get_prefixes_str
 import lib.state as state
 
 
@@ -73,7 +74,7 @@ def get_ontology() -> Ontology:
     # From state
     framework = state.get_endpoint().ontology_framework
 
-    if framework == OntologyFramework.SHACL.value:
+    if framework == OntologyFramework.SHACL:
         return get_shacl_ontology()
     
     return get_noframework_ontology()
@@ -384,3 +385,44 @@ def get_all_instances_of_class(cls: OntologyClass):
     instances = query(text)
 
     return instances
+
+
+def download_graph(graph: Graph) -> str:
+    """Fetches the named graph and returns its content."""
+
+    # Force the right format
+    graph_uri = ensure_uri(graph.uri)
+
+    # From session state
+    endpoint = state.get_endpoint()
+    
+    # Prepare the query
+    text = """
+        SELECT 
+            (COALESCE(?subject , '') as ?s)
+            (COALESCE(?predicate , '') as ?p)
+            (COALESCE(?object, '') as ?o)
+            (isLiteral(?object) as ?literal)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else '') + """
+                ?subject ?predicate ?object 
+            """ + ("}" if graph_uri else '') + """
+        }
+    """
+
+    # Execute the query
+    triples = query(text)
+    
+    # Add all prefixes
+    content = get_prefixes_str(format='turtle') + '\n\n'
+
+    # Add all triples
+    for triple in triples:
+        subject = ensure_uri(triple['s'])
+        predicate = ensure_uri(triple['p'])
+        if triple['literal'] == 'true': object = f"'{triple['o']}'"
+        else: object = ensure_uri(triple['o'])
+
+        content += f"{subject} {predicate} {object} .\n"
+
+    return content

@@ -33,7 +33,7 @@ def dialog_config_graph():
 
             # Insert triples
             insert([triple_name, triple_comment]) # graph label and comment can't be added to the graph itself by convention
-            insert([dummy_triple], graph=graph_uri)
+            insert([dummy_triple], graph=graph_uri, delete_before=False)
 
             # And reset the graphs that are in session, so that, they are fetched on rerun
             state.clear_graphs()

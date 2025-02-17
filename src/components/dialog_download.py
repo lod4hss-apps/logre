@@ -1,9 +1,8 @@
 from typing import List
 import pandas as pd, io, zipfile
 import streamlit as st
-from schema import Graph, OntologyProperty
-from lib.sparql_base import download_graph
-from lib.sparql_queries import get_ontology, get_all_instances_of_class
+from schema import Graph
+from lib.sparql_queries import get_ontology, get_all_instances_of_class, download_graph
 from lib.utils import to_snake_case
 import lib.state as state
 
@@ -19,7 +18,7 @@ def __get_uri_of_property(class_uri: str, property_label: str):
     else: return ""
 
 
-def get_all_class_dataframes() -> List[dict[str, str]]:
+def __get_all_class_dataframes() -> List[dict[str, pd.DataFrame]]:
     """For each class listed in the ontology, generate a dataframe containing all instances with their properties as columns."""
 
     # Get all classes listed in the ontology
@@ -49,22 +48,25 @@ def get_all_class_dataframes() -> List[dict[str, str]]:
         df.columns = [col[2:] for col in df.columns]
 
         # Save the result
-        data.append({'name': name, 'df': df})
+        data.append({'name': name, 'value': df})
 
     return data
 
 
-def build_zip_file(dfs: List[dict[str, str]]):
+def __build_zip_file(datas: List[dict[str, str | pd.DataFrame]]):
     """Transform the result of the endpoint extract into one single zip file."""
 
     zip_buffer = io.BytesIO()
     
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for data in dfs:
-            csv_buffer = io.StringIO()
-            data['df'].to_csv(csv_buffer, index=False)
-            zip_file.writestr(data['name'], csv_buffer.getvalue())
-    
+        for data in datas:
+            if isinstance(data['value'], pd.DataFrame):
+                csv_buffer = io.StringIO()
+                data['value'].to_csv(csv_buffer, index=False)
+                zip_file.writestr(data['name'], csv_buffer.getvalue())
+            if isinstance(data['value'], str):
+                zip_file.writestr(data['name'], data['value'])
+
     zip_buffer.seek(0)
     return zip_buffer
 
@@ -91,10 +93,10 @@ def dialog_download_graph(graph: Graph):
         col1, col2 = st.columns([1, 1])
         if col1.button('Build the turtle file'):
             try:
-                data = download_graph(graph)
+                datas = download_graph(graph)
                 col1.write('File generated')
                 filename = f"logre-{endpoint.name}-{graph.label}.ttl".lower()
-                col2.download_button(label="Click to Download", data=data, file_name=filename, mime="text/turtle")
+                col2.download_button(label="Click to Download", data=datas, file_name=filename, mime="text/turtle")
             except Exception as e:
                 st.error(f"Error: {e}")
 
@@ -102,8 +104,35 @@ def dialog_download_graph(graph: Graph):
     if ".csv" in format:
         col1, col2 = st.columns([1, 1])
         if col1.button('Build the CSV bundle'):
-            data = get_all_class_dataframes()
-            zip_file = build_zip_file(data)
+            datas = __get_all_class_dataframes()
+            zip_file = __build_zip_file(datas)
             filename = f"logre-{endpoint.name}-{graph.label}.zip".lower()
             col2.download_button(label="Click to Download", data=zip_file, file_name=filename, mime="application/zip")
     
+
+
+@st.dialog('Download the graph')
+def dialog_dump_endpoint():
+    """Dialog function allowing the user download the full endpoint (zip of turtle files, one for each graph)."""
+
+    # From state
+    endpoint = state.get_endpoint()
+    all_graphs = state.get_graphs()
+
+    # Information for the user
+    st.markdown('Depending on the endpoint size, building the file could take a while.')
+
+    st.divider()
+
+    col1, col2 = st.columns([1, 1])
+    if col1.button('Build the zip file'):
+        
+        datas = []
+        for graph in all_graphs:
+            filename = f"logre-{endpoint.name}-{graph.label}.ttl".lower()
+            value = download_graph(graph)
+            datas.append({'name': filename, 'value': value})
+
+        zip_file = __build_zip_file(datas)
+        filename = f"logre-{endpoint.name}-dump.zip".lower()
+        col2.download_button(label="Click to Download", data=zip_file, file_name=filename, mime="application/zip")

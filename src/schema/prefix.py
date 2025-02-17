@@ -11,6 +11,11 @@ class Prefix(BaseModel):
 
         return f"PREFIX {self.short}: <{self.url}>"
     
+    def to_turtle(self) -> str:
+        """Return a Turtle ready string for the prefix"""
+
+        return f"@prefix {self.short}: <{self.url}> ."
+
     def shorten(self, uri: str) -> str:
         """Replace the given long uri by its short prefix, if present."""
         return uri.replace(self.url, self.short + ':')

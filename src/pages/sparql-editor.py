@@ -1,7 +1,7 @@
 import pandas as pd
 from code_editor import code_editor
 import streamlit as st
-from lib.prefixes import get_sparql_prefixes
+from lib.prefixes import get_prefixes_str
 import lib.sparql_base as sparql
 import lib.state as state
 from components.init import init
@@ -30,7 +30,8 @@ if not endpoint:
 else:
 
     # The default query that is shown on first load of the page
-    default_query = (get_sparql_prefixes() + """
+    default_query = (get_prefixes_str() + """
+                     
 SELECT ?subject ?predicate ?object
 WHERE {
     ?subject ?predicate ?object

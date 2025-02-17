@@ -9,7 +9,7 @@ import lib.state as state
 from components.init import init
 from components.menu import menu
 from components.dialog_confirmation import dialog_confirmation
-from components.dialog_download_graph import dialog_download_graph
+from components.dialog_download import dialog_download_graph, dialog_dump_endpoint
 from components.dialog_config_endpoint import dialog_config_endpoint
 from components.dialog_config_graph import dialog_config_graph
 
@@ -192,9 +192,10 @@ st.divider()
 if endpoint:
 
     # Title and boxes for graph actions (show/hide graph list)
-    col1, col2, col3, col4 = st.columns([4, 1, 1, 2], vertical_alignment='bottom')
+    col1, col_dump, col2, col3, col4 = st.columns([2, 2, 1, 1, 2], vertical_alignment='bottom')
     col1.markdown('### Graphs')
 
+    col_dump.button('Dump', icon=":material/download_2:", on_click=dialog_dump_endpoint, type='tertiary')
     col2.button('Show', on_click=__show_graph_list, icon=':material/visibility:', key='config-btn-show-graphs', type='tertiary')
     col3.button('Hide', on_click=__hide_graph_list, icon=':material/visibility_off:', key='config-btn-hide-graphs', type='tertiary')
     col4.button('Add new', on_click=dialog_config_graph, icon=':material/add:', key='config-btn-add-graph')
