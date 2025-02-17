@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from schema.enums import EndpointTechnology, OntologyFramework
 
 
@@ -28,10 +28,13 @@ class Endpoint(BaseModel):
     def from_dict(cls, data: dict) -> 'Endpoint':
         """Create an Endpoint instance from a dictionary"""
 
-        # Ensure enums are correctly parsed
-        if isinstance(data.get("technology"), str):
-            data["technology"] = EndpointTechnology(data["technology"])
-        if isinstance(data.get("ontology_framework"), str):
-            data["ontology_framework"] = OntologyFramework(data["ontology_framework"])
+        # Parse the object 
+        parsed = cls(**data)
 
-        return cls(**data)
+        # Parse the enums correctly
+        if parsed.technology: parsed.technology = EndpointTechnology(parsed.technology)
+        else: parsed.technology = EndpointTechnology.NONE
+        if parsed.ontology_framework: parsed.ontology_framework = OntologyFramework(parsed.ontology_framework)
+        else: parsed.ontology_framework = OntologyFramework.NONE
+
+        return parsed

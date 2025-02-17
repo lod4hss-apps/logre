@@ -4,8 +4,10 @@ import lib.state as state
 from lib.configuration import save_config
 
 # Contants
-technologies = [e.value for e in EndpointTechnology]
-frameworks = [e.value for e in OntologyFramework]
+technologies = [e for e in EndpointTechnology]
+technologies_str = [e.value for e in EndpointTechnology]
+frameworks = [e for e in OntologyFramework]
+frameworks_str = [e.value for e in OntologyFramework]
 
 
 @st.dialog("Add an endpoint")
@@ -15,7 +17,7 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
     # Values, and default
     name = endpoint.name if endpoint else ""
     url = endpoint.url if endpoint else ""
-    technology = technologies.index(endpoint.technology) if endpoint else 0
+    technology_index = technologies.index(endpoint.technology) if endpoint else 0
     base_uri = endpoint.base_uri if endpoint else "http://www.example.org/"
     ontology_uri = endpoint.ontology_uri if endpoint else "base:shacl"
     framework_index = frameworks.index(endpoint.ontology_framework) if endpoint else 0
@@ -26,11 +28,11 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
     endpoint_name = st.text_input('Endpoint name ❗️', value=name, help="Name your endpoint, this is just for you, to recognize it in the list.")
     endpoint_url = st.text_input('Endpoint URL ❗️', value=url, help="If the endpoint is local, it is propably something like 'http://localhost:9999/', otherwise, see with your endpoint provider.")
     endpoint_base_uri = st.text_input('Endpoint base URI ❗️', value=base_uri, help="Base URI that will be given to new nodes in the endpoint (plus an ID).")
-    endpoint_technology = st.selectbox('Technology', options=technologies, index=technology, help="Is your endpoint a Fuseki server? Allegrograph server?")
-    endpoint_ontological_framework = st.selectbox('Select the ontological framework', options=frameworks, index=framework_index, help="Only those in the list are supported as of now.")
+    endpoint_technology = st.selectbox('Technology', options=technologies_str, index=technology_index, help="Is your endpoint a Fuseki server? Allegrograph server?")
+    endpoint_ontological_framework = st.selectbox('Select the ontological framework', options=frameworks_str, index=framework_index, help="Only those in the list are supported as of now.")
     endpoint_ontology_uri = st.text_input('Select the graph in which the ontologycal model lies', value=ontology_uri, help="URI (or shortcut) of the graph containing the ontologycal model; e.g. base:shac.")
-    endpoint_username = st.text_input('Username', value=username)
-    endpoint_password = st.text_input('Password', value=password, type='password')
+    endpoint_username = st.text_input('Username', value=username, help="In case their is authentication on the endpoint. Leave it empty if not.")
+    endpoint_password = st.text_input('Password', value=password, type='password', help="In case their is authentication on the endpoint. Leave it empty if not.")
 
     st.text("")
 
@@ -43,10 +45,10 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
             new_endpoint = Endpoint(
                 name=endpoint_name,
                 url=endpoint_url,
-                technology=endpoint_technology,
+                technology=EndpointTechnology(endpoint_technology),
                 base_uri=endpoint_base_uri,
                 ontology_uri=endpoint_ontology_uri,
-                ontology_framework=endpoint_ontological_framework,
+                ontology_framework=OntologyFramework(endpoint_ontological_framework),
                 username=endpoint_username,
                 password=endpoint_password
             )

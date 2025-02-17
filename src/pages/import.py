@@ -25,7 +25,7 @@ def __get_import_url(graph_uri: str = ""):
     endpoint_url = endpoint.url
 
     # Allegrograph endpoint
-    if technology == EndpointTechnology.ALLEGROGRAPH.value:
+    if technology == EndpointTechnology.ALLEGROGRAPH:
         
         # If in the Allegrograph endpoint, there is the trailing '/sparql', remove it: 
         # import does not work on this URL
@@ -45,7 +45,7 @@ def __get_import_url(graph_uri: str = ""):
 
         return url
     
-    elif technology == 'Fuseki':
+    elif technology == EndpointTechnology.FUSEKI:
         # If it is a Fuseki endpoint
         if graph_uri:
             graph_uri = graph_uri.replace('base:', 'http://geovistory.org/information/')

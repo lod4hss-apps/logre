@@ -31,7 +31,6 @@ else:
 
     # The default query that is shown on first load of the page
     default_query = (get_sparql_prefixes() + """
-
 SELECT ?subject ?predicate ?object
 WHERE {
     ?subject ?predicate ?object
