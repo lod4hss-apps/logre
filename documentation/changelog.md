@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.9.0 - Date 2025-02-18
+
+- Allow user to import spreadsheets (CSV)
+- Bug corrections
+
 ## v1.8.3 - Date 2025-02-17
 
 - Solve download graph issues

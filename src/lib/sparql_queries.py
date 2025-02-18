@@ -349,11 +349,9 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
     return display_triples
 
 
-def get_all_instances_of_class(cls: OntologyClass): 
+def get_all_instances_of_class(cls: OntologyClass, graph: Graph): 
     """List all instances with all properties (from the ontology) of a given class."""
 
-    # From state
-    graph = state.get_graph()
     graph_uri = ensure_uri(graph.uri)
 
     # Get the ontology properties of this class
@@ -365,13 +363,12 @@ def get_all_instances_of_class(cls: OntologyClass):
     properties_outgoing_names_str = '\n            '.join(properties_outgoing_names)
     triples_outgoings = [f"optional {{ ?instance {prop.uri} ?{to_snake_case(prop.label)}_ . }}" for prop in properties_outgoing]
     triples_outgoings_str = '\n                '.join(triples_outgoings)
-    
-
 
     # Build the query
     text = f"""
         SELECT
             (?instance as ?uri)
+            ('{cls.uri}' as ?type)
             {properties_outgoing_names_str}
         WHERE {{
             {'GRAPH ' + graph_uri + '{' if graph_uri else ''}

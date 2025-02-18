@@ -63,7 +63,7 @@ def to_snake_case(text: str) -> str:
     # Remove punctuation
     cleaned_text = re.sub(r"[^\w\s]", "", no_accents_text)
 
-    # Replace spaces with underscores and convert to lowercase
+    # Replace spaces with dashs and convert to lowercase
     snake_case_text = re.sub(r"\s+", "_", cleaned_text.strip()).lower()
 
     return snake_case_text

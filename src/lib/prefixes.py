@@ -65,3 +65,8 @@ def explicits_uri(uri: str) -> str:
         uri = prefix.explicit(uri)
     return uri
 
+def is_prefix(supposed_prefix: str) -> bool:
+    """Check if the given supposed prefix is listed as a prefix."""
+
+    found = [prefix for prefix in prefixes if prefix.short == supposed_prefix]
+    return len(found) == 0

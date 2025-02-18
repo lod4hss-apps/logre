@@ -18,7 +18,7 @@ def __get_uri_of_property(class_uri: str, property_label: str):
     else: return ""
 
 
-def __get_all_class_dataframes() -> List[dict[str, pd.DataFrame]]:
+def __get_all_class_dataframes(graph: Graph) -> List[dict[str, pd.DataFrame]]:
     """For each class listed in the ontology, generate a dataframe containing all instances with their properties as columns."""
 
     # Get all classes listed in the ontology
@@ -28,7 +28,7 @@ def __get_all_class_dataframes() -> List[dict[str, pd.DataFrame]]:
     data = []
     for cls in all_classes:
         # Get all instances of this class
-        instances = get_all_instances_of_class(cls)
+        instances = get_all_instances_of_class(cls, graph)
 
         # Format the information
         name = to_snake_case(cls.label) + '.csv'
@@ -37,15 +37,15 @@ def __get_all_class_dataframes() -> List[dict[str, pd.DataFrame]]:
         # Rename all columns: add the properties URI
         new_cols = []
         for col in df.columns:
-            if col == "uri":
-                new_cols.append("0-uri")
-            else:
-                new_cols.append(f"{__get_uri_of_property(cls.uri, col)}-{col}")
+            if col == "uri": new_cols.append("00-uri")
+            elif col == "type": new_cols.append("01-rdfs:type")
+            else: new_cols.append(f"{__get_uri_of_property(cls.uri, col)}_{col.replace('_', '-')}")
         df.columns = new_cols
 
         # Make the column order same as the ontology
         df = df[sorted(new_cols)]
-        df.columns = [col[2:] for col in df.columns]
+        df.columns = [col[col.index('-')+1:] for col in df.columns]
+
 
         # Save the result
         data.append({'name': name, 'value': df})
@@ -104,7 +104,7 @@ def dialog_download_graph(graph: Graph):
     if ".csv" in format:
         col1, col2 = st.columns([1, 1])
         if col1.button('Build the CSV bundle'):
-            datas = __get_all_class_dataframes()
+            datas = __get_all_class_dataframes(graph)
             zip_file = __build_zip_file(datas)
             filename = f"logre-{endpoint.name}-{graph.label}.zip".lower()
             col2.download_button(label="Click to Download", data=zip_file, file_name=filename, mime="application/zip")
