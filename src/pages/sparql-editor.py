@@ -12,7 +12,7 @@ from components.dialog_queries_load import dialog_queries_load
 
 ##### The page #####
 
-init()
+init(layout='wide')
 menu()
 
 

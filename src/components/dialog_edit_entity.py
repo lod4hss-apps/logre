@@ -40,9 +40,9 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
     # Get the ontology, to have labels
     ontology = get_ontology()
 
-    col1, col2 = st.columns([5, 1], vertical_alignment='bottom')
-    col1.title(entity.display_label_comment)
-    col2.button('', icon=':material/info:', type='tertiary', help='You can only edit outgoing triples, to edit an incoming one, go to the subject entity.')
+    col_label, col_range = st.columns([5, 1], vertical_alignment='bottom')
+    col_label.title(entity.display_label_comment)
+    col_range.button('', icon=':material/info:', type='tertiary', help='You can only edit outgoing triples, to edit an incoming one, go to the subject entity.')
 
     st.divider()
 
@@ -50,13 +50,13 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
 
     # In all case, we make 3 statements mandatory, independant of the ontology.
     # They are: the class (rdf:type), the label (rdfs:label) and the comment (rdfs:comment).
-    col1, col2 = st.columns([2, 3])
+    col_label, col_range = st.columns([2, 3])
 
     # 1/ Class is fixed, we can not update it for an entity
-    col1.selectbox('Class ❗️', options=[entity.class_label], index=0, disabled=True)
+    col_label.selectbox('Class ❗️', options=[entity.class_label], index=0, disabled=True)
 
     # 2/ Input field to set the entity label
-    new_entity_label = col2.text_input('Label ❗️', value=entity.label)
+    new_entity_label = col_range.text_input('Label ❗️', value=entity.label)
     # If the label is nothing, we forbid it: label is mandatory
     if new_entity_label.strip() == '':
         st.warning('This will have no effect: the label is mandatory')
@@ -71,6 +71,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
         triples_to_delete.append(Triple(entity.uri, 'rdfs:comment', f"'{entity.comment}'"))
         # Only append the new if it not an empty string
         if new_entity_comment.strip() != '': triples_to_create.append(Triple(entity.uri, 'rdfs:comment', f"'{new_entity_comment.strip()}'"))
+        entity.comment = new_entity_comment
 
     st.divider()
 
@@ -87,7 +88,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
 
     # Loop through all relevant properties and display the right input Field
     for i, prop in enumerate(props_to_create):
-        col11, col1, col2 = st.columns([2, 4, 6], vertical_alignment='center') 
+        col_label, col_range, col_info = st.columns([4, 6, 2], vertical_alignment='bottom') 
 
         # Fetch the existing triple
         existing_triples = [triple for triple in triples if triple.predicate.uri == prop.uri]
@@ -95,7 +96,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
         else: existing_triple = None
 
         # Information about the property
-        with col11.popover('', icon=':material/info:'):
+        with col_info.popover('', icon=':material/info:'):
             st.markdown('### Property information')
 
             c1, c2 = st.columns([1, 1])
@@ -126,81 +127,143 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
 
 
         # On the left: Property label
-        col1.markdown(f"### {prop.label}{suffix}")
+        col_label.markdown(f"### {prop.label}{suffix}")
         
         # For code simplification
         field_key = f"dlg-edit-entity-field-{i}"
 
         # If the range is a xsd:string, display a text field
         if prop.range_class_uri == 'xsd:string':
-            # Fetch the existing value (literal) if there is any
-            existing_value = existing_triple.object.label if existing_triple else None
-            # User form input field
-            new_string_value = col2.text_input(ontology.get_class_name(prop.range_class_uri), key=field_key, value=existing_value)
-            # If this property is mandatory, we forbid to set this property value to empty string
-            if mandatory and new_string_value.strip() == '':
-                st.warning('This will have no effect: this property is mandatory')
-            elif new_string_value != existing_value:
-                # Delete the old one, if there is any
-                if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, f"'{existing_value}'"))
-                # Only append the new if it not an empty string (not mandatory here)
-                if new_string_value.strip() != '': triples_to_create.append(Triple(entity.uri, prop.uri, f"'{new_string_value.strip()}'"))
+            # Get all the existing labels from the existing triples
+            existing_values = [triple.object.label for triple in existing_triples]
+
+            # For each one of them, display it correctly, and give wanted behavior (create/delete on save click)
+            for j, existing_value in enumerate(existing_values):
+                new_string_value = col_range.text_input(ontology.get_class_name(prop.range_class_uri), key=field_key + f'-{j}', value=existing_value)
+                # If this property is mandatory, we forbid to set this property value to empty string
+                if mandatory and new_string_value.strip() == '':
+                    st.warning('This will have no effect: this property is mandatory')
+                elif new_string_value != existing_value:
+                    # Delete the old one, if there is any
+                    if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, f"'{existing_value}'"))
+                    # Only append the new if it not an empty string (not mandatory here)
+                    if new_string_value.strip() != '': triples_to_create.append(Triple(entity.uri, prop.uri, f"'{new_string_value.strip()}'"))
+   
+            # Dedicated behavior:
+            # Here, if the property have a max count greater that 1,
+            # We would like to give the user the possibility to add them accrodingly
+            # So the strategy is the following:
+            # Each time the user fill a value, we display another empty field so that he can add another value
+            # Of course it is limited by the max count of the cardinality, once it is reached
+
+            def recursive_call_xsdstring(index: int) -> None:
+                """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
+                string_value = col_range.text_input(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{len(existing_values)+index}", placeholder="Start writing to add a new value")
+                if string_value and string_value.strip() != '':
+                    triples_to_create.append(Triple(entity.uri, prop.uri, f"'{string_value.strip()}'"))
+                if string_value and index + 1 < prop.max_count:
+                    recursive_call_xsdstring(index + 1)
+
+            # If we do not yet have reached max value, add possibility to add some
+            if len(existing_values) < prop.max_count: 
+                recursive_call_xsdstring(len(existing_values)) 
+
 
         # If the range is a xsd:html, display a text area
         elif prop.range_class_uri == 'xsd:html':
-            # Fetch the existing value (literal) if there is any
-            existing_value = existing_triple.object.label if existing_triple else None
-            # User form input field
-            new_html_value = col2.text_area(ontology.get_class_name(prop.range_class_uri), key=field_key, value=existing_value)
-            # If this property is mandatory, we forbid to set this property value to empty string
-            if mandatory and new_html_value.strip() == '':
-                st.warning('This will have no effect: this property is mandatory')
-            elif new_html_value != existing_value:
-                # Delete the old one, if there is any
-                if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, f"'{existing_value}'"))
-                # Only append the new if it not an empty string (not mandatory here)
-                if new_html_value.strip() != '': triples_to_create.append(Triple(entity.uri, prop.uri, f"'{new_html_value.strip()}'"))
-        
+
+            # Get all the existing labels from the existing triples
+            existing_values = [triple.object.label for triple in existing_triples]
+
+            # For each one of them, display it correctly, and give wanted behavior (create/delete on save click)
+            for j, existing_value in enumerate(existing_values):
+                new_html_value = col_range.text_area(ontology.get_class_name(prop.range_class_uri), key=field_key + f'-{j}', value=existing_value)
+                # If this property is mandatory, we forbid to set this property value to empty string
+                if mandatory and new_html_value.strip() == '':
+                    st.warning('This will have no effect: this property is mandatory')
+                elif new_html_value != existing_value:
+                    # Delete the old one, if there is any
+                    if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, f"'{existing_value}'"))
+                    # Only append the new if it not an empty string (not mandatory here)
+                    if new_html_value.strip() != '': triples_to_create.append(Triple(entity.uri, prop.uri, f"'{new_string_value.strip()}'"))
+   
+            # Dedicated behavior:
+            # Here, if the property have a max count greater that 1,
+            # We would like to give the user the possibility to add them accrodingly
+            # So the strategy is the following:
+            # Each time the user fill a value, we display another empty field so that he can add another value
+            # Of course it is limited by the max count of the cardinality, once it is reached
+
+            def recursive_call_xsdhtml(index: int) -> None:
+                """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
+                html_value = col_range.text_area(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{len(existing_values)+index}", placeholder="Start writing to add a new value")
+                if html_value and html_value.strip() != '':
+                    triples_to_create.append(Triple(entity.uri, prop.uri, f"'{html_value.strip()}'"))
+                if html_value and index + 1 < prop.max_count:
+                    recursive_call_xsdhtml(index + 1)
+
+            # If we do not yet have reached max value, add possibility to add some
+            if len(existing_values) < prop.max_count: 
+                recursive_call_xsdhtml(len(existing_values)) 
+
+
         # If the range is not a Literal, it should then be instances of classes 
         else: 
             # List all possible existing entities (right class) from the endpoint
             possible_objects = find_entities(class_filter=prop.range_class_uri)
             # Get their label
             possible_objects_label = [obj.display_label_comment for obj in possible_objects]
-            # If the property is mandatory, add the possibility to set to nothing
-            if not mandatory: possible_objects_label = ['None'] + possible_objects_label
-            # Target the existing entity with its uri, if any
-            existing_object = [ent for ent in possible_objects if ent.uri == existing_triple.object.uri][0] if existing_triple else None
-            # Get the index of this entity, if any
-            existing_index = possible_objects_label.index(existing_object.display_label_comment) if existing_triple else None
-            # Get its URI (for code conveniance), if any
-            existing_uri = existing_object.uri if existing_triple else None
-            # User form input field
-            new_object_label = col2.selectbox(ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key, index=existing_index)
-            if new_object_label:
-                # If the user selected an entity
-                if new_object_label != 'None':
-                    object_index = possible_objects_label.index(new_object_label) - 1
-                    new_object = possible_objects[object_index]
-                    if new_object.uri != existing_uri:
-                        if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, existing_uri))
-                        triples_to_create.append(Triple(entity.uri, prop.uri, new_object.uri))
-                # If the user selected 'None' and there was an entity, just delete the old one
-                elif existing_triple:
-                    triples_to_delete.append(Triple(entity.uri, prop.uri, existing_uri))
 
+            # Only if this prop has max cardinality equal to 1
+            if prop.max_count == 1:
+                # If the property is mandatory, add the possibility to set to nothing
+                if not mandatory: possible_objects_label = ['None'] + possible_objects_label
+                # Target the existing entity with its uri, if any
+                existing_object = [ent for ent in possible_objects if ent.uri == existing_triple.object.uri][0] if existing_triple else None
+                # Get the index of this entity, if any
+                existing_index = possible_objects_label.index(existing_object.display_label_comment) if existing_triple else None
+                # Get its URI (for code conveniance), if any
+                existing_uri = existing_object.uri if existing_triple else None
+                # User form input field
+                new_object_label = col_range.selectbox(ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key, index=existing_index)
+                if new_object_label:
+                    # If the user selected an entity
+                    if new_object_label != 'None':
+                        object_index = possible_objects_label.index(new_object_label) - 1
+                        new_object = possible_objects[object_index]
+                        if new_object.uri != existing_uri:  
+                            if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, existing_uri))
+                            triples_to_create.append(Triple(entity.uri, prop.uri, new_object.uri))
+                    # If the user selected 'None' and there was an entity, just delete the old one
+                    elif existing_triple:
+                        triples_to_delete.append(Triple(entity.uri, prop.uri, existing_uri))
+            
+            # If it can have multiple ranges:
+            else:
+                # Target all the existing entities so that they are correctly displayed
+                existing_objects_uris = [triple.object.uri for triple in triples if triple.predicate.uri == prop.uri]
+                existing_objects = [ent for ent in possible_objects if ent.uri in existing_objects_uris]
+                existing_objects_labels = [ent.display_label for ent in existing_objects]
+
+                # Allow user to modify current values
+                new_object_labels = col_range.multiselect(ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key, default=existing_objects_labels)
+
+                # Find the selected entities
+                new_objects_uris = [ent.uri for ent in possible_objects if ent.display_label in new_object_labels]
+                
+                # Find the triples to delete
+                uri_to_delete = [uri for uri in existing_objects_uris if uri not in new_objects_uris]
+                for uri in uri_to_delete:
+                    triples_to_delete.append(Triple(entity.uri, prop.uri, uri))
+                
+                # Find the triples to create
+                uri_to_create = [uri for uri in new_objects_uris if uri not in existing_objects_uris]
+                for uri in uri_to_create:
+                    triples_to_create.append(Triple(entity.uri, prop.uri, uri))
 
         st.text('')
 
     st.divider()
-
-    # st.write('DELETE')
-    # for triple in triples_to_delete:
-    #     st.write(f"{triple.subject_uri} --- {triple.predicate_uri} --- {triple.object_uri}")
-    # st.write('CREATE')
-    # for triple in triples_to_create:
-    #     st.write(f"{triple.subject_uri} --- {triple.predicate_uri} --- {triple.object_uri}")
-
 
     # Validation, edition, and display
     if st.button('Save', icon=":material/save:"):

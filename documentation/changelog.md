@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.9.1 - Date 2025-02-19
+
+- Allow to add multiple time the same triple in formulars when ontology allows it
+- Add a delete button on the entity card
+- Solve bugs
+- Change the way dump is handled: Now when dumping, create a n-quads file.
+
 ## v1.9.0 - Date 2025-02-18
 
 - Allow user to import spreadsheets (CSV)

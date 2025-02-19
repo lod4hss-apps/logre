@@ -1,4 +1,5 @@
 from typing import Dict, List
+import requests
 from urllib.error import URLError, HTTPError
 from SPARQLWrapper import SPARQLWrapper, JSON, SPARQLExceptions
 import streamlit as st
@@ -216,3 +217,25 @@ def delete(triples: List[Triple] | Triple, graph: str = None) -> None:
 
     # Execute
     execute(text)
+
+
+def dump_endpoint():
+
+    # From state
+    endpoint = state.get_endpoint()
+
+    # Build the URL
+    url = endpoint.url + '/statements'
+
+    # Send GET request with Accept header for N-Quads format
+    headers = {"Accept": "application/n-quads"}
+
+    # Add Authentication
+    if endpoint.username and endpoint.password: auth = (endpoint.username, endpoint.password)
+    elif endpoint.username: auth = (endpoint.username, '')
+    else: auth = None
+
+    # Make the request
+    response = requests.get(url, headers=headers, auth=auth)
+
+    return response.text

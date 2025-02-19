@@ -1,8 +1,9 @@
+from typing import Literal
 from pathlib import Path
 import pandas as pd
 from io import StringIO
 import streamlit as st
-from schema import EndpointTechnology, Triple
+from schema import EndpointTechnology, Triple, Graph
 from components.init import init
 from components.menu import menu
 from components.dialog_confirmation import dialog_confirmation
@@ -11,25 +12,28 @@ import lib.state as state
 from lib.sparql_base import insert
 from lib.prefixes import is_prefix
 
-all_file_formats = ['Turtle (.ttl)', 'Spreadsheet (.csv)']
-all_file_types = ['ttl', 'csv']
+all_file_formats = ['Turtle (.ttl)', 'Spreadsheet (.csv)', 'n-Quads (.nq)']
+all_file_types = ['ttl', 'csv', 'nq']
 
 
-def format_filename(filename: str) -> str:
+def __format_filename(filename: str) -> str:
     """Transform a filename in a usable title in the page"""
+
     name = filename[0:filename.rindex(".")] # Remove extension
     name = name.replace("-", " ").replace("_", " ")  # Replace separators
     return name.title()
 
 
-def __get_import_url(graph_uri: str = ""):
+def __get_import_url(graph_uri: str = "") -> str | None:
+    """Depending on the technology, get the correct import URL"""
 
+    # From state
+    endpoint = state.get_endpoint()
     technology = endpoint.technology
     endpoint_url = endpoint.url
 
     # Allegrograph endpoint
     if technology == EndpointTechnology.ALLEGROGRAPH:
-        
         # If in the Allegrograph endpoint, there is the trailing '/sparql', remove it: 
         # import does not work on this URL
         allegrograph_base_url = endpoint_url.replace('/sparql', '')
@@ -45,7 +49,6 @@ def __get_import_url(graph_uri: str = ""):
         else: 
             # If it is in the default graph, nothing is needed to do
             url = f"{allegrograph_base_url}/statements"
-
         return url
     
     elif technology == EndpointTechnology.FUSEKI:
@@ -57,13 +60,23 @@ def __get_import_url(graph_uri: str = ""):
             return endpoint_url
 
 
-def __upload_turtle_file(ttl_data: str, graph_uri: str):
+def __upload_turtle_file(ttl_data: str, graph_uri: str) -> None | Literal['error']:
+    """
+    Function to import raw turtle data (as string) into the given graph.
+    Specifying the graph is mandatory, otherwise import it into default graph.
+    """
 
     # Upload
     url = __get_import_url(graph_uri)
     headers = {"Content-Type": "text/turtle"}
-    authentication = (endpoint.username, endpoint.password)
-    response = requests.post(url, data=ttl_data, headers=headers, auth=authentication)
+
+    # Add Authentication
+    if endpoint.username and endpoint.password: auth = (endpoint.username, endpoint.password)
+    elif endpoint.username: auth = (endpoint.username, '')
+    else: auth = None
+    
+    # Make the request
+    response = requests.post(url, data=ttl_data, headers=headers, auth=auth)
 
     # Check response
     if response.status_code >= 400:
@@ -78,8 +91,43 @@ def __upload_turtle_file(ttl_data: str, graph_uri: str):
     state.set_toast('Data inserted', ':material/file_upload:')
 
 
+def __upload_nquads_file(nq_data:str) -> None | Literal['error']:
+    """
+    Function to import raw n-Quads data (as string) into the endpoint.
+    As n-quads already include the graph, data can't be imported into a specified graph.
+    """
 
-def __upload_spreadsheet_file(csv_data: str, graph_uri: str):
+    # Upload
+    url = __get_import_url()
+    headers = {"Content-Type": "application/n-quads"}
+
+    # Add Authentication
+    if endpoint.username and endpoint.password: auth = (endpoint.username, endpoint.password)
+    elif endpoint.username: auth = (endpoint.username, '')
+    else: auth = None
+
+    # Make the request
+    response = requests.post(url, data=nq_data, headers=headers, auth=auth)
+
+    # Check response
+    if response.status_code >= 400:
+        st.error(f"Failed to upload file. Status code: {response.status_code}. Reason: {response.reason}. Message: {response.text}.")
+        return 'error'
+    else:
+        # We clear the cache, because it needs to refetch the needed information: 
+        # If for example, imported data is the model, we need to fetch it on next occasion
+        # Which won't happen if the cache is not cleared.
+        st.cache_data.clear()
+        state.clear_graphs()
+
+    state.set_toast('Data inserted', ':material/file_upload:')
+
+
+def __upload_spreadsheet_file(csv_data: str, graph_uri: str) -> None:
+    """
+    Function to import CSV raw file into the endpoint.
+    Specifying the graph is mandatory, otherwise import it into default graph.
+    """
 
     df = pd.read_csv(StringIO(csv_data))
 
@@ -132,70 +180,85 @@ else:
     graphs_labels = [graph.label for graph in all_graphs]
     tab_data, tab_ontologies = st.tabs(['Data', 'Ontologies'])
 
-    ### TAB DATA ### 
-    
+    ### TAB DATA ###
+
     tab_data.text('')
-    col1, col2 = tab_data.columns([1, 1])
-
-    # Graph selection
-    graph_label = col1.selectbox('Select the graph', options=graphs_labels, index=None, key='import-data-graph-selection')  
-
-    # Fetch the graph
-    if graph_label:
-        graph_index = graphs_labels.index(graph_label)
-        selected_graph = all_graphs[graph_index]
+    col1, col2 = tab_data.columns([1, 1]) 
+    
 
     # File format selection
-    format = col2.selectbox('Select the file format', options=all_file_formats, disabled=(graph_label is None))
+    format = col1.selectbox('Select the file format', options=all_file_formats)
     if format:
         format_index = all_file_formats.index(format)
         file_type = all_file_types[format_index]
 
-    # File uploader
-    file = tab_data.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None or graph_label is None))
-    tab_data.text('')
+        # Only provide graph selection if it makes sense
+        if file_type != 'nq': 
+            
+            # Graph selection
+            graph_label = col2.selectbox('Select the graph', options=graphs_labels, index=None, key='import-data-graph-selection')  
 
-    # Explaination for the user, in order to build a specific table
-    if file_type == 'csv':
-        st.markdown('## Tip:')
-        st.markdown("""
-                    To make the CSV import work, you will need to provide a specific format. 
-                    In short, you should provide one table per class, and all triples in it should be outgoing.
-                    If you would like to import incoming statements, you should then have a table for the domain class.
-        """)
-        st.markdown('Separator is comma.')
-        st.markdown("""
-                    Also, the content of the file itself should have a specific format.
-                    First of all, there should be a column named `uri` (generally the first column).
-                    Then each other column name should be like `rdfs:label_has-name`: 
-                    first the property as a uri, followed by an underscore, and then you're free to put the name you want.
-                    If, for some lines you do not have all the properties, no problem, just let an empty string of None instead.
-        """)
-        st.markdown('**Example of CSV to import person instances:**')
-        st.markdown('`my-persons.csv`')
-        st.dataframe(pd.DataFrame(data=[
-            {'uri':'base:1234', 'rdfs:type':'crm:E21', 'rdfs:label_name':'John Doe', 'rdfs:comment_description':'Unknown person', 'sdh:P23_gender':'base:SAHIIne'},
-            {'uri':'base:1235', 'rdfs:type':'crm:E21', 'rdfs:label_name':'Jeane Doe', 'rdfs:comment_description':'Unknown person', 'sdh:P23_gender':None},
-            {'uri':'base:1236', 'rdfs:type':'crm:E21', 'rdfs:label_name':'Albert', 'rdfs:comment_description':'King of some country', 'sdh:P23_gender':'base:SAHIIne'},
-        ]), use_container_width=True, hide_index=True)
+            # Target the graph
+            if graph_label:
+                graph_index = graphs_labels.index(graph_label)
+                selected_graph = all_graphs[graph_index]
 
-    # If everything is ready for the TTL import
-    if graph_label and format and file and file_type == 'ttl' and tab_data.button('Upload Turtle file', icon=':material/upload:'):
-        dialog_confirmation(
-            f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
-            callback=__upload_turtle_file, 
-            ttl_data=file.read().decode("utf-8"),
-            graph_uri=selected_graph.uri
-        )
 
-    # If everything is ready for the CSV import
-    if graph_label and format and file and file_type == 'csv' and tab_data.button('Upload Spreadsheet', icon=':material/upload:'):
-        dialog_confirmation(
-            f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
-            callback=__upload_spreadsheet_file, 
-            csv_data=file.read().decode("utf-8"),
-            graph_uri=selected_graph.uri
-        )
+        # File uploader
+        file = tab_data.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None))
+        tab_data.text('')
+
+        # In case format is CSV, provide additional informations:
+        # Explaination for the user, in order to build a specific table
+        if file_type == 'csv':
+            st.markdown('## Tip:')
+            st.markdown("""
+                        To make the CSV import work, you will need to provide a specific format. 
+                        In short, you should provide one table per class, and all triples in it should be outgoing.
+                        If you would like to import incoming statements, you should then have a table for the domain class.
+            """)
+            st.markdown('Separator is comma.')
+            st.markdown("""
+                        Also, the content of the file itself should have a specific format.
+                        First of all, there should be a column named `uri` (generally the first column).
+                        Then each other column name should be like `rdfs:label_has-name`: 
+                        first the property as a uri, followed by an underscore, and then you're free to put the name you want.
+                        If, for some lines you do not have all the properties, no problem, just let an empty string of None instead.
+            """)
+            st.markdown('**Example of CSV to import person instances:**')
+            st.markdown('`my-persons.csv`')
+            st.dataframe(pd.DataFrame(data=[
+                {'uri':'base:1234', 'rdf:type':'crm:E21', 'rdfs:label_name':'John Doe', 'rdfs:comment_description':'Unknown person', 'sdh:P23_gender':'base:SAHIIne'},
+                {'uri':'base:1235', 'rdf:type':'crm:E21', 'rdfs:label_name':'Jeane Doe', 'rdfs:comment_description':'Unknown person', 'sdh:P23_gender':None},
+                {'uri':'base:1236', 'rdf:type':'crm:E21', 'rdfs:label_name':'Albert', 'rdfs:comment_description':'King of some country', 'sdh:P23_gender':'base:SAHIIne'},
+            ]), use_container_width=True, hide_index=True)
+
+
+        # If everything is ready for the TTL import
+        if format and file and file_type == 'ttl' and graph_label and tab_data.button('Upload Turtle file', icon=':material/upload:'):
+            dialog_confirmation(
+                f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
+                callback=__upload_turtle_file, 
+                ttl_data=file.read().decode("utf-8"),
+                graph_uri=selected_graph.uri
+            )
+
+        # If everything is ready for the CSV import
+        if format and file and file_type == 'csv' and graph_label and tab_data.button('Upload Spreadsheet', icon=':material/upload:'):
+            dialog_confirmation(
+                f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
+                callback=__upload_spreadsheet_file, 
+                csv_data=file.read().decode("utf-8"),
+                graph_uri=selected_graph.uri
+            )
+
+        # If everything is ready for the NQuad import
+        if format and file and file_type == 'nq' and tab_data.button('Upload n-Quads', icon=':material/upload:'):
+            dialog_confirmation(
+                f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
+                callback=__upload_nquads_file, 
+                nq_data=file.read().decode("utf-8")
+            )
 
 
     ### TAB ONTOLOGIES ###
@@ -204,7 +267,7 @@ else:
 
     # Loop through all ontologies files
     folder = Path('./ontologies')
-    files = [{ 'name': format_filename(f.name), 'path': f.name } for f in folder.iterdir()]
+    files = [{ 'name': __format_filename(f.name), 'path': f.name } for f in folder.iterdir()]
     onto_names = [file['name'] for file in files]
     onto_paths = [file['path'] for file in files]
     

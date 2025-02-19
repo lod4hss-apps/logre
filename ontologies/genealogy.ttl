@@ -88,6 +88,7 @@ sdh-shacl:crm_E21_Shape a sh:NodeShape;
         sh:name "has gender";
         sh:class sdh:C11;
         sh:order 3;
+        sh:maxCount 1;
     ];   
 
     sh:property [
@@ -121,8 +122,8 @@ sdh-shacl:crm_E67_Shape a sh:NodeShape;
     ];   
     
     sh:property [
-        sh:path sdh-short:P1;
-        sh:name "occured in";
+        sh:path crm:P82;
+        sh:name "at some time within";
         sh:datatype xsd:string;
         sh:order 3;
         sh:maxCount 1;
@@ -153,6 +154,52 @@ sdh-shacl:crm_E67_Shape a sh:NodeShape;
     . 
 
 
+sdh-shacl:crm_E69_Shape a sh:NodeShape;
+    sh:targetClass crm:E69;
+    sh:name "Death";
+
+    sh:property [
+        sh:path rdfs:label;
+        sh:name "has label";
+        sh:datatype xsd:string;
+        sh:order 1;
+        sh:minCount 1;
+        sh:maxCount 1;
+    ];
+
+    sh:property [
+        sh:path rdfs:comment;
+        sh:name "has definition";
+        sh:datatype xsd:string;
+        sh:order 2;
+    ];   
+    
+    sh:property [
+        sh:path crm:P82;
+        sh:name "at some time within";
+        sh:datatype xsd:string;
+        sh:order 3;
+        sh:maxCount 1;
+    ];
+        
+    sh:property [
+        sh:path crm:P8;
+        sh:name "took place in";
+        sh:class sdh:C13;
+        sh:order 4;
+        sh:maxCount 1;
+    ];
+            
+    sh:property [
+        sh:path crm:P100;
+        sh:name "was death of";
+        sh:class crm:E21;
+        sh:order 5;
+        sh:maxCount 1;
+    ];
+
+    . 
+
 sdh-shacl:sdh_C3_Shape a sh:NodeShape;
     sh:targetClass sdh:C3;
     sh:name "Relationship";
@@ -179,10 +226,21 @@ sdh-shacl:sdh_C3_Shape a sh:NodeShape;
         sh:class crm:E21;
         sh:order 3;
     ];
+    
+    sh:property [
+        sh:path crm:P116;
+        sh:name "started in";
+        sh:datatype xsd:string;
+        sh:order 4;
+        sh:maxCount 1;
+    ];
 
     sh:property [
-        sh:path [ sh:inversePath sdh:P22;];
-        sh:name "resulted in";
+        sh:path crm:P115;
+        sh:name "ended in";
+        sh:datatype xsd:string;
+        sh:order 5;
+        sh:maxCount 1;
     ];
 
     . 

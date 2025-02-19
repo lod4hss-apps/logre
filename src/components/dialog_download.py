@@ -3,6 +3,7 @@ import pandas as pd, io, zipfile
 import streamlit as st
 from schema import Graph
 from lib.sparql_queries import get_ontology, get_all_instances_of_class, download_graph
+from lib.sparql_base import dump_endpoint
 from lib.utils import to_snake_case
 import lib.state as state
 
@@ -38,7 +39,7 @@ def __get_all_class_dataframes(graph: Graph) -> List[dict[str, pd.DataFrame]]:
         new_cols = []
         for col in df.columns:
             if col == "uri": new_cols.append("00-uri")
-            elif col == "type": new_cols.append("01-rdfs:type")
+            elif col == "type": new_cols.append("01-rdf:type")
             else: new_cols.append(f"{__get_uri_of_property(cls.uri, col)}_{col.replace('_', '-')}")
         df.columns = new_cols
 
@@ -113,26 +114,25 @@ def dialog_download_graph(graph: Graph):
 
 @st.dialog('Download the graph')
 def dialog_dump_endpoint():
-    """Dialog function allowing the user download the full endpoint (zip of turtle files, one for each graph)."""
+    """Dialog function allowing the user download the full endpoint as an n-quads file."""
 
     # From state
     endpoint = state.get_endpoint()
-    all_graphs = state.get_graphs()
 
     # Information for the user
-    st.markdown('Depending on the endpoint size, building the file could take a while.')
+    st.markdown('Depending on the endpoint size, building the dump file could take a while.')
 
     st.divider()
 
+    # First we need to generate the dump file
     col1, col2 = st.columns([1, 1])
-    if col1.button('Build the zip file'):
-        
-        datas = []
-        for graph in all_graphs:
-            filename = f"logre-{endpoint.name}-{graph.label}.ttl".lower()
-            value = download_graph(graph)
-            datas.append({'name': filename, 'value': value})
+    if col1.button('Build the dump file'):
+        file_content = dump_endpoint()
+        file_name =f"logre-{endpoint.name}-dump.nq".lower()
 
-        zip_file = __build_zip_file(datas)
-        filename = f"logre-{endpoint.name}-dump.zip".lower()
-        col2.download_button(label="Click to Download", data=zip_file, file_name=filename, mime="application/zip")
+        # And then the user can download it
+        col2.download_button(label="Click to Download", data=file_content, file_name=file_name, mime="application/n-quads")
+
+        # Validation and rerun
+        state.set_toast('Dump file downloaded')
+        st.rerun()

@@ -7,7 +7,7 @@ from components.dialog_create_entity import dialog_create_entity
 from components.dialog_create_triple import dialog_create_triple
 
 
-def on_graph_selection():
+def __on_graph_selection():
     """Callback function for the graph selection"""
 
     # Fetch variables from State
@@ -20,7 +20,6 @@ def on_graph_selection():
     # Find the selected graph, and set the session variable
     index = graphs_labels.index(graph_label)
     state.set_graph_index(index)
-
 
 
 def menu() -> None:
@@ -123,7 +122,7 @@ def menu() -> None:
                 options=graphs_labels, 
                 index=state.get_graph_index(), 
                 key='radio-btn-graph-selection', 
-                on_change=on_graph_selection
+                on_change=__on_graph_selection
             )
 
             st.sidebar.divider()

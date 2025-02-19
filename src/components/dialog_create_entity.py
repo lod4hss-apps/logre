@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Any
 import streamlit as st
-from schema import Entity, Triple
+from schema import Entity, Triple, OntologyProperty
 from lib.sparql_queries import find_entities, get_ontology
 from lib.sparql_base import insert
 from lib.utils import generate_id
@@ -21,7 +21,6 @@ def __create_entity(entity: Entity, triples: List[Triple]) -> None:
     # Finalization: validation message and load the created entity
     state.set_toast('Entity Created', ':material/done:')
     st.switch_page("pages/my-entities.py")
-
 
 
 @st.dialog('Create an entity', width='large')
@@ -52,11 +51,11 @@ def dialog_create_entity() -> None:
 
     # In all case, we make 3 statements mandatory, independant of the entology.
     # They are: the class (rdf:type), the label (rdfs:label) and the comment (rdfs:comment).
-    col1, col2 = st.columns([2, 3])
+    col_label, col_range = st.columns([2, 3])
 
     # Class selection
     classes_labels = list(map(lambda cls: cls.display_label , ontology.classes))
-    class_label = col1.selectbox('Class ❗️', options=classes_labels, index=None)
+    class_label = col_label.selectbox('Class ❗️', options=classes_labels, index=None)
     mandatories.append('rdf:type')
     if class_label:
         # Find the selected class from the selected label
@@ -65,7 +64,7 @@ def dialog_create_entity() -> None:
         triples.append(Triple(entity_uri, 'rdf:type', selected_class.uri))
 
         # Input field to set the entity label: it is mandatory
-        entity_label = col2.text_input('Label ❗️')
+        entity_label = col_range.text_input('Label ❗️')
         mandatories.append('rdfs:label')
         if entity_label:
             triples.append(Triple(entity_uri, 'rdfs:label', f"'{entity_label.strip()}'"))
@@ -90,10 +89,11 @@ def dialog_create_entity() -> None:
 
         # Loop through all relevant properties and display the right input Field
         for i, prop in enumerate(props_to_create):
-            col11, col1, col2 = st.columns([2, 4, 6], vertical_alignment='center') 
+
+            col_label, col_range, col_info = st.columns([4, 6, 2], vertical_alignment='bottom') 
 
             # Information about the property
-            with col11.popover('', icon=':material/info:'):
+            with col_info.popover('', icon=':material/info:'):
                 st.markdown('### Property information')
 
                 c1, c2 = st.columns([1, 1])
@@ -122,23 +122,50 @@ def dialog_create_entity() -> None:
                 suffix = ""
 
             # On the left: Property label
-            col1.markdown(f"### {prop.label} {suffix}")
+            col_label.markdown(f"## {prop.label} {suffix}")
+            col_label.text('')
             
             # For code simplification
             field_key = f"dlg-create-entity-field-{i}"
 
             # If the range is a xsd:string, display a text field
             if prop.range_class_uri == 'xsd:string':
-                string_value = col2.text_input(ontology.get_class_name(prop.range_class_uri), key=field_key)
-                if string_value and string_value.strip() != '':
-                    triples.append(Triple(entity_uri, prop.uri, f"'{string_value.strip()}'"))
+                
+                # Dedicated behavior:
+                # Here, if the property have a max count greater that 1,
+                # We would like to give the user the possibility to add them accrodingly
+                # So the strategy is the following:
+                # Each time the user fill a value, we display another empty field so that he can add another value
+                # Of course it is limited by the max count of the cardinality, once it is reached
+
+                def recursive_call_xsdstring(index: int) -> None:
+                    """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
+                    string_value = col_range.text_input(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
+                    if string_value and string_value.strip() != '':
+                        triples.append(Triple(entity_uri, prop.uri, f"'{string_value.strip()}'"))
+                    if string_value and index < prop.max_count:
+                        recursive_call_xsdstring(index + 1)
+                recursive_call_xsdstring(1)   
 
             # If the range is a xsd:html, display a text area
             elif prop.range_class_uri == 'xsd:html':
-                html_value = col2.text_area(ontology.get_class_name(prop.range_class_uri), key=field_key)
-                if html_value and html_value.strip() != '':
-                    triples.append(Triple(entity_uri, prop.uri, f"'{html_value.strip()}'"))
-            
+                
+                # Dedicated behavior:
+                # Here, if the property have a max count greater that 1,
+                # We would like to give the user the possibility to add them accrodingly
+                # So the strategy is the following:
+                # Each time the user fill a value, we display another empty field so that he can add another value
+                # Of course it is limited by the max count of the cardinality, once it is reached
+
+                def recursive_call_xsdhtml(index: int) -> None:
+                    """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
+                    html_value = col_range.text_area(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
+                    if html_value and html_value.strip() != '':
+                        triples.append(Triple(entity_uri, prop.uri, f"'{html_value.strip()}'"))
+                    if html_value and index < prop.max_count:
+                        recursive_call_xsdhtml(index + 1)
+                recursive_call_xsdhtml(1)   
+
             # If the range is not a Literal, it should then be instances of classes 
             else: 
                 # List all possible existing entities (right class) from the endpoint
@@ -146,12 +173,20 @@ def dialog_create_entity() -> None:
                 # Get their label
                 possible_objects_label = [obj.display_label_comment for obj in possible_objects]
                 # User form input field
-                object_label = col2.selectbox(ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key, index=None)
-                if object_label:
-                    object_index = possible_objects_label.index(object_label)
-                    object = possible_objects[object_index]
-                    triples.append(Triple(entity_uri, prop.uri, object.uri))
-
+                if prop.max_count == 1: 
+                    object_label = col_range.selectbox(ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key, index=None)
+                    if object_label:
+                        object_index = possible_objects_label.index(object_label)
+                        object = possible_objects[object_index]
+                        triples.append(Triple(entity_uri, prop.uri, object.uri))
+                else: 
+                    object_labels = col_range.multiselect(ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key)
+                    if object_labels:
+                        for object_label in object_labels:
+                            object_index = possible_objects_label.index(object_label)
+                            object = possible_objects[object_index]
+                            triples.append(Triple(entity_uri, prop.uri, object.uri))
+            
             st.text('')
 
         st.divider()

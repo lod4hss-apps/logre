@@ -1,5 +1,5 @@
 import streamlit as st
-from schema import Triple, Graph, DisplayTriple
+from schema import Entity, Triple, Graph, DisplayTriple
 from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples
 from lib.sparql_base import delete
 import lib.state as state
@@ -19,6 +19,14 @@ def __delete_triple(display_triple: DisplayTriple, graph: Graph=None):
     state.set_toast('Triple deleted', icon=':material/done:')
     
 
+def __delete_entity(entity: Entity, graph: Graph=None):
+    """Delete all triples of a given entity in the given graph."""
+
+    delete([Triple(entity.uri, '?p', '?o')], graph=graph.uri)
+    delete([Triple('?s', '?p', entity.uri)], graph=graph.uri)
+
+    state.clear_entity()
+    state.set_toast('Entity deleted', icon=':material/done:')
 
 
 ##### The page #####
@@ -45,9 +53,11 @@ elif not entity:
 else:
 
     # Header: entity name, additional info and description
-    col1, col2, col_edit = st.columns([10, 1, 1], vertical_alignment='bottom')
+    col1, col2, col_delete, col_edit = st.columns([10, 1, 1, 1], vertical_alignment='bottom')
     col1.title(entity.display_label)
     col2.button('', icon=':material/info:', type='tertiary', on_click=dialog_entity_info, kwargs={'entity': entity})
+    if col_delete.button('', icon=':material/delete:', type='primary'):
+        dialog_confirmation("You are about to delete this entity (including all triples) in this graph.", __delete_entity, entity=entity, graph=graph)
     st.markdown(entity.comment or '')
 
     st.text('')
@@ -85,7 +95,6 @@ else:
         elif triple.object.uri == entity.uri:
             col1.markdown(f"##### [incoming] {triple.predicate.display_label}")
             col2.button(triple.subject.display_label_comment, type='tertiary', key=f"my-entities-card-jump-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
-            col2.markdown(triple.subject.comment)
 
         # Also, for each triple allow user to have all detailed information about the triple
         col3.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"my-entities-card-info-{i}")

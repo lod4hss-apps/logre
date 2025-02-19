@@ -31,6 +31,9 @@ def get_prefixes_str(format: Literal['sparql', 'turtle'] = 'sparql') -> str:
 
     # In case we are in Allegrograph, we would like to shortcut the default graph behavior of Allegrograph
     endpoint_technology = state.get_endpoint().technology
+    # For some reason, sometimes, especially on hot reload, streamlit looses the enums.
+    # Maybe its my fault, by I can't find the reason why after some clicking around, the enums are lost
+    # This is the way I found to make it work every time
     if endpoint_technology == EndpointTechnology.ALLEGROGRAPH or endpoint_technology.value == EndpointTechnology.ALLEGROGRAPH.value:
         franz_rdf = Prefix(short='franzOption_defaultDatasetBehavior', url='franz:rdf')
         if format == 'sparql': prefixes_str = [franz_rdf.to_sparql()] + prefixes_str
