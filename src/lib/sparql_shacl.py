@@ -1,6 +1,7 @@
 from typing import List
 import streamlit as st
 from schema import OntologyClass, OntologyProperty, Ontology
+from lib.utils import ensure_uri
 from lib.sparql_base import query
 import lib.state as state
 
@@ -17,7 +18,7 @@ def get_shacl_classes() -> List[OntologyClass]:
             ?uri 
             (COALESCE(?label_, 'Unknown Class Name') as ?label)
         WHERE {
-            """ + ("GRAPH " + endpoint.ontology_uri + " {" if endpoint.ontology_uri else "") + """
+            """ + ("GRAPH " + ensure_uri(endpoint.ontology_uri) + " {" if endpoint.ontology_uri else "") + """
                 ?node a sh:NodeShape .
                 ?node sh:name ?label_ .
                 ?node sh:targetClass ?uri .
@@ -51,7 +52,7 @@ def get_shacl_properties() -> OntologyProperty:
             ?domain_class_uri
             (COALESCE(?range_class_uri_1, ?range_class_uri_2, '') as ?range_class_uri)
         WHERE {
-            """ + ("GRAPH " + endpoint.ontology_uri + " {" if endpoint.ontology_uri else "") + """
+            """ + ("GRAPH " + ensure_uri(endpoint.ontology_uri) + " {" if endpoint.ontology_uri else "") + """
                 ?shape sh:property ?node .
                 ?node sh:path ?uri .  
                 ?shape sh:targetClass ?domain_class_uri .
