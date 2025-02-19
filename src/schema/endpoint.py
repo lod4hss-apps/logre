@@ -22,7 +22,12 @@ class Endpoint(BaseModel):
 
     def to_dict(self) -> dict:
         """Convert the Endpoint instance to a dictionary"""
-        return self.model_dump()
+
+        model_dump = self.model_dump()
+        model_dump['technology'] = self.technology.value
+        model_dump['ontology_framework'] = self.ontology_framework.value
+
+        return model_dump
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Endpoint':
