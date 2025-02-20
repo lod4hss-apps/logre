@@ -88,16 +88,16 @@ else:
         elif triple.subject.uri == entity.uri: # If entity
             col1.markdown(f"##### {triple.predicate.display_label}")
             # Allow user to jump from the card of another entity by clicking on it
-            col2.button(triple.object.display_label_comment, type='tertiary', key=f"my-entities-card-jump-{i}", on_click=state.set_entity, kwargs={'entity': triple.object})
+            col2.button(triple.object.display_label_comment, type='tertiary', key=f"entity-card-jump-{i}", on_click=state.set_entity, kwargs={'entity': triple.object})
 
         # (incoming triple) Add an additional information on the predicate label that it is incoming
         # and display the subject (as a clickable button: no subject can be a literal)
         elif triple.object.uri == entity.uri:
             col1.markdown(f"##### [incoming] {triple.predicate.display_label}")
-            col2.button(triple.subject.display_label_comment, type='tertiary', key=f"my-entities-card-jump-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
+            col2.button(triple.subject.display_label_comment, type='tertiary', key=f"entity-card-jump-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
 
         # Also, for each triple allow user to have all detailed information about the triple
-        col3.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"my-entities-card-info-{i}")
+        col3.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"entity-card-info-{i}")
 
         tab1.text('')
         tab1.text('')
@@ -128,13 +128,13 @@ else:
             col2_.markdown(f"> {triple.object.display_label}")
         else:
             # Allow user to jump from the card of another entity by clicking on it
-            col2_.button(triple.object.display_label_comment, type='tertiary', key=f"my-entities-triple-jump-out-{i}", on_click=state.set_entity, kwargs={'entity': triple.object})
+            col2_.button(triple.object.display_label_comment, type='tertiary', key=f"entity-triple-jump-out-{i}", on_click=state.set_entity, kwargs={'entity': triple.object})
 
         # Also, for each triple allow user to have all detailed information about the triple
-        col3_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"my-entities-triple-info-out-{i}")
+        col3_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"entity-triple-info-out-{i}")
 
         # Allow user to delete this triple
-        if col4_.button('', icon=':material/delete:', type='tertiary', key=f"my-entities-triple-delete-out-{i}"):
+        if col4_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-out-{i}"):
             dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
 
 
@@ -170,19 +170,19 @@ else:
 
             # Col3: Subject information
             # Allow user to jump from the card of another entity by clicking on it
-            col3_.button(triple.subject.display_label_comment, type='tertiary', key=f"my-entities-triple-jump-inc-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
+            col3_.button(triple.subject.display_label_comment, type='tertiary', key=f"entity-triple-jump-inc-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
 
             # Also, for each triple allow user to have all detailed information about the triple
-            col2_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"my-entities-triple-info-inc-{i}")
+            col2_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"entity-triple-info-inc-{i}")
             
             # Allow user to delete this triple
-            if col1_.button('', icon=':material/delete:', type='tertiary', key=f"my-entities-triple-delete-inc-{i}"):
+            if col1_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-inc-{i}"):
                 dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
 
 
             col1.text('')
 
 
-    ### TAB TRIPLES ###
+    ### TAB VISUALISATION ###
 
     tab3.write('Coming soon')

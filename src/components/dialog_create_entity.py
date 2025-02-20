@@ -20,7 +20,7 @@ def __create_entity(entity: Entity, triples: List[Triple]) -> None:
 
     # Finalization: validation message and load the created entity
     state.set_toast('Entity Created', ':material/done:')
-    st.switch_page("pages/my-entities.py")
+    st.switch_page("pages/entity.py")
 
 
 @st.dialog('Create an entity', width='large')

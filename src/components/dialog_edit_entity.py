@@ -22,7 +22,7 @@ def __edit_entity(entity: Entity, triples_to_create: List[Triple], triples_to_de
 
     # Finalization: validation message and load the created entity
     state.set_toast('Entity Updated', ':material/done:')
-    st.switch_page("pages/my-entities.py")
+    st.switch_page("pages/entity.py")
 
 
 @st.dialog('Edit an entity', width='large')

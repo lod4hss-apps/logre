@@ -39,5 +39,5 @@ def dialog_find_entity() -> None:
     for i, entity in enumerate(entities):
         if st.button(entity.display_label_comment, type='tertiary', key=f'dlg-find-entity-{i}'):
             state.set_entity(entity)
-            st.switch_page("pages/my-entities.py")
+            st.switch_page("pages/entity.py")
 
