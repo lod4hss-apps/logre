@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, List
 from pathlib import Path
 import pandas as pd
 from io import StringIO
@@ -60,7 +60,7 @@ def __get_import_url(graph_uri: str = "") -> str | None:
             return endpoint_url
 
 
-def __upload_turtle_file(ttl_data: str, graph_uri: str) -> None | Literal['error']:
+def __upload_turtle_file(ttl_datas: List[str], graph_uri: str) -> None | Literal['error']:
     """
     Function to import raw turtle data (as string) into the given graph.
     Specifying the graph is mandatory, otherwise import it into default graph.
@@ -76,17 +76,18 @@ def __upload_turtle_file(ttl_data: str, graph_uri: str) -> None | Literal['error
     else: auth = None
     
     # Make the request
-    response = requests.post(url, data=ttl_data, headers=headers, auth=auth)
+    for ttl_data in ttl_datas:
+        response = requests.post(url, data=ttl_data, headers=headers, auth=auth)
 
-    # Check response
-    if response.status_code >= 400:
-        st.error(f"Failed to upload file. Status code: {response.status_code}. Reason: {response.reason}. Message: {response.text}.")
-        return 'error'
-    else:
-        # We clear the cache, because it needs to refetch the needed information: 
-        # If for example, imported data is the model, we need to fetch it on next occasion
-        # Which won't happen if the cache is not cleared.
-        st.cache_data.clear()
+        # Check response
+        if response.status_code >= 400:
+            st.error(f"Failed to upload file. Status code: {response.status_code}. Reason: {response.reason}. Message: {response.text}.")
+            return 'error'
+    
+    # We clear the cache, because it needs to refetch the needed information: 
+    # If for example, imported data is the model, we need to fetch it on next occasion
+    # Which won't happen if the cache is not cleared.
+    st.cache_data.clear()
 
     state.set_toast('Data inserted', ':material/file_upload:')
 
@@ -123,36 +124,47 @@ def __upload_nquads_file(nq_data:str) -> None | Literal['error']:
     state.set_toast('Data inserted', ':material/file_upload:')
 
 
-def __upload_spreadsheet_file(csv_data: str, graph_uri: str) -> None:
+def __upload_spreadsheet_file(csv_datas: str, graph_uri: str) -> None:
     """
     Function to import CSV raw file into the endpoint.
     Specifying the graph is mandatory, otherwise import it into default graph.
     """
 
-    df = pd.read_csv(StringIO(csv_data))
-
     # Prepare all the triples to be imported
     triples = []
-    for _, row in df.iterrows():
-        # Get the URI of the entity
-        uri = row['uri']
-        # For each properties available
-        for col in df.columns:
-            # Do not do anything with the uri
-            if col == 'uri': continue
-            # If the cell is empty, skip
-            if pd.isna(row[col]) or row[col] is None or row[col] == '': continue
-            # Extract the property URI from the column name, and save it as a triple
-            property_uri = col[:col.index('_') if '_' in col else len(col)]
+    
+    # Loop on each given file content
+    for csv_data in csv_datas:
+        
+        try: 
+            # For better handling, transform into a dataframe
+            df = pd.read_csv(StringIO(csv_data))
 
-            # Is the range a URI or a literal?
-            if (':' in row[col] and is_prefix(row[col][:row[col].index(':')])) or row[col].startswith('http://'):
-                triples.append(Triple(uri, property_uri, row[col]))
-            else:
-                triples.append(Triple(uri, property_uri, f"'{row[col]}'"))
+            for _, row in df.iterrows():
+                # Get the URI of the entity
+                uri = row['uri']
+                # For each properties available
+                for col in df.columns:
+                    # Do not do anything with the uri
+                    if col == 'uri': continue
+                    # If the cell is empty, skip
+                    if pd.isna(row[col]) or row[col] is None or row[col] == '': continue
+                    # Extract the property URI from the column name, and save it as a triple
+                    property_uri = col[:col.index('_') if '_' in col else len(col)]
 
+                    # Is the range a URI or a literal?
+                    if (':' in row[col] and is_prefix(row[col][:row[col].index(':')])) or row[col].startswith('http://'):
+                        triples.append(Triple(uri, property_uri, row[col]))
+                    else:
+                        triples.append(Triple(uri, property_uri, f"'{row[col]}'"))
+        except Exception:
+            st.error('CSV import went wrong, the file is probably malformed: the file format (column names) needs to be respected in order to import those files.')
+            return
+
+    # Insert all data into the file
     insert(triples, graph_uri)
 
+    # Validation message
     state.set_toast('Data inserted', ':material/file_upload:')
 
 
@@ -205,7 +217,7 @@ else:
 
 
         # File uploader
-        file = tab_data.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None))
+        files = tab_data.file_uploader(f"Load your {format} file:", type=[file_type], disabled=(format is None), accept_multiple_files=(file_type != 'nq'))
         tab_data.text('')
 
         # In case format is CSV, provide additional informations:
@@ -235,29 +247,30 @@ else:
 
 
         # If everything is ready for the TTL import
-        if format and file and file_type == 'ttl' and graph_label and tab_data.button('Upload Turtle file', icon=':material/upload:'):
+        if format and len(files) != 0 and file_type == 'ttl' and graph_label and tab_data.button('Upload Turtle file', icon=':material/upload:'):
             dialog_confirmation(
-                f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
+                f'You are about to upload **{', '.join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
                 callback=__upload_turtle_file, 
-                ttl_data=file.read().decode("utf-8"),
+                ttl_datas=[file.read() for file in files].decode("utf-8"),
                 graph_uri=selected_graph.uri
             )
 
         # If everything is ready for the CSV import
-        if format and file and file_type == 'csv' and graph_label and tab_data.button('Upload Spreadsheet', icon=':material/upload:'):
+        if format and len(files) != 0 and file_type == 'csv' and graph_label and tab_data.button('Upload Spreadsheet', icon=':material/upload:'):
             dialog_confirmation(
-                f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
+                f'You are about to upload **{', '.join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
                 callback=__upload_spreadsheet_file, 
-                csv_data=file.read().decode("utf-8"),
+                csv_datas=[file.read() for file in files].decode("utf-8"),
                 graph_uri=selected_graph.uri
             )
 
         # If everything is ready for the NQuad import
-        if format and file and file_type == 'nq' and tab_data.button('Upload n-Quads', icon=':material/upload:'):
+        # In this case, files is actually not a list, but a single file
+        if format and files and file_type == 'nq' and tab_data.button('Upload n-Quads', icon=':material/upload:'):
             dialog_confirmation(
-                f'You are about to upload **{file.name.upper()}** into **{graph_label.upper()}**.', 
+                f'You are about to upload **{files.name.upper()}** into **{graph_label.upper()}**.', 
                 callback=__upload_nquads_file, 
-                nq_data=file.read().decode("utf-8")
+                nq_data=files.read().decode("utf-8")
             )
 
 
