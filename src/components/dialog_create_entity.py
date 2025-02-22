@@ -31,6 +31,9 @@ def dialog_create_entity() -> None:
     Class (rdf:type), label (rdfs:label), comment (rdfs:comment) are mandatory, whatever the ontology.
     """
 
+    # From state
+    graph = state.get_graph()
+    
     # Fetch the ontology in order to have all needed information 
     # about the selected class (and build the formular)
     # But also to know the class list to chose from
@@ -169,7 +172,7 @@ def dialog_create_entity() -> None:
             # If the range is not a Literal, it should then be instances of classes 
             else: 
                 # List all possible existing entities (right class) from the endpoint
-                possible_objects = find_entities(class_filter=prop.range_class_uri)
+                possible_objects = find_entities(graph=graph, class_filter=prop.range_class_uri)
                 # Get their label
                 possible_objects_label = [obj.display_label_comment for obj in possible_objects]
                 # User form input field

@@ -4,9 +4,12 @@ from streamlit import session_state as state
 from schema import Query, Endpoint, Graph, Entity, OntologyProperty
 
 
-def get_element(key) -> Any:
+def get_element(key: str) -> Any:
     if key not in state: return None
     return state[key]
+
+def set_element(key: str, value: Any):
+    state[key] = value
 
 ###
 

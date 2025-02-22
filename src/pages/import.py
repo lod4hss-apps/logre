@@ -249,7 +249,7 @@ else:
         # If everything is ready for the TTL import
         if format and len(files) != 0 and file_type == 'ttl' and graph_label and tab_data.button('Upload Turtle file', icon=':material/upload:'):
             dialog_confirmation(
-                f'You are about to upload **{', '.join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
+                f'You are about to upload **{", ".join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
                 callback=__upload_turtle_file, 
                 ttl_datas=[file.read() for file in files].decode("utf-8"),
                 graph_uri=selected_graph.uri
@@ -258,7 +258,7 @@ else:
         # If everything is ready for the CSV import
         if format and len(files) != 0 and file_type == 'csv' and graph_label and tab_data.button('Upload Spreadsheet', icon=':material/upload:'):
             dialog_confirmation(
-                f'You are about to upload **{', '.join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
+                f'You are about to upload **{", ".join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
                 callback=__upload_spreadsheet_file, 
                 csv_datas=[file.read() for file in files].decode("utf-8"),
                 graph_uri=selected_graph.uri

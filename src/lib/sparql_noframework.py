@@ -31,6 +31,7 @@ def get_noframework_classes() -> List[OntologyClass]:
 
     return classes
 
+
 def get_noframework_properties() -> List[OntologyProperty]:
     """Since there is no framework on the endpoint, trust the used ones."""
 

@@ -219,7 +219,8 @@ def delete(triples: List[Triple] | Triple, graph: str = None) -> None:
     execute(text)
 
 
-def dump_endpoint():
+def dump_endpoint() -> str:
+    """Make a full endpoint dump as a n-Quads file."""
 
     # From state
     endpoint = state.get_endpoint()

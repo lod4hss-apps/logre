@@ -5,3 +5,4 @@ pandas
 toml
 pydantic
 pyperclip
+pyvis

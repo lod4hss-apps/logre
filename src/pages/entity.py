@@ -1,6 +1,11 @@
+import os, shutil
+from typing import List
+import hashlib
+import numpy as np
 import streamlit as st
+from pyvis.network import Network
 from schema import Entity, Triple, Graph, DisplayTriple
-from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples
+from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples, get_ontology, get_graph_of_entities
 from lib.sparql_base import delete
 import lib.state as state
 from components.init import init
@@ -29,16 +34,27 @@ def __delete_entity(entity: Entity, graph: Graph=None):
     state.set_toast('Entity deleted', icon=':material/done:')
 
 
+def __get_hex_color(label: str):
+    """From a given label, determine an associated color."""
+    if label is None or label == '': 
+        return "#000"
+    hash_val = hashlib.md5(label.encode()).hexdigest()  # Hash the subject name
+    return f"#{hash_val[:6]}"  # Take the first 6 characters for a hex color
+
+
+
 ##### The page #####
 
 init(layout='wide')
 menu()
 
+# By default, for performance, he disable the graph tab
+state.set_element('entity-viz', False)
+
 # From state
 endpoint = state.get_endpoint()
 graph = state.get_graph()
 entity = state.get_entity()
-
 
 # If no endpoint is selected, no entities can be displayed
 if not endpoint:
@@ -53,7 +69,7 @@ elif not entity:
 else:
 
     # Header: entity name, additional info and description
-    col1, col2, col_delete, col_edit = st.columns([10, 1, 1, 1], vertical_alignment='bottom')
+    col1, col2, col_delete, col_edit = st.columns([5, 1, 1, 1], vertical_alignment='bottom')
     col1.title(entity.display_label)
     col2.button('', icon=':material/info:', type='tertiary', on_click=dialog_entity_info, kwargs={'entity': entity})
     if col_delete.button('', icon=':material/delete:', type='primary'):
@@ -65,7 +81,10 @@ else:
     # Multi tab window
     tab1, tab2, tab3 = st.tabs(['Card', 'Triples', 'Visualization'])
 
-    ### TAB CARD ###
+
+
+    ### 1ST TAB: CARD ###
+    # Since this is the default we load everything anyways
 
     # Get all triples linked to the ontology (and only!)
     # We fetch them here so we have them for edition
@@ -103,25 +122,28 @@ else:
         tab1.text('')
 
 
-    ### TAB TRIPLES ###
 
-    # First part: the outgoing triples
+    ### 2ND TAB: ALL TRIPLES ###
+
+    # PART 1: outgoing triples
+
     tab2.markdown('## Outgoing triples')
-    col1, col2 = tab2.columns([1, 2], vertical_alignment='center')
+    tab2.text('')
+    # col1, col2 = tab2.columns([1, 2], vertical_alignment='center')
 
     # Fetch all outgoing triples
-    outgoing_triples = get_entity_outgoing_triples(entity, graph)
+    all_triples = get_entity_outgoing_triples(entity, graph)
 
     # Col 1: here the first column (subject) is always the selected entity because we are listing the outgoing entities
-    if len(outgoing_triples):
-        col1.markdown(entity.display_label)
+    # if len(all_triples):
+    #     col1.markdown(entity.display_label)
 
     # For each triple, we display as a list all triples
-    for i, triple in enumerate(outgoing_triples):
-        col1_, col2_, col3_, col4_ = col2.columns([3, 3, 1, 1], vertical_alignment='center')
+    for i, triple in enumerate(all_triples):
+        col1_, col2_, col3_, col4_ = tab2.columns([3, 3, 1, 1], vertical_alignment='center')
 
         # Col 2: the predicate
-        col1_.markdown(triple.predicate.display_label)
+        col1_.markdown(f"*{triple.predicate.display_label}*")
 
         # Col3: Object information, can be a literal or an entity
         if triple.object.is_literal:
@@ -137,52 +159,173 @@ else:
         if col4_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-out-{i}"):
             dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
 
-
-        if i != len(outgoing_triples) - 1:
-            col2.divider()
-        # col2.text('')
-        # col2.text('')
+        tab2.text('')
 
     tab2.divider()
 
-    # Second part: the incoming triples
+
+    # PART 2: incoming triples
+
     col1, col2 = tab2.columns([1, 3], vertical_alignment='bottom')
     col1.markdown('## Incoming triples')
     fetch_incoming = col2.checkbox('Fetch incoming triples', value=False)
-
-    col1, col2 = tab2.columns([2, 1], vertical_alignment='center')
+    tab2.text('')
 
     if fetch_incoming: 
         with st.spinner('Fetching incoming statements'):
             incoming_triples = get_entity_incoming_triples(entity, graph)
     
-
         # Col 1: here the first column (subject) is always the selected entity because we are listing the outgoing entities
-        if len(incoming_triples):
-            col2.markdown(entity.display_label)
+        # if len(incoming_triples):
+        #     col2.markdown(entity.display_label)
 
         # For each triple, we display as a list all triples
         for i, triple in enumerate(incoming_triples):
-            col1_, col2_, col3_, col4_ = col1.columns([1, 1, 3, 3], vertical_alignment='center')
+            col1_, col2_, col3_, col4_ = tab2.columns([3, 3, 1, 1], vertical_alignment='center')
 
             # Col 2: the predicate
-            col4_.markdown(triple.predicate.display_label)
+            col1_.markdown(f"*{triple.predicate.display_label}*")
 
             # Col3: Subject information
             # Allow user to jump from the card of another entity by clicking on it
-            col3_.button(triple.subject.display_label_comment, type='tertiary', key=f"entity-triple-jump-inc-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
+            col2_.button(triple.subject.display_label_comment, type='tertiary', key=f"entity-triple-jump-inc-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
 
             # Also, for each triple allow user to have all detailed information about the triple
-            col2_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"entity-triple-info-inc-{i}")
+            col3_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"entity-triple-info-inc-{i}")
             
             # Allow user to delete this triple
-            if col1_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-inc-{i}"):
+            if col4_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-inc-{i}"):
                 dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
 
+            tab2.text('')
 
-            col1.text('')
 
 
-    ### TAB VISUALISATION ###
+    ### 3RD TAB: VISUALIZATION ###
+    
+    col1, col2, col3, col4 = tab3.columns([2, 1, 4, 4], vertical_alignment='bottom')
 
-    tab3.write('Coming soon')
+    # To avoid to do heavy request on each entity card, we ask the user to confirm the loading
+    if col1.button('Load visualization', help='Depending on information on your entities, this can take a while'):
+        state.set_element('graph-viz', True)
+
+    if state.get_element('graph-viz'):
+        ontology = get_ontology()
+        classes_labels = list(map(lambda cls: cls.display_label , ontology.classes))
+        excluded_predicate_uris = set(['rdf:type', 'rdfs:label']) # Because there is no point of displaying them on the graph
+
+        # Also for performance reasons, we set the value of graph depth on each page back to 2.
+        graph_depth = col2.number_input('Graph depth', min_value=1, step=1)
+
+        # Option to not filter out particular classes (eg genders on a family tree might not be relevant)
+        excluded_classes_labels = col3.multiselect('Filter out classes', options=classes_labels)
+
+        # If classes have been selected to be excluded, get their URIs
+        excluded_classes_uris = set()
+        if excluded_classes_labels:
+            for class_label in excluded_classes_labels:
+                idx = classes_labels.index(class_label)
+                excluded_classes_uris.add(ontology.classes[idx].uri)
+
+        # Option to only display a certain list of classes
+        included_classes_labels = col4.multiselect('Include classes', options=['All'] + classes_labels, default=['All'])
+
+        # If classes have been selected to be excluded, get their URIs
+        included_classes_uris = set()
+        if included_classes_labels:
+            for class_label in included_classes_labels:
+                if class_label == "All": 
+                    included_classes_uris.add('All')
+                else:
+                    idx = classes_labels.index(class_label)
+                    included_classes_uris.add(ontology.classes[idx].uri)
+
+        # Get the asked graph
+        graph_triples: List[DisplayTriple] = []
+        uris_done = set()
+        for depth in range(0, graph_depth):
+
+            # List all entities
+            subjects_uris = [triple.subject.uri for triple in graph_triples]
+            objects_uris = [triple.object.uri for triple in graph_triples]
+            uris = [entity.uri] + subjects_uris + objects_uris
+
+            # Filter out those already done
+            uris = [uri for uri in uris if uri not in uris_done]
+
+            # Fetch triples (if there at least one entity to fetch)
+            if len(uris) == 0: 
+                break
+            triples = get_graph_of_entities(uris)
+
+            # List the asked
+            for uri in uris: uris_done.add(uri)
+
+            # Filter out excluded classes: if the triples has subject or object of one excluded class, 
+            # triple is itself excluded
+            # Also, exclude the triples if it is in the list of excluded predicates
+            triples = [
+                triple for triple in triples 
+                if  triple.predicate.uri not in excluded_predicate_uris and
+                    triple.subject.class_uri not in excluded_classes_uris and
+                    triple.object.class_uri not in excluded_classes_uris and
+                    ('All' in included_classes_uris or triple.subject.class_uri in included_classes_uris) and 
+                    ('All' in included_classes_uris or triple.object.class_uri in included_classes_uris) 
+            ]
+
+            # Add them to the fetched triples
+            graph_triples += triples
+
+        # To make the visualization prettier, we change the entity labels and make it on multiple lines
+        formated_triples = [{
+                "subject": triple.subject.display_label.replace(' (', '\n('),
+                "predicate": triple.predicate.display_label.replace(' (', '\n('),
+                "object": triple.object.display_label.replace(' (', '\n(')
+            } for triple in graph_triples
+        ]
+
+        # Network object: the one that will be displayed
+        network = Network(width="100%", neighborhood_highlight=True)
+
+        # Build and add the needed information for the Network: Nodes
+        nodes = [t['subject'] for t in formated_triples] + [t['object'] for t in formated_triples]
+        nodes = list(np.unique(nodes))
+        nodes_colors = [__get_hex_color(node[node.index('\n(')+1:]) if '\n(' in node else '#000' for node in nodes]
+        network.add_nodes(nodes, color=nodes_colors)
+    
+        # Build and add the needed information for the Network: Edges
+        for t in formated_triples:
+            network.add_edge(t['subject'], t['object'], label=t['predicate'])
+
+        # Set the options
+        network.set_options("""
+            const options = {
+                "nodes": {"font": {"face": "tahoma"}},
+                "edges": {
+                    "length": 150,
+                    "arrows": {"to": {"enabled": true}},
+                    "font": {"size": 10,"face": "tahoma","align": "top"}
+                }
+            }
+        """)
+
+        # Because pyvis work like that, there is no direct way of getting the html directly:
+        # We need to save on disk and then read it and finally delete it in order to display it
+        # It is not so clean, but the displayed graph is the better out there IMHO
+
+        # Generate the graph
+        network.save_graph('network.html')
+        
+        # Read from disk
+        with open("network.html", 'r', encoding='utf-8') as file:
+            source_code = file.read()
+
+        # Delete the file from disk
+        os.remove('network.html')
+        shutil.rmtree('./lib/')
+
+        # Display the read HTML
+        # Here we have to use "with" because it appears that it is the only way with streamlit to display HTML
+        with tab3:
+            # 617 as height because it makes the network look centered
+            st.components.v1.html(source_code, height=617)

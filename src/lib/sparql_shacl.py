@@ -6,7 +6,6 @@ from lib.sparql_base import query
 import lib.state as state
 
 
-@st.cache_data(ttl='1d', show_spinner=False)
 def get_shacl_classes() -> List[OntologyClass]:
     """Get the list of classes listed with the SHACL framework."""
 
@@ -35,7 +34,6 @@ def get_shacl_classes() -> List[OntologyClass]:
     return classes
 
 
-@st.cache_data(ttl='1d', show_spinner=False)
 def get_shacl_properties() -> OntologyProperty:
     """Get the list of properties listed with the SHACL framework."""
     

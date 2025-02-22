@@ -1,6 +1,5 @@
-from typing import Literal
 import streamlit as st
-from schema import Triple, EndpointTechnology, OntologyFramework, Endpoint, Graph
+from schema import Triple, Endpoint, Graph
 from lib.sparql_base import delete
 from lib.sparql_queries import count_graph_triples
 from lib.utils import readable_number, ensure_uri
@@ -133,7 +132,7 @@ def __graph_list() -> None:
         st.text('')
         col1, col2, col3, col4, col5 = st.columns([3, 2, 4, 1, 1], vertical_alignment='center')
         col1.markdown(graph.label)
-        col2.markdown(f"{readable_number(count_graph_triples(graph.uri))} triples")
+        col2.markdown(f"{readable_number(count_graph_triples(graph))} triples")
         col3.markdown(graph.comment)
 
         # Button to cleanse a graph

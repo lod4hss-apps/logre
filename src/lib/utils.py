@@ -1,3 +1,4 @@
+from schema import EntityType
 import re
 import unicodedata
 import time
@@ -69,19 +70,29 @@ def to_snake_case(text: str) -> str:
     return snake_case_text
 
 
-def generate_id() -> str:
+def generate_id(entity_type: EntityType) -> str:
     "Generate a uuid base on the current time"
 
+    # The seed (now's timestamp in ms)
     timestamp_ms = int(time.time() * 1000)
+
+    # The used alphabet
     BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
-    if timestamp_ms == 0: 
-        return BASE64_ALPHABET[0]
+    # Should never occur
+    # if timestamp_ms == 0: 
+    #     return BASE64_ALPHABET[0]
     
+    # Generate the id
     result = ""
     while timestamp_ms:
         timestamp_ms, remainder = divmod(timestamp_ms, 62)
         result = BASE64_ALPHABET[remainder] + result
 
-    return result[::-1]
+    # Prepend a prefix so that it is clearer what it is
+    # Also it makes sure that all entities will then start with a letter
+    if entity_type == EntityType.RESOURCE: prefix = 'i'
+    elif entity_type == EntityType.GRAPH: prefix = 'g'
+    else: prefix = 'i'
 
+    return prefix + result[::-1]

@@ -8,3 +8,7 @@ class EndpointTechnology(Enum):
 class OntologyFramework(Enum):
     NONE = 'None'
     SHACL = 'SHACL'
+
+class EntityType(Enum):
+    RESOURCE = "resource"
+    GRAPH = "graph"

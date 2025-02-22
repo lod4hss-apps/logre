@@ -34,6 +34,7 @@ def dialog_create_triple() -> None:
 
     # Fetch the entities
     entities = find_entities(
+        graph=graph,
         label_filter=entity_label if entity_label else None,
         class_filter=selected_class_uri,
         limit=5

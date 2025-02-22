@@ -37,6 +37,9 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
     triples_to_create: List[Triple] = []
     triples_to_delete: List[Triple] = []
 
+    # From state
+    graph = state.get_graph()
+
     # Get the ontology, to have labels
     ontology = get_ontology()
 
@@ -210,7 +213,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
         # If the range is not a Literal, it should then be instances of classes 
         else: 
             # List all possible existing entities (right class) from the endpoint
-            possible_objects = find_entities(class_filter=prop.range_class_uri)
+            possible_objects = find_entities(graph=graph, class_filter=prop.range_class_uri)
             # Get their label
             possible_objects_label = [obj.display_label_comment for obj in possible_objects]
 

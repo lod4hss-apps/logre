@@ -10,13 +10,13 @@ from lib.prefixes import get_prefixes_str
 import lib.state as state
 
 
-@st.cache_data(ttl="1d", show_spinner=False)
+@st.cache_data(show_spinner=False, ttl='1 day')
 def list_graphs() -> List[Graph]:
     """List all graphs available in the SPARQL endpoint."""
 
     # Prepare the query
     text = """
-        SELECT DISTINCT 
+        SELECT DISTINCT
             ?uri 
             (COALESCE(?label_, ?uri) as ?label)
             (COALESCE(?comment_, '') as ?comment)
@@ -28,7 +28,8 @@ def list_graphs() -> List[Graph]:
     """    
 
     # Execute the query
-    response = query(text, caller='sparql_queries.list_graphs')
+    with st.spinner("Listing all graphs..."):
+        response = query(text, caller='sparql_queries.list_graphs')
     
     # Transform list of objects into list of graphs
     if response: return list(map(lambda obj: Graph.from_dict(obj), response))
@@ -36,12 +37,11 @@ def list_graphs() -> List[Graph]:
     else: return []
 
 
-@st.cache_data(ttl=60, show_spinner=False)
-def count_graph_triples(graph: str) -> int:
+def count_graph_triples(graph: Graph) -> int:
     """Count how much triples there is in the selected dataset/graph"""
 
     # Make sure the given graph is a valid URI
-    graph_uri = ensure_uri(graph)
+    graph_uri = ensure_uri(graph.uri)
 
     # Prepare the query
     select = "SELECT (COUNT(*) as ?count)"
@@ -62,14 +62,17 @@ def count_graph_triples(graph: str) -> int:
     """
 
     # Execute the query
-    response = query(text)
+    with st.spinner(f'Counting triples in {graph.label}...'):
+        response = query(text)
 
     # Make sure a number is answered
     if not response: return 0
     return int(response[0]['count'])
 
 
+@st.cache_data(show_spinner=False, ttl='1 day')
 def get_ontology() -> Ontology:
+    """Depending on the endpoint configuration, fetch the right ontology."""
 
     # From state
     framework = state.get_endpoint().ontology_framework
@@ -78,12 +81,17 @@ def get_ontology() -> Ontology:
     # Maybe its my fault, by I can't find the reason why after some clicking around, the enums are lost
     # This is the way I found to make it work every time
     if framework == OntologyFramework.SHACL or framework.value == OntologyFramework.SHACL.value:
-        return get_shacl_ontology()
+        with st.spinner('Fetching SHACL ontology...'):
+            ontology = get_shacl_ontology()
+    else:
+        with st.spinner('Fetching used ontology...'):
+            ontology = get_noframework_ontology()
     
-    return get_noframework_ontology()
+    return ontology
     
 
-def find_entities(label_filter: str = None, class_filter: str = None, limit: int = None) -> List[Entity]:
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri})
+def find_entities(graph: Graph = None, label_filter: str = None, class_filter: str = None, limit: int = None) -> List[Entity]:
     """
     Fetch the list of entities on the endpoint with:
     Args:
@@ -92,12 +100,10 @@ def find_entities(label_filter: str = None, class_filter: str = None, limit: int
         limit (int): max number of retrived entities. If None, no limit is applied
     """
 
-    # From state
-    graph = state.get_graph()
-
     # Make sure the given class is a valid URI
     class_uri = ensure_uri(class_filter)
 
+    # Prepare query
     text = """
         SELECT
             (?uri_ as ?uri)
@@ -116,8 +122,9 @@ def find_entities(label_filter: str = None, class_filter: str = None, limit: int
     """
 
 
-    # Execute on the endpoint
-    response = query(text)
+    # Execute query
+    with st.spinner(f"Looking for entities in graph {graph.label}"):
+        response = query(text)
 
     # If there is no result, there is no point to go forward
     if not response: 
@@ -132,6 +139,7 @@ def find_entities(label_filter: str = None, class_filter: str = None, limit: int
     return entities
 
 
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
 def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """Fetch all relevant triples (according to the ontology) from the given graph about the given entity."""
 
@@ -170,8 +178,8 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """
 
     # Execute the request (Outgoing properties)
-    outgoing_props = query(text)
-
+    with st.spinner(f"Fetching entity card (outgoing triples) from graph {graph.label}..."):
+        outgoing_props = query(text)
 
     # Prepare que query (Incoming properties)
     text = """
@@ -198,7 +206,8 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """
 
     # Execute the request (Incoming properties)
-    incoming_props = query(text)
+    with st.spinner(f"Fetching entity card (incoming triples) from graph {graph.label}..."):
+        incoming_props = query(text)
 
     # Merge the data (left joins)
     display_triples_list = [{
@@ -207,7 +216,7 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
         # Merge the information about the subject class from the ontology (first right list)
         **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
         # Merge the information about the object class from the ontology (second right list)
-        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}) ,
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}),
         # Merge the information about the predicate from the ontology (third right list)
         **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
     } for triple in outgoing_props + incoming_props]
@@ -221,7 +230,7 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     return display_triples
 
 
-
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
 def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """Fetch all outgoing triples from the given graph about the given entity."""
 
@@ -229,7 +238,7 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
     entity_uri = ensure_uri(entity.uri)
     graph_uri = ensure_uri(graph.uri)
 
-    # Fetch only the wanted properties
+    # Fetch the ontology
     ontology = get_ontology()
     classes_dict = ontology.get_classes_named_dict()
     properties_dict = ontology.get_properties_named_dict()
@@ -258,7 +267,8 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
     """
 
     # Execute the request (Outgoing properties)
-    outgoing_props = query(text)
+    with st.spinner(f"Fetching outgoing triples from graph {graph.label}..."):
+        outgoing_props = query(text)
 
     # Merge the data (left joins)
     display_triples_list = [{
@@ -267,7 +277,7 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
         # Merge the information about the subject class from the ontology (first right list)
         **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
         # Merge the information about the object class from the ontology (second right list)
-        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}) ,
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}),
         # Merge the information about the predicate from the ontology (third right list)
         **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
     } for triple in outgoing_props]
@@ -287,6 +297,7 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
     return display_triples
 
 
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
 def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """Fetch all incoming triples from the given graph about the given entity."""
 
@@ -294,7 +305,7 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
     entity_uri = ensure_uri(entity.uri)
     graph_uri = ensure_uri(graph.uri)
 
-    # Fetch only the wanted properties
+    # Fetch the ontology
     ontology = get_ontology()
     classes_dict = ontology.get_classes_named_dict()
     properties_dict = ontology.get_properties_named_dict()
@@ -322,8 +333,9 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
         }
     """
 
-    # Execute the request (Outgoing properties)
-    outgoing_props = query(text)
+    # Execute the request (Incoming properties)
+    with st.spinner(f"Fetching incoming triples from graph {graph.label}..."):
+        incoming_props = query(text)
 
     # Merge the data (left joins)
     display_triples_list = [{
@@ -332,10 +344,10 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
         # Merge the information about the subject class from the ontology (first right list)
         **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
         # Merge the information about the object class from the ontology (second right list)
-        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}) ,
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}),
         # Merge the information about the predicate from the ontology (third right list)
         **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
-    } for triple in outgoing_props]
+    } for triple in incoming_props]
 
     # Here, since we are making a left join, some of the triples are not in the onotlogy, so we need to make sure that some information are set
     display_triples_list = [{
@@ -352,6 +364,7 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
     return display_triples
 
 
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
 def get_all_instances_of_class(cls: OntologyClass, graph: Graph): 
     """List all instances with all properties (from the ontology) of a given class."""
 
@@ -382,7 +395,8 @@ def get_all_instances_of_class(cls: OntologyClass, graph: Graph):
     """
 
     # Execute the query
-    instances = query(text)
+    with st.spinner(f"Fetching all instances of class {cls.display_label} from graph {graph.label}..."):
+        instances = query(text)
 
     return instances
 
@@ -392,9 +406,6 @@ def download_graph(graph: Graph) -> str:
 
     # Force the right format
     graph_uri = ensure_uri(graph.uri)
-
-    # From session state
-    endpoint = state.get_endpoint()
     
     # Prepare the query
     text = """
@@ -411,7 +422,8 @@ def download_graph(graph: Graph) -> str:
     """
 
     # Execute the query
-    triples = query(text)
+    with st.spinner(f"Fetching all triples from graph {graph.label}..."):
+        triples = query(text)   
     
     # Add all prefixes
     content = get_prefixes_str(format='turtle') + '\n\n'
@@ -426,3 +438,104 @@ def download_graph(graph: Graph) -> str:
         content += f"{subject} {predicate} {object} .\n"
 
     return content
+
+
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
+def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
+
+    # From state
+    graph = state.get_graph()
+    
+    # Fetch the ontology
+    ontology = get_ontology()
+    classes_dict = ontology.get_classes_named_dict()
+    properties_dict = ontology.get_properties_named_dict()
+
+    # Prepare the query
+    text = """            
+        SELECT DISTINCT
+            (COALESCE(?s2, '') as ?sub2_uri)
+            (COALESCE(?s2_label, '') as ?sub2_label)
+            (COALESCE(?s2_class_uri, '') as ?sub2_class_uri)
+            (COALESCE(?s2_comment, '') as ?sub2_comment)
+            (COALESCE(?p2, '') as ?pred2)
+            (COALESCE(?target, '') as ?initial_uri)
+            (COALESCE(?target_label, '') as ?initial_label)
+            (COALESCE(?target_class_uri, '') as ?initial_class_uri)
+            (COALESCE(?target_comment, '') as ?initial_comment)
+            (COALESCE(?p1, '') as ?pred1)
+            (COALESCE(?o1, '') as ?obj1_uri)
+            (COALESCE(?o1_label, '') as ?obj1_label)
+            (COALESCE(?o1_class_uri, '') as ?obj1_class_uri)
+            (COALESCE(?o1_comment, '') as ?obj1_comment)
+            (COALESCE(isLiteral(?o1), 'false') as ?is_literal)
+        WHERE {
+            """ + ("GRAPH " + ensure_uri(graph.uri) + " {" if graph.uri else "") + """
+                    {    
+                        optional { 
+                            ?target ?p1 ?o1 . 
+                            optional { ?o1 rdfs:label ?o1_label . }
+                            optional { ?o1 rdf:type ?o1_class_uri . }
+                            optional { ?o1 rdfs:comment ?o1_comment . }
+                            FILTER (?p1 NOT IN (rdf:type, rdfs:label, rdfs:comment) )
+                        }
+                    } UNION {
+                        optional { 
+                            ?s2 ?p2 ?target . 
+                            optional { ?s2 rdfs:label ?s2_label . }
+                            optional { ?s2 rdf:type ?s2_class_uri . }
+                            optional { ?s2 rdfs:comment ?s2_comment . }
+                        }
+                    }
+                    optional { ?target rdfs:label ?target_label . }
+                    optional { ?target rdf:type ?target_class_uri . }
+                    optional { ?target rdfs:comment ?target_comment . }
+                
+                VALUES ?target { """ + ' '.join(entity_uris) + """ }
+
+            """ + ("}" if graph.uri else "") + """
+        }
+    """
+
+    # Execute the query
+    with st.spinner(f"Fetching all triples of {len(entity_uris)} entities from graph {graph.label}..."):
+        response = query(text)
+
+    # Build triples
+    triples = []
+    for line in response:
+        triples.append({
+            'subject_uri': line['sub2_uri'] if line['pred2'] else line['initial_uri'],
+            'subject_label': line['sub2_label'] if line['pred2'] else line['initial_label'],
+            'subject_comment': line['sub2_comment'] if line['pred2'] else line['initial_comment'],
+            'subject_class_uri': line['sub2_class_uri'] if line['pred2'] else line['initial_class_uri'],
+            'predicate_uri': line['pred2'] if line['pred2'] else line['pred1'],
+            'object_uri': line['initial_uri'] if line['pred2'] else line['obj1_uri'],
+            'object_label': line['initial_label'] if line['pred2'] else line['obj1_label'],
+            'object_comment': line['initial_comment'] if line['pred2'] else line['obj1_comment'],
+            'object_class_uri': line['initial_class_uri'] if line['pred2'] else line['obj1_class_uri'],
+            'object_is_literal': 'false' if line['pred2'] else line['is_literal']
+        })
+
+    # Merge the ontology (left joins)
+    display_triples_list = [{
+        # Get attributes from left list
+        **triple, 
+        # Merge the information about the subject class from the ontology (first right list)
+        **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
+        # Merge the information about the object class from the ontology (second right list)
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}),
+        # Merge the information about the predicate from the ontology (third right list)
+        **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
+    } for triple in triples]
+
+    # Here, since we are making a left join, some of the triples are not in the onotlogy, so we need to make sure that some information are set
+    display_triples_list = [{
+        **triple, 
+        "predicate_order": triple["predicate_order"] if "predicate_order" in triple and triple["predicate_order"] is not None else 1000000000000000000
+    } for triple in display_triples_list]
+
+    # Convert into list of DisplayTriples instances
+    display_triples = list(map(lambda triple: DisplayTriple.from_dict(triple), display_triples_list))
+
+    return display_triples

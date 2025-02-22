@@ -7,6 +7,9 @@ import lib.state as state
 def dialog_find_entity() -> None:
     """Dialog function to allow user to find an entity and select it."""
     
+    # From state
+    graph = state.get_graph()
+
     ontology = get_ontology()
 
     # All entity filters:
@@ -30,6 +33,7 @@ def dialog_find_entity() -> None:
 
     # Fetch the entities
     entities = find_entities(
+        graph=graph,
         label_filter=entity_label if entity_label else None,
         class_filter=selected_class_uri,
         limit=limit
