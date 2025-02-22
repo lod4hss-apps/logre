@@ -11,6 +11,8 @@ class OntologyProperty(BaseModel):
     domain_class_uri: str 
     range_class_uri: str
 
+    is_blank: bool
+
 
     @field_validator("order", mode="before")
     @classmethod
@@ -38,7 +40,11 @@ class OntologyProperty(BaseModel):
     @classmethod
     def from_dict(cls, data: dict) -> 'OntologyProperty':
         """Create an OntologyProperty instance from a dictionary"""
-        return cls(**data)
+
+        instance = cls(**data)
+        instance.is_blank = True if data['is_blank'] == 'true' else False
+
+        return instance
     
     def get_key(self) -> str:
         return f"{self.domain_class_uri}-{self.uri}"

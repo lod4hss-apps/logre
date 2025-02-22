@@ -151,7 +151,7 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     ontology = get_ontology()
     classes_dict = ontology.get_classes_named_dict()
     properties_dict = ontology.get_properties_named_dict()
-    wanted_properties = [ensure_uri(prop.uri) for prop in ontology.properties if prop.domain_class_uri == entity.class_uri]
+    wanted_properties = [ensure_uri(prop.uri) for prop in ontology.properties if not prop.is_blank]
 
     # Prepare the query (Outgoing properties)
     text = """

@@ -89,7 +89,7 @@ else:
     # Get all triples linked to the ontology (and only!)
     # We fetch them here so we have them for edition
     card_triples = get_entity_card(entity, graph)
-    
+
     # Filter out rdf:type, rdfs:label, rdfs:comment they are already in the header
     card_triples = [triple for triple in card_triples if triple.predicate.uri not in ['rdf:type', 'rdfs:label', 'rdfs:comment']]
 

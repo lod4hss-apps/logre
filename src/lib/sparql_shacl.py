@@ -49,6 +49,7 @@ def get_shacl_properties() -> OntologyProperty:
             (COALESCE(?max_count_, '') as ?max_count)
             ?domain_class_uri
             (COALESCE(?range_class_uri_1, ?range_class_uri_2, '') as ?range_class_uri)
+            (isBlank(?uri) as ?is_blank)
         WHERE {
             """ + ("GRAPH " + ensure_uri(endpoint.ontology_uri) + " {" if endpoint.ontology_uri else "") + """
                 ?shape sh:property ?node .
@@ -64,7 +65,6 @@ def get_shacl_properties() -> OntologyProperty:
                 }
                 OPTIONAL { ?node sh:datatype ?range_class_uri_2 . }
             """ + ("}" if endpoint.ontology_uri else "") + """
-            FILTER(!isBlank(?uri))
         }
     """
 
