@@ -251,7 +251,7 @@ else:
             dialog_confirmation(
                 f'You are about to upload **{", ".join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
                 callback=__upload_turtle_file, 
-                ttl_datas=[file.read() for file in files].decode("utf-8"),
+                ttl_datas=[file.read().decode("utf-8") for file in files],
                 graph_uri=selected_graph.uri
             )
 
@@ -260,7 +260,7 @@ else:
             dialog_confirmation(
                 f'You are about to upload **{", ".join([file.name.upper() for file in files])}** into **{graph_label.upper()}**.', 
                 callback=__upload_spreadsheet_file, 
-                csv_datas=[file.read() for file in files].decode("utf-8"),
+                csv_datas=[file.read().decode("utf-8") for file in files],
                 graph_uri=selected_graph.uri
             )
 
@@ -310,7 +310,7 @@ else:
             dialog_confirmation(
                 f'You are about to upload the ontology named **{ontology_name.upper()}** into **{selected_graph_uri}**.', 
                 callback=__upload_turtle_file, 
-                ttl_data=file_content,
+                ttl_datas=[file_content],
                 graph_uri=selected_graph_uri
             )
 

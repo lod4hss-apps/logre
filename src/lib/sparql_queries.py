@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 import streamlit as st
 from schema import Graph, OntologyFramework, Entity
 from schema import DisplayTriple, Ontology, OntologyClass
@@ -143,6 +143,11 @@ def find_entities(graph: Graph = None, label_filter: str = None, class_filter: s
 def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """Fetch all relevant triples (according to the ontology) from the given graph about the given entity."""
 
+    # In case the entity is a blank node, do nothing
+    if entity.is_blank:
+        st.error('Can not fetch triples from a blank node')
+        return []
+    
     # Make sure the given entity is a valid URI
     entity_uri = ensure_uri(entity.uri)
     graph_uri = ensure_uri(graph.uri)
@@ -156,16 +161,18 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     # Prepare the query (Outgoing properties)
     text = """
         SELECT DISTINCT
-            ('""" + entity.uri + """' as ?subject_uri)
+            ('""" + entity_uri + """' as ?subject_uri)
             ('""" + entity.label + """' as ?subject_label)
             ('""" + entity.class_uri + """' as ?subject_class_uri)
             ('""" + (entity.comment or '') + """' as ?subject_comment)
+            ('false' as ?subject_is_blank)
             ?predicate_uri
             ?object_uri
             (COALESCE(?object_label_, '') as ?object_label)
             (COALESCE(?object_class_uri_, '') as ?object_class_uri)
-            (isLiteral(?object_uri) as ?object_is_literal)
             (COALESCE(?object_comment_, '') as ?object_comment)
+            (isLiteral(?object_uri) as ?object_is_literal)
+            (isBlank(?object_uri) as ?object_is_blank)
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
                 """ + entity_uri + """ ?predicate_uri ?object_uri . 
@@ -234,6 +241,11 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
 def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """Fetch all outgoing triples from the given graph about the given entity."""
 
+    # In case the entity is a blank node, do nothing
+    if entity.is_blank:
+        st.error('Can not fetch triples from a blank node')
+        return []
+    
     # Make sure the given entity is a valid URI
     entity_uri = ensure_uri(entity.uri)
     graph_uri = ensure_uri(graph.uri)
@@ -246,16 +258,18 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
     # Prepare the query (Outgoing properties)
     text = """
         SELECT DISTINCT
-            ('""" + entity.uri + """' as ?subject_uri)
+            ('""" + entity_uri + """' as ?subject_uri)
             ('""" + entity.label + """' as ?subject_label)
             ('""" + entity.class_uri + """' as ?subject_class_uri)
             ('""" + (entity.comment or '') + """' as ?subject_comment)
+            (isBlank(""" + entity_uri + """) as ?object_is_blank)
             ?predicate_uri
             ?object_uri
             (COALESCE(?object_label_, '') as ?object_label)
             (COALESCE(?object_class_uri_, '') as ?object_class_uri)
-            (isLiteral(?object_uri) as ?object_is_literal)
             (COALESCE(?object_comment_, '') as ?object_comment)
+            (isLiteral(?object_uri) as ?object_is_literal)
+            (isBlank(?object_uri) as ?object_is_blank)
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
                 """ + entity_uri + """ ?predicate_uri ?object_uri . 
@@ -301,6 +315,11 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
 def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     """Fetch all incoming triples from the given graph about the given entity."""
 
+    # In case the entity is a blank node, do nothing
+    if entity.is_blank:
+        st.error('Can not fetch triples from a blank node')
+        return []
+
     # Make sure the given entity is a valid URI
     entity_uri = ensure_uri(entity.uri)
     graph_uri = ensure_uri(graph.uri)
@@ -317,12 +336,14 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
             (COALESCE(?subject_label_, 'No label') as ?subject_label)
             (COALESCE(?subject_class_uri_, '') as ?subject_class_uri)
             (COALESCE(?subject_comment_, '') as ?subject_comment)
+            (isBlank(?subject_uri) as ?subject_is_blank)
             ?predicate_uri
             ('""" + entity.uri + """' as ?object_uri)
             ('""" + entity.label + """' as ?object_label)
             ('""" + entity.class_uri + """' as ?object_class_uri)
             ('""" + (entity.comment or '') + """' as ?object_comment)
             ('false' as ?object_is_literal)
+            (isBlank(?object_uri) as ?object_is_blank)
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
                 ?subject_uri ?predicate_uri """ + entity_uri + """ . 
@@ -365,7 +386,7 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
 
 
 @st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
-def get_all_instances_of_class(cls: OntologyClass, graph: Graph): 
+def get_all_instances_of_class(cls: OntologyClass, graph: Graph) -> List[Dict[str, str]] | bool: 
     """List all instances with all properties (from the ontology) of a given class."""
 
     graph_uri = ensure_uri(graph.uri)
@@ -443,6 +464,12 @@ def download_graph(graph: Graph) -> str:
 @st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
 def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
 
+
+    # In case the entity is a blank node, do nothing
+    if any([uri.startswith('_:') for uri in entity_uris]):
+        st.error('Can not fetch triples from a blank node')
+        return []
+
     # From state
     graph = state.get_graph()
     
@@ -458,17 +485,20 @@ def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
             (COALESCE(?s2_label, '') as ?sub2_label)
             (COALESCE(?s2_class_uri, '') as ?sub2_class_uri)
             (COALESCE(?s2_comment, '') as ?sub2_comment)
+            (COALESCE(isBlank(?s2), 'false') as ?sub2_is_blank)
             (COALESCE(?p2, '') as ?pred2)
             (COALESCE(?target, '') as ?initial_uri)
             (COALESCE(?target_label, '') as ?initial_label)
             (COALESCE(?target_class_uri, '') as ?initial_class_uri)
             (COALESCE(?target_comment, '') as ?initial_comment)
+            (COALESCE(isBlank(?target), 'false') as ?initial_is_blank)
             (COALESCE(?p1, '') as ?pred1)
             (COALESCE(?o1, '') as ?obj1_uri)
             (COALESCE(?o1_label, '') as ?obj1_label)
             (COALESCE(?o1_class_uri, '') as ?obj1_class_uri)
             (COALESCE(?o1_comment, '') as ?obj1_comment)
             (COALESCE(isLiteral(?o1), 'false') as ?is_literal)
+            (COALESCE(isBlank(?o1), 'false') as ?obj1_is_blank)
         WHERE {
             """ + ("GRAPH " + ensure_uri(graph.uri) + " {" if graph.uri else "") + """
                     {    
@@ -509,12 +539,14 @@ def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
             'subject_label': line['sub2_label'] if line['pred2'] else line['initial_label'],
             'subject_comment': line['sub2_comment'] if line['pred2'] else line['initial_comment'],
             'subject_class_uri': line['sub2_class_uri'] if line['pred2'] else line['initial_class_uri'],
+            'subject_is_blank': line['sub2_is_blank'] if line['pred2'] else line['initial_is_blank'],
             'predicate_uri': line['pred2'] if line['pred2'] else line['pred1'],
             'object_uri': line['initial_uri'] if line['pred2'] else line['obj1_uri'],
             'object_label': line['initial_label'] if line['pred2'] else line['obj1_label'],
             'object_comment': line['initial_comment'] if line['pred2'] else line['obj1_comment'],
             'object_class_uri': line['initial_class_uri'] if line['pred2'] else line['obj1_class_uri'],
-            'object_is_literal': 'false' if line['pred2'] else line['is_literal']
+            'object_is_literal': 'false' if line['pred2'] else line['is_literal'],
+            'object_is_blank': line['initial_is_blank'] if line['pred2'] else line['obj1_is_blank'],
         })
 
     # Merge the ontology (left joins)

@@ -8,6 +8,7 @@ class Entity(BaseModel):
     label: Optional[str] = None
     comment: Optional[str] = None
     is_literal: bool = False
+    is_blank: bool = False
 
     class_uri: Optional[str] = None
     class_label: Optional[str] = None
@@ -19,14 +20,43 @@ class Entity(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def set_labels(cls, values):
+
+        # If it is a literal: 
         if values.get('is_literal') == 'true':
-            uri = values.get('uri')
+
+            # Set the booleans
+            values["is_literal"] = True
+            values["is_blank"] = False
+
+            # Set the string variables
+            uri: str = values.get('uri')
             values["uri"] = ""
             values["label"] = uri
             values["display_label"] = uri
             values["display_label_comment"] = uri
-            values["is_literal"] = True
+
+        # If it is a blank node:
+        elif values.get('is_blank') == 'true':
+            
+            # Set the booleans
+            values["is_literal"] = False
+            values["is_blank"] = True
+
+            # Set the string variables
+            uri: str = values.get('uri')
+            values["uri"] = uri if uri.startswith('_:') else '_:' + uri
+            values["label"] = f"(blank) {uri}"
+            values["display_label"] = f"(blank) {uri}"
+            values["display_label_comment"] = f"(blank) {uri}"
+
+        # If it is neither a literal or a blank node: a classic instance:
         else:
+            
+            # Set the booleans
+            values["is_literal"] = False
+            values["is_blank"] = False
+
+            # Set the string variables
             uri = values.get('uri')
             label = values.get("label") or uri
             class_label = values.get("class_label") or values.get("class_uri") or "Unknown Class"
@@ -35,7 +65,7 @@ class Entity(BaseModel):
             display_label_comment = display_label if not comment else display_label + ": " + comment
             values["display_label"] = display_label
             values["display_label_comment"] = display_label_comment
-            values["is_literal"] = False
+            
         return values
 
     def to_dict(self) -> dict:

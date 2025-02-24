@@ -246,8 +246,8 @@ else:
         for depth in range(0, graph_depth):
 
             # List all entities
-            subjects_uris = [triple.subject.uri for triple in graph_triples]
-            objects_uris = [triple.object.uri for triple in graph_triples]
+            subjects_uris = [triple.subject.uri for triple in graph_triples if (not triple.subject.is_blank)]
+            objects_uris = [triple.object.uri for triple in graph_triples if (not triple.object.is_literal) and (not triple.object.is_blank)]
             uris = [entity.uri] + subjects_uris + objects_uris
 
             # Filter out those already done
@@ -290,7 +290,14 @@ else:
         # Build and add the needed information for the Network: Nodes
         nodes = [t['subject'] for t in formated_triples] + [t['object'] for t in formated_triples]
         nodes = list(np.unique(nodes))
-        nodes_colors = [__get_hex_color(node[node.index('\n(')+1:]) if '\n(' in node else '#000' for node in nodes]
+
+        # Determine the color: each class has the same color
+        # Values are black, blank nodes are grey
+        nodes_colors = []
+        for node in nodes:
+            if '\n(' in node: nodes_colors.append(__get_hex_color(node[node.index('\n(')]))
+            elif node.startswith('(blank)'): nodes_colors.append('#535353')
+            else: nodes_colors.append('#000')
         network.add_nodes(nodes, color=nodes_colors)
     
         # Build and add the needed information for the Network: Edges

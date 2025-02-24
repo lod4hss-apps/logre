@@ -95,7 +95,6 @@ sdh-shacl:crm_E21_Shape a sh:NodeShape;
         sh:path [ sh:inversePath crm:P98; ];
         sh:name "was born";
         sh:order 4;
-        sh:maxCount 1;
     ];
 
     .
