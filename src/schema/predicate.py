@@ -20,9 +20,13 @@ class Predicate(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def set_display_label(cls, values):
-        label = values.get("label") or "Unknown Label"
-        uri = values.get("uri")
-        values["display_label"] = f"{label} ({uri})"
+        if values.get("label"):
+            label = values.get("label")
+            uri = values.get("uri")
+            values["display_label"] = f"{label} ({uri})"
+        else:
+            uri = values.get("uri")
+            values["display_label"] = f"{uri}"
         return values
     
     def to_dict(self) -> dict:

@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - When generating ids, prepend a 'i' for a resource, and a 'g' for a graph
 - Add spinners eveywhere needed
 - Enhance caching behavior
+- Handle blank nodes more properly
 
 ## v1.9.1 - Date 2025-02-19
 

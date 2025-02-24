@@ -70,7 +70,7 @@ def to_snake_case(text: str) -> str:
     return snake_case_text
 
 
-def generate_id(entity_type: EntityType) -> str:
+def generate_id(entity_type: EntityType = EntityType.RESOURCE) -> str:
     "Generate a uuid base on the current time"
 
     # The seed (now's timestamp in ms)

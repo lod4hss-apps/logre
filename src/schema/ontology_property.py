@@ -10,9 +10,7 @@ class OntologyProperty(BaseModel):
 
     domain_class_uri: str 
     range_class_uri: str
-
-    is_blank: bool
-
+    card_of_class_uri: str
 
     @field_validator("order", mode="before")
     @classmethod
@@ -40,11 +38,8 @@ class OntologyProperty(BaseModel):
     @classmethod
     def from_dict(cls, data: dict) -> 'OntologyProperty':
         """Create an OntologyProperty instance from a dictionary"""
-
-        instance = cls(**data)
-        instance.is_blank = True if data['is_blank'] == 'true' else False
-
-        return instance
+        return cls(**data)
     
     def get_key(self) -> str:
-        return f"{self.domain_class_uri}-{self.uri}"
+        """Create a key to identify a property and its vision for a class (eg "was born" on the Person class, but "brought into life" for a Birth card)"""
+        return f"{self.domain_class_uri or self.range_class_uri}-{self.uri}"

@@ -156,7 +156,7 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     ontology = get_ontology()
     classes_dict = ontology.get_classes_named_dict()
     properties_dict = ontology.get_properties_named_dict()
-    wanted_properties = [ensure_uri(prop.uri) for prop in ontology.properties if not prop.is_blank]
+    wanted_properties = [ensure_uri(prop.uri) for prop in ontology.properties if prop.card_of_class_uri == entity.class_uri]
 
     # Prepare the query (Outgoing properties)
     text = """
@@ -216,8 +216,11 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     with st.spinner(f"Fetching entity card (incoming triples) from graph {graph.label}..."):
         incoming_props = query(text)
 
-    # Merge the data (left joins)
-    display_triples_list = [{
+
+    # Merge the data (left joins). We have to do it 2 times, once for the incomings, and once for the outgoings:
+    # Because for the incoming we want to fetch the label of the right class vision of the property
+    # For outgoing
+    display_triples_list_outgoing = [{
         # Get attributes from left list
         **triple, 
         # Merge the information about the subject class from the ontology (first right list)
@@ -226,7 +229,20 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
         **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}),
         # Merge the information about the predicate from the ontology (third right list)
         **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["subject_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
-    } for triple in outgoing_props + incoming_props]
+    } for triple in outgoing_props]
+    # For incoming
+    display_triples_list_incoming = [{
+        # Get attributes from left list
+        **triple, 
+        # Merge the information about the subject class from the ontology (first right list)
+        **({f"subject_class_{k}": v for k, v in classes_dict.get(triple["subject_class_uri"], {}).items()} if "subject_class_uri" in triple else {}),
+        # Merge the information about the object class from the ontology (second right list)
+        **({f"object_class_{k}": v for k, v in classes_dict.get(triple["object_class_uri"], {}).items()} if "object_class_uri" in triple else {}),
+        # Merge the information about the predicate from the ontology (third right list)
+        **{f"predicate_{k}": v for k, v in properties_dict.get(f'{triple["object_class_uri"]}-{triple["predicate_uri"]}', {}).items()},
+    } for triple in incoming_props]
+    # Regroup both lists
+    display_triples_list = display_triples_list_outgoing + display_triples_list_incoming
 
     # Convert into list of DisplayTriples instances
     display_triples = list(map(lambda triple: DisplayTriple.from_dict(triple), display_triples_list))
