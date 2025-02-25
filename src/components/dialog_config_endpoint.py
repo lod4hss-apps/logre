@@ -1,3 +1,4 @@
+from enum import Enum
 import streamlit as st
 from schema import EndpointTechnology, OntologyFramework, Endpoint
 import lib.state as state
@@ -6,7 +7,7 @@ from lib.configuration import save_config
 # Contants
 technologies = [e for e in EndpointTechnology]
 technologies_str = [e.value for e in EndpointTechnology]
-frameworks = [e for e in OntologyFramework]
+frameworks =  [e for e in OntologyFramework]
 frameworks_str = [e.value for e in OntologyFramework]
 
 
@@ -14,13 +15,23 @@ frameworks_str = [e.value for e in OntologyFramework]
 def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None:
     """Dialog function to provide a formular for the endpoint creation/edition."""
 
+    # For some reason, sometimes, especially on hot reload, Enums are lost.
+    # Maybe its my fault, by I can't find the reason why after some clicking around, the enums are lost
+    # This is the way I found to make it work every time
+    if endpoint:
+        technology = endpoint.technology.value if isinstance(endpoint.technology, Enum) else endpoint.technology
+        ontology_framework = endpoint.ontology_framework.value if isinstance(endpoint.ontology_framework, Enum) else endpoint.ontology_framework
+    else:
+        technology = 'None'
+        ontology_framework = 'None'
+
     # Values, and default
     name = endpoint.name if endpoint else ""
     url = endpoint.url if endpoint else ""
-    technology_index = technologies.index(endpoint.technology) if endpoint else 0
+    technology_index = technologies_str.index(technology) if endpoint else 0
     base_uri = endpoint.base_uri if endpoint else "http://www.example.org/"
     ontology_uri = endpoint.ontology_uri if endpoint else "base:shacl"
-    framework_index = frameworks.index(endpoint.ontology_framework) if endpoint else 0
+    framework_index = frameworks_str.index(ontology_framework) if endpoint else 0
     username = endpoint.username if endpoint else ""
     password = endpoint.password if endpoint else ""
 
@@ -52,7 +63,7 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
                 username=endpoint_username,
                 password=endpoint_password
             )
-
+            
             # Update the endpoint, or add it to the list
             all_endpoints = state.get_endpoints()
             if endpoint: all_endpoints[index] = new_endpoint
@@ -63,8 +74,11 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
             state.clear_endpoint()
 
             # If Logre is running locally and has a configuration: save the config on disk
+            # Otherwise tell the GUI that a configuration is present
             if state.get_configuration() == 'local': 
                 save_config()
+            else: 
+                state.set_configuration('uploaded')
 
             # Finalization: validation message and reload
             state.set_toast('Endpoint saved', icon=':material/done:')

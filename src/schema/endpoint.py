@@ -26,7 +26,7 @@ class Endpoint(BaseModel):
 
         model_dump = self.model_dump()
         model_dump['technology'] = self.technology.value if isinstance(self.technology, Enum) else self.technology
-        model_dump['ontology_framework'] = self.ontology_framework.value if isinstance(self.ontology_framework, Enum) else self.technology
+        model_dump['ontology_framework'] = self.ontology_framework.value if isinstance(self.ontology_framework, Enum) else self.ontology_framework
 
         return model_dump
 

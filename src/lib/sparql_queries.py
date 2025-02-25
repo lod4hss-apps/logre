@@ -77,10 +77,10 @@ def get_ontology() -> Ontology:
     # From state
     framework = state.get_endpoint().ontology_framework
 
-    # For some reason, sometimes, especially on hot reload, streamlit looses the enums.
+    # For some reason, sometimes, especially on hot reload, Enums are lost.
     # Maybe its my fault, by I can't find the reason why after some clicking around, the enums are lost
     # This is the way I found to make it work every time
-    if framework == OntologyFramework.SHACL or framework.value == OntologyFramework.SHACL.value:
+    if framework == OntologyFramework.SHACL or framework == OntologyFramework.SHACL.value:
         with st.spinner('Fetching SHACL ontology...'):
             ontology = get_shacl_ontology()
     else:

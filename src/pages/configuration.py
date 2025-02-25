@@ -75,7 +75,9 @@ def __endpoint_list() -> None:
     # Display all saved endpoints
     for i, endpoint in enumerate(all_endpoints):
 
-        # To work around the fact, that sometimes on reload, enums are transformed into string, for reasons I do not understand
+        # For some reason, sometimes, especially on hot reload, Enums are lost.
+        # Maybe its my fault, by I can't find the reason why after some clicking around, the enums are lost
+        # This is the way I found to make it work every time
         technology = endpoint.technology.value if isinstance(endpoint.technology, Enum) else endpoint.technology
         ontology_framework = endpoint.ontology_framework.value if isinstance(endpoint.ontology_framework, Enum) else endpoint.ontology_framework
 
