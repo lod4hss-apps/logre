@@ -291,6 +291,17 @@ else:
         nodes = [t['subject'] for t in formated_triples] + [t['object'] for t in formated_triples]
         nodes = list(np.unique(nodes))
 
+        # Special behavior: Handle the bug in pyvis
+        # In pyvis, later on, when adding edges, when one is a string that can be parsed into a integer (at least, maybe also a float, but not sure)
+        # It crashes because it does not find it in the nodes, which is false: it actually is in the node
+        # I assume this is a bug from pyvis, and that, somehow, internally it parsed it into an integer, so far that it does not find the string of it in the nodes
+        # The strategy used here is to make the string not parsable as an integer (by adding a ".", which is not perfect, but work around the bug)
+        for i, node in enumerate(nodes):
+            try:
+                int(node)
+                nodes[i] = str(node) + '.'
+            except ValueError: pass
+
         # Determine the color: each class has the same color
         # Values are black, blank nodes are grey
         nodes_colors = []
@@ -302,7 +313,12 @@ else:
     
         # Build and add the needed information for the Network: Edges
         for t in formated_triples:
-            network.add_edge(t['subject'], t['object'], label=t['predicate'])
+            try:
+                int(t['object'])
+                object = t['object'] + '.'
+            except ValueError:
+                object = t['object']
+            network.add_edge(t['subject'], object, label=t['predicate'])
 
         # Set the options
         network.set_options("""

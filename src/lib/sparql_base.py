@@ -159,7 +159,7 @@ def insert(triples: List[Triple] | Triple, graph: str = None, delete_before=True
     if delete_before and state.get_endpoint().technology == EndpointTechnology.ALLEGROGRAPH:
         delete(triples, graph)
 
-    # If only a single triple is given, transform is into a list
+    # If only a single triple is given, transform it into a list
     if isinstance(triples, Triple):
         triples = [triples]
 

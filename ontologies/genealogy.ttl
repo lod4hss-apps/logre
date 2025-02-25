@@ -97,6 +97,12 @@ sdh-shacl:crm_E21_Shape a sh:NodeShape;
         sh:order 4;
     ];
 
+    sh:property [
+        sh:path [ sh:inversePath crm:P100; ];
+        sh:name "died";
+        sh:order 5;
+    ];
+
     .
 
 

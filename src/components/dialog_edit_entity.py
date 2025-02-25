@@ -73,8 +73,8 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
     if new_entity_comment != entity.comment:
         triples_to_delete.append(Triple(entity.uri, 'rdfs:comment', f"'{entity.comment}'"))
         # Only append the new if it not an empty string
-        if new_entity_comment.strip() != '': triples_to_create.append(Triple(entity.uri, 'rdfs:comment', f"'{new_entity_comment.strip()}'"))
-        entity.comment = new_entity_comment
+        if new_entity_comment.strip() != '': 
+            triples_to_create.append(Triple(entity.uri, 'rdfs:comment', f"'{new_entity_comment.strip()}'"))
 
     st.divider()
 
@@ -215,7 +215,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
             # List all possible existing entities (right class) from the endpoint
             possible_objects = find_entities(graph=graph, class_filter=prop.range_class_uri)
             # Get their label
-            possible_objects_label = [obj.display_label_comment for obj in possible_objects]
+            possible_objects_label = [obj.display_label for obj in possible_objects]
 
             # Only if this prop has max cardinality equal to 1
             if prop.max_count == 1:
@@ -224,7 +224,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
                 # Target the existing entity with its uri, if any
                 existing_object = [ent for ent in possible_objects if ent.uri == existing_triple.object.uri][0] if existing_triple else None
                 # Get the index of this entity, if any
-                existing_index = possible_objects_label.index(existing_object.display_label_comment) if existing_triple else None
+                existing_index = possible_objects_label.index(existing_object.display_label) if existing_triple else None
                 # Get its URI (for code conveniance), if any
                 existing_uri = existing_object.uri if existing_triple else None
                 # User form input field

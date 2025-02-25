@@ -401,7 +401,7 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
     return display_triples
 
 
-@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri, OntologyClass: lambda cls: cls.uri})
 def get_all_instances_of_class(cls: OntologyClass, graph: Graph) -> List[Dict[str, str]] | bool: 
     """List all instances with all properties (from the ontology) of a given class."""
 

@@ -131,8 +131,8 @@ def dialog_dump_endpoint():
         file_name =f"logre-{endpoint.name}-dump.nq".lower()
 
         # And then the user can download it
-        col2.download_button(label="Click to Download", data=file_content, file_name=file_name, mime="application/n-quads")
+        if col2.download_button(label="Click to Download", data=file_content, file_name=file_name, mime="application/n-quads"):
 
-        # Validation and rerun
-        state.set_toast('Dump file downloaded')
-        st.rerun()
+            # Validation and rerun
+            state.set_toast('Dump file downloaded')
+            st.rerun()
