@@ -1,3 +1,4 @@
+from enum import Enum
 import streamlit as st
 from schema import Triple, Endpoint, Graph
 from lib.sparql_base import delete
@@ -74,6 +75,10 @@ def __endpoint_list() -> None:
     # Display all saved endpoints
     for i, endpoint in enumerate(all_endpoints):
 
+        # To work around the fact, that sometimes on reload, enums are transformed into string, for reasons I do not understand
+        technology = endpoint.technology.value if isinstance(endpoint.technology, Enum) else endpoint.technology
+        ontology_framework = endpoint.ontology_framework.value if isinstance(endpoint.ontology_framework, Enum) else endpoint.ontology_framework
+
         # Display all information from the endpoint as disabled inputs
         col1, col2 = st.columns([6, 13], vertical_alignment='center')
         col1.text_input('Name', value=endpoint.name, key=f"config-endpoint-name-{i}", disabled=True)
@@ -81,11 +86,11 @@ def __endpoint_list() -> None:
         col1, col2, col3 = st.columns([6, 6, 7], vertical_alignment='center')
         col1.text_input('Username', value=endpoint.username, key=f"config-endpoint-username-{i}", disabled=True)
         col2.text_input('Password', value=endpoint.password, key=f"config-endpoint-password-{i}", type='password', disabled=True)
-        col3.text_input('Endpoint technology', value=endpoint.technology.value, key=f"config-endpoint-technology-{i}", disabled=True)
+        col3.text_input('Endpoint technology', value=technology, key=f"config-endpoint-technology-{i}", disabled=True)
         col1, col2, col3 = st.columns([8, 5, 5], vertical_alignment='center')
         col1.text_input('Base URI', value=endpoint.base_uri, key=f"config-endpoint-base-uri-{i}", disabled=True)
         col2.text_input('Ontology graph URI', value=endpoint.ontology_uri, key=f"config-endpoint-ontology-graph-uri-{i}", disabled=True)
-        col3.text_input('Ontology Framework', value=endpoint.ontology_framework.value, key=f"config-endpoint-ontology-framework-{i}", disabled=True)
+        col3.text_input('Ontology Framework', value=ontology_framework, key=f"config-endpoint-ontology-framework-{i}", disabled=True)
 
         st.text('')
         
