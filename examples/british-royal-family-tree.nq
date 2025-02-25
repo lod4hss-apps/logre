@@ -1,0 +1,675 @@
+<http://geovistory.org/information/british_royal_family> <http://www.w3.org/2000/01/rdf-schema#comment> "Example project about the British Royal family tree" .
+<http://geovistory.org/information/british_royal_family> <http://www.w3.org/2000/01/rdf-schema#label> "British Royal family" .
+_:b8D0EAF2Fx1305 <http://geovistory.org/information/dummyPredicate> _:b8D0EAF2Fx1306 <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i2ugIsne> <http://www.w3.org/2000/01/rdf-schema#label> "Male" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i2ugIsne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C11> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6jiIsne> <http://www.w3.org/2000/01/rdf-schema#label> "Female" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6jiIsne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C11> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilthVsne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilthVsne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isrnWsne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ilthVsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isrnWsne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/irYzesne> <http://www.w3.org/2000/01/rdf-schema#label> "London" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/irYzesne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMn4esne> <http://www.w3.org/2000/01/rdf-schema#label> "Aberdeenshire" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMn4esne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isrnWsne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isrnWsne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1926-04-26" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia1Jfsne> <http://www.cidoc-crm.org/cidoc-crm/P100> <http://geovistory.org/information/ilthVsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia1Jfsne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iMn4esne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia1Jfsne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2022-09-08" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia1Jfsne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E69> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iVAd4sne> <http://www.w3.org/2000/01/rdf-schema#label> "Corfu" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iVAd4sne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iwOl4sne> <http://www.w3.org/2000/01/rdf-schema#label> "Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iwOl4sne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivAp4sne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivAp4sne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMmx4sne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ivAp4sne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMmx4sne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iVAd4sne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMmx4sne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1921-06-10" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMmx4sne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Prince Philip" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMmx4sne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ift34sne> <http://www.cidoc-crm.org/cidoc-crm/P100> <http://geovistory.org/information/ivAp4sne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ift34sne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iwOl4sne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ift34sne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2021-04-17" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ift34sne> <http://www.w3.org/2000/01/rdf-schema#label> "Death of Prince Philip" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ift34sne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E69> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isGRBtne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isGRBtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9deBtne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/isGRBtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9deBtne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9deBtne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1948-11-14" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9deBtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDw0Btne> <http://www.cidoc-crm.org/cidoc-crm/P116> "1947-11-20" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDw0Btne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ilthVsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDw0Btne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ivAp4sne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDw0Btne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9deBtne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iDw0Btne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i0qiCtne> <http://www.w3.org/2000/01/rdf-schema#label> "Sandringham" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i0qiCtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3erCtne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3erCtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilV4Ctne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i3erCtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilV4Ctne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/i0qiCtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilV4Ctne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1961-07-01" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilV4Ctne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iCjgPtne> <http://www.w3.org/2000/01/rdf-schema#label> "Paris" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iCjgPtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivbAQtne> <http://www.cidoc-crm.org/cidoc-crm/P100> <http://geovistory.org/information/i3erCtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivbAQtne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iCjgPtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivbAQtne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1997-08-31" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivbAQtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E69> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iExdQtne> <http://www.cidoc-crm.org/cidoc-crm/P116> "1981-07-29" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iExdQtne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/isGRBtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iExdQtne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/i3erCtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iExdQtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iXrLStne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iXrLStne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is3XStne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iXrLStne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is3XStne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is3XStne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1947-07-17" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is3XStne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Queen Camilla" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is3XStne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iBurStne> <http://www.cidoc-crm.org/cidoc-crm/P116> "2005-04-09" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iBurStne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/isGRBtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iBurStne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iXrLStne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iBurStne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iTGkUtne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iTGkUtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivIvUtne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iTGkUtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivIvUtne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iExdQtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivIvUtne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivIvUtne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1982-06-21" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivIvUtne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of William" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivIvUtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaZ8Utne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaZ8Utne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i4EvVtne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iaZ8Utne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i4EvVtne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1982-01-09" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i4EvVtne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Princess Catherine" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i4EvVtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS5xVtne> <http://www.w3.org/2000/01/rdf-schema#label> "Berkshire" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS5xVtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i4EvVtne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iS5xVtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iHDNWtne> <http://www.cidoc-crm.org/cidoc-crm/P116> "2011-04-29" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iHDNWtne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iTGkUtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iHDNWtne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iaZ8Utne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iHDNWtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9NUWtne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9NUWtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i49jWtne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i9NUWtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i49jWtne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iHDNWtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i49jWtne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i49jWtne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2013-07-22" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i49jWtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is7sWtne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is7sWtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itIBXtne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/is7sWtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itIBXtne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iHDNWtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itIBXtne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itIBXtne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2015-05-02" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itIBXtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZjHXtne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZjHXtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iFZQXtne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iZjHXtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iFZQXtne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iHDNWtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iFZQXtne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iFZQXtne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2018-04-23" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iFZQXtne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ibf7btne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ibf7btne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5victne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ibf7btne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5victne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iExdQtne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5victne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5victne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1984-09-15" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5victne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilthVsne> <http://www.w3.org/2000/01/rdf-schema#comment> "Elizabeth Alexandra Mary Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/shacl> <http://www.w3.org/2000/01/rdf-schema#comment> "Here lies the ontology" .
+<http://geovistory.org/information/shacl> <http://www.w3.org/2000/01/rdf-schema#label> "SHACL" .
+_:b8D0EAF2Fx1307 <http://geovistory.org/information/dummyPredicate> _:b8D0EAF2Fx1308 <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C13_Shape> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/shacl#NodeShape> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C13_Shape> <http://www.w3.org/ns/shacl#targetClass> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C13_Shape> <http://www.w3.org/ns/shacl#name> "Geographical Place" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1309 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#label> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1309 <http://www.w3.org/ns/shacl#name> "has name" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1309 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1309 <http://www.w3.org/ns/shacl#order> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1309 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1309 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C13_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1309 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1310 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#comment> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1310 <http://www.w3.org/ns/shacl#name> "has definition" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1310 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1310 <http://www.w3.org/ns/shacl#order> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1310 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1310 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C13_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1310 <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C11_Shape> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/shacl#NodeShape> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C11_Shape> <http://www.w3.org/ns/shacl#targetClass> <https://sdhss.org/ontology/core/C11> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C11_Shape> <http://www.w3.org/ns/shacl#name> "Gender" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1311 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#label> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1311 <http://www.w3.org/ns/shacl#name> "has name" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1311 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1311 <http://www.w3.org/ns/shacl#order> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1311 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1311 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C11_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1311 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1312 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#comment> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1312 <http://www.w3.org/ns/shacl#name> "has definition" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1312 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1312 <http://www.w3.org/ns/shacl#order> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1312 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1312 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C11_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1312 <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/shacl#NodeShape> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/ns/shacl#targetClass> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/ns/shacl#name> "Person" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1313 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#label> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1313 <http://www.w3.org/ns/shacl#name> "has name" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1313 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1313 <http://www.w3.org/ns/shacl#order> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1313 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1313 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1313 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1314 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#comment> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1314 <http://www.w3.org/ns/shacl#name> "has definition" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1314 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1314 <http://www.w3.org/ns/shacl#order> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1314 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1314 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1314 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1315 <http://www.w3.org/ns/shacl#path> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1315 <http://www.w3.org/ns/shacl#name> "has gender" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1315 <http://www.w3.org/ns/shacl#class> <https://sdhss.org/ontology/core/C11> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1315 <http://www.w3.org/ns/shacl#order> "3"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1315 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1315 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1317 <http://www.w3.org/ns/shacl#inversePath> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1316 <http://www.w3.org/ns/shacl#path> _:b8D0EAF2Fx1317 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1316 <http://www.w3.org/ns/shacl#name> "was born" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1316 <http://www.w3.org/ns/shacl#order> "4"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1316 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1319 <http://www.w3.org/ns/shacl#inversePath> <http://www.cidoc-crm.org/cidoc-crm/P100> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1318 <http://www.w3.org/ns/shacl#path> _:b8D0EAF2Fx1319 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1318 <http://www.w3.org/ns/shacl#name> "died" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1318 <http://www.w3.org/ns/shacl#order> "5"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E21_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1318 <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/shacl#NodeShape> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#targetClass> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#name> "Birth" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1320 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#label> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1320 <http://www.w3.org/ns/shacl#name> "has label" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1320 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1320 <http://www.w3.org/ns/shacl#order> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1320 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1320 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1320 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1321 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#comment> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1321 <http://www.w3.org/ns/shacl#name> "has definition" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1321 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1321 <http://www.w3.org/ns/shacl#order> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1321 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1322 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P82> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1322 <http://www.w3.org/ns/shacl#name> "at some time within" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1322 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1322 <http://www.w3.org/ns/shacl#order> "3"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1322 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1322 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1323 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1323 <http://www.w3.org/ns/shacl#name> "took place in" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1323 <http://www.w3.org/ns/shacl#class> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1323 <http://www.w3.org/ns/shacl#order> "4"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1323 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1323 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1324 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1324 <http://www.w3.org/ns/shacl#name> "brought into life" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1324 <http://www.w3.org/ns/shacl#class> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1324 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1324 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1325 <http://www.w3.org/ns/shacl#path> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1325 <http://www.w3.org/ns/shacl#name> "stemmed from" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1325 <http://www.w3.org/ns/shacl#class> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1325 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E67_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1325 <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/shacl#NodeShape> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/ns/shacl#targetClass> <http://www.cidoc-crm.org/cidoc-crm/E69> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/ns/shacl#name> "Death" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1326 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#label> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1326 <http://www.w3.org/ns/shacl#name> "has label" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1326 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1326 <http://www.w3.org/ns/shacl#order> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1326 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1326 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1326 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1327 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#comment> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1327 <http://www.w3.org/ns/shacl#name> "has definition" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1327 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1327 <http://www.w3.org/ns/shacl#order> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1327 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1328 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P82> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1328 <http://www.w3.org/ns/shacl#name> "at some time within" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1328 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1328 <http://www.w3.org/ns/shacl#order> "3"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1328 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1328 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1329 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1329 <http://www.w3.org/ns/shacl#name> "took place in" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1329 <http://www.w3.org/ns/shacl#class> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1329 <http://www.w3.org/ns/shacl#order> "4"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1329 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1329 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1330 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P100> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1330 <http://www.w3.org/ns/shacl#name> "was death of" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1330 <http://www.w3.org/ns/shacl#class> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1330 <http://www.w3.org/ns/shacl#order> "5"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1330 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/crm_E69_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1330 <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/shacl#NodeShape> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/ns/shacl#targetClass> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/ns/shacl#name> "Relationship" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1331 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#label> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1331 <http://www.w3.org/ns/shacl#name> "has label" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1331 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1331 <http://www.w3.org/ns/shacl#order> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1331 <http://www.w3.org/ns/shacl#minCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1331 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1331 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1332 <http://www.w3.org/ns/shacl#path> <http://www.w3.org/2000/01/rdf-schema#comment> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1332 <http://www.w3.org/ns/shacl#name> "has definition" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1332 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1332 <http://www.w3.org/ns/shacl#order> "2"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1332 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1333 <http://www.w3.org/ns/shacl#path> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1333 <http://www.w3.org/ns/shacl#name> "had partner" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1333 <http://www.w3.org/ns/shacl#class> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1333 <http://www.w3.org/ns/shacl#order> "3"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1333 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1334 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P116> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1334 <http://www.w3.org/ns/shacl#name> "started in" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1334 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1334 <http://www.w3.org/ns/shacl#order> "4"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1334 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1334 <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1335 <http://www.w3.org/ns/shacl#path> <http://www.cidoc-crm.org/cidoc-crm/P115> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1335 <http://www.w3.org/ns/shacl#name> "ended in" <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1335 <http://www.w3.org/ns/shacl#datatype> <http://www.w3.org/2001/XMLSchema#string> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1335 <http://www.w3.org/ns/shacl#order> "5"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+_:b8D0EAF2Fx1335 <http://www.w3.org/ns/shacl#maxCount> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <http://geovistory.org/information/shacl> .
+<https://sdhss.org/shacl/profiles/sdh_C3_Shape> <http://www.w3.org/ns/shacl#property> _:b8D0EAF2Fx1335 <http://geovistory.org/information/shacl> .
+<http://geovistory.org/information/ivAp4sne> <http://www.w3.org/2000/01/rdf-schema#comment> "Philip Mountbatten" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivAp4sne> <http://www.w3.org/2000/01/rdf-schema#label> "Prince Philip" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isGRBtne> <http://www.w3.org/2000/01/rdf-schema#label> "Charles III" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9deBtne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Charles III" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilthVsne> <http://www.w3.org/2000/01/rdf-schema#label> "Elisabeth II" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isrnWsne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Elisabeth II" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia1Jfsne> <http://www.w3.org/2000/01/rdf-schema#label> "Death of Elisabeth II" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDw0Btne> <http://www.w3.org/2000/01/rdf-schema#label> "Elisabeth II & Philip" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iExdQtne> <http://www.w3.org/2000/01/rdf-schema#label> "Charles III & Diana" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3erCtne> <http://www.w3.org/2000/01/rdf-schema#comment> "Diana Spencer" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3erCtne> <http://www.w3.org/2000/01/rdf-schema#label> "Diana" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilV4Ctne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Diana" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivbAQtne> <http://www.w3.org/2000/01/rdf-schema#label> "Death of Diana" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iBurStne> <http://www.w3.org/2000/01/rdf-schema#label> "Charles III & Camilla" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iXrLStne> <http://www.w3.org/2000/01/rdf-schema#comment> "Camilla Rosemary Shand" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iXrLStne> <http://www.w3.org/2000/01/rdf-schema#label> "Camilla" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5victne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Harry" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ibf7btne> <http://www.w3.org/2000/01/rdf-schema#label> "Harry" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iTGkUtne> <http://www.w3.org/2000/01/rdf-schema#label> "William" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isGRBtne> <http://www.w3.org/2000/01/rdf-schema#comment> "Charles Philip Arthur George Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iTGkUtne> <http://www.w3.org/2000/01/rdf-schema#comment> "William Arthur Philip Louis Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ibf7btne> <http://www.w3.org/2000/01/rdf-schema#comment> "Henry Charles Albert David Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iHDNWtne> <http://www.w3.org/2000/01/rdf-schema#label> "William & Kate" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaZ8Utne> <http://www.w3.org/2000/01/rdf-schema#comment> "Catherine Elizabeth Middleton" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaZ8Utne> <http://www.w3.org/2000/01/rdf-schema#label> "Kate" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itIBXtne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Charlotte" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is7sWtne> <http://www.w3.org/2000/01/rdf-schema#comment> "Charlotte Elizabeth Diana Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/is7sWtne> <http://www.w3.org/2000/01/rdf-schema#label> "Charlotte" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iFZQXtne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Louis" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZjHXtne> <http://www.w3.org/2000/01/rdf-schema#comment> "Louis Arthur Charles Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZjHXtne> <http://www.w3.org/2000/01/rdf-schema#label> "Louis" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i49jWtne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of George" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9NUWtne> <http://www.w3.org/2000/01/rdf-schema#comment> "George Alexander Louis Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9NUWtne> <http://www.w3.org/2000/01/rdf-schema#label> "George" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMFpwvne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMFpwvne> <http://www.w3.org/2000/01/rdf-schema#comment> "Rachel Meghan Markle" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMFpwvne> <http://www.w3.org/2000/01/rdf-schema#label> "Meghan" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMFpwvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/icdywvne> <http://www.w3.org/2000/01/rdf-schema#label> "Los Angeles" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/icdywvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMe6wvne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iMFpwvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMe6wvne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/icdywvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMe6wvne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1981-08-04" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMe6wvne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Meghan" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iMe6wvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iQMPxvne> <http://www.cidoc-crm.org/cidoc-crm/P116> "2018-05-19" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iQMPxvne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ibf7btne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iQMPxvne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iMFpwvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iQMPxvne> <http://www.w3.org/2000/01/rdf-schema#label> "Harry & Meghan" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iQMPxvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6Uxvne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6Uxvne> <http://www.w3.org/2000/01/rdf-schema#comment> "Archie Harrison Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6Uxvne> <http://www.w3.org/2000/01/rdf-schema#label> "Archie" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6Uxvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izQcxvne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iB6Uxvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izQcxvne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iQMPxvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izQcxvne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izQcxvne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2019-05-06" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izQcxvne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Archie" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izQcxvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9loxvne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9loxvne> <http://www.w3.org/2000/01/rdf-schema#comment> "Lilibet Diana Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9loxvne> <http://www.w3.org/2000/01/rdf-schema#label> "Lilibet" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i9loxvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isayxvne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i9loxvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isayxvne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iQMPxvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isayxvne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2021-06-04" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isayxvne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Lilibet" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isayxvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i2U1xvne> <http://www.w3.org/2000/01/rdf-schema#label> "Santa Barbara" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i2U1xvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isayxvne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/i2U1xvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilQLyvne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilQLyvne> <http://www.w3.org/2000/01/rdf-schema#comment> "Anne Elizabeth Alice Louise" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilQLyvne> <http://www.w3.org/2000/01/rdf-schema#label> "Anne" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilQLyvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idIVyvne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ilQLyvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idIVyvne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iDw0Btne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idIVyvne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idIVyvne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1950-08-15" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idIVyvne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Anne" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idIVyvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6R6yvne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6R6yvne> <http://www.w3.org/2000/01/rdf-schema#comment> "Mark Anthony Peter Phillips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6R6yvne> <http://www.w3.org/2000/01/rdf-schema#label> "Mark Philips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6R6yvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iVyDzvne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i6R6yvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iVyDzvne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1948-09-22" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iVyDzvne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Mark Philips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iVyDzvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivnGzvne> <http://www.w3.org/2000/01/rdf-schema#label> "Tetbury" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ivnGzvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iVyDzvne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/ivnGzvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izwczvne> <http://www.cidoc-crm.org/cidoc-crm/P115> "1992-04-23" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izwczvne> <http://www.cidoc-crm.org/cidoc-crm/P116> "1973-11-14" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izwczvne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ilQLyvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izwczvne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/i6R6yvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izwczvne> <http://www.w3.org/2000/01/rdf-schema#label> "Anne & Mark Philips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izwczvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipntzvne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipntzvne> <http://www.w3.org/2000/01/rdf-schema#comment> "Timothy James Hamilton Laurence" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipntzvne> <http://www.w3.org/2000/01/rdf-schema#label> "Timothy Laurence" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipntzvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inl6zvne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ipntzvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inl6zvne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1955-03-01" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inl6zvne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Timothy Laurence" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inl6zvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ira9zvne> <http://www.w3.org/2000/01/rdf-schema#label> "Camberley" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ira9zvne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inl6zvne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/ira9zvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iuwP0vne> <http://www.cidoc-crm.org/cidoc-crm/P116> "1992-12-12" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iuwP0vne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ilQLyvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iuwP0vne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ipntzvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iuwP0vne> <http://www.w3.org/2000/01/rdf-schema#label> "Anne & Timothy Laurence" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iuwP0vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izmj0vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izmj0vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Peter Mark Andrew Phillips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izmj0vne> <http://www.w3.org/2000/01/rdf-schema#label> "Peter Philips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/izmj0vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inRu0vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/izmj0vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inRu0vne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/izwczvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inRu0vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inRu0vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1977-11-15" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inRu0vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Peter Philips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inRu0vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia550vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia550vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Autumn Patricia Kelly" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia550vne> <http://www.w3.org/2000/01/rdf-schema#label> "Autumn Kelly" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia550vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilAF1vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ia550vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilAF1vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1978-05-03" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilAF1vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Autumn Kelly" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilAF1vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iBAI1vne> <http://www.w3.org/2000/01/rdf-schema#label> "Montreal" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iBAI1vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ilAF1vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iBAI1vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS2l1vne> <http://www.cidoc-crm.org/cidoc-crm/P115> "2021-06-14" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS2l1vne> <http://www.cidoc-crm.org/cidoc-crm/P116> "2008-05-17" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS2l1vne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/izmj0vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS2l1vne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ia550vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS2l1vne> <http://www.w3.org/2000/01/rdf-schema#label> "Peter Philips & Autumn Kelly" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iS2l1vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idf01vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idf01vne> <http://www.w3.org/2000/01/rdf-schema#label> "Savannah" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idf01vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i8gA2vne> <http://www.w3.org/2000/01/rdf-schema#label> "Gloucester" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i8gA2vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDyH2vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/idf01vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDyH2vne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iS2l1vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDyH2vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/i8gA2vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDyH2vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2010-12-29" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDyH2vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Savannah" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iDyH2vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i79N2vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i79N2vne> <http://www.w3.org/2000/01/rdf-schema#label> "Isla" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i79N2vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i79N2vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Isla Elizabeth Phillips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/idf01vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Savannah Anne Kathleen Phillips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i63o2vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i79N2vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i63o2vne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iS2l1vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i63o2vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/i8gA2vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i63o2vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2012-03-29" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i63o2vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Isla" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i63o2vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iA682vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iA682vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Zara Anne Elizabeth Phillips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iA682vne> <http://www.w3.org/2000/01/rdf-schema#label> "Zara" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iA682vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipjI3vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iA682vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipjI3vne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/izwczvne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipjI3vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipjI3vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1981-05-15" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipjI3vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Zara" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ipjI3vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3MR3vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3MR3vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Zara Anne Elizabeth Phillips" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3MR3vne> <http://www.w3.org/2000/01/rdf-schema#label> "Mike Tindall" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3MR3vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iAdW3vne> <http://www.w3.org/2000/01/rdf-schema#label> "Otley" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iAdW3vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iE5g3vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i3MR3vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iE5g3vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iAdW3vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iE5g3vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1978-10-18" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iE5g3vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Mike Tindall" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iE5g3vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isfs3vne> <http://www.cidoc-crm.org/cidoc-crm/P116> "2011-07-30" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isfs3vne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iA682vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isfs3vne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/i3MR3vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isfs3vne> <http://www.w3.org/2000/01/rdf-schema#label> "Zara & Mike Tindall" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isfs3vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7eA4vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7eA4vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Mia Grace Tindall" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7eA4vne> <http://www.w3.org/2000/01/rdf-schema#label> "Mia" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7eA4vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZTI4vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i7eA4vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZTI4vne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/isfs3vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZTI4vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/i8gA2vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZTI4vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2014-01-17" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZTI4vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Mia" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iZTI4vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLvO4vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLvO4vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Lena Elizabeth Tindall" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLvO4vne> <http://www.w3.org/2000/01/rdf-schema#label> "Lena" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLvO4vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iRcc4vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iLvO4vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iRcc4vne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/isfs3vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iRcc4vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2018-06-18" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iRcc4vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Lena" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iRcc4vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isRe4vne> <http://www.w3.org/2000/01/rdf-schema#label> "Stroud" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/isRe4vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iRcc4vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/isRe4vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijYo4vne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijYo4vne> <http://www.w3.org/2000/01/rdf-schema#comment> "Lucas Philip Tindall" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijYo4vne> <http://www.w3.org/2000/01/rdf-schema#label> "Lucas" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijYo4vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7Ct4vne> <http://www.w3.org/2000/01/rdf-schema#label> "Gloucestershire" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7Ct4vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLs04vne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ijYo4vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLs04vne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/isfs3vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLs04vne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/i7Ct4vne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLs04vne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2021-03-21" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLs04vne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Lucas" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLs04vne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iExdQtne> <http://www.cidoc-crm.org/cidoc-crm/P115> "1996" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaHYjxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaHYjxne> <http://www.w3.org/2000/01/rdf-schema#label> "Andrew" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaHYjxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ioJijxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iaHYjxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ioJijxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iDw0Btne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ioJijxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ioJijxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1960-02-19" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ioJijxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Andrew" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ioJijxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iaHYjxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Andrew Albert Christian Edward" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itlujxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itlujxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Sarah Margaret Ferguson" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itlujxne> <http://www.w3.org/2000/01/rdf-schema#label> "Sarah Ferguson" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/itlujxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i1W1jxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/itlujxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i1W1jxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i1W1jxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1959-10-15" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i1W1jxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Sarah Ferguson" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i1W1jxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3BNkxne> <http://www.cidoc-crm.org/cidoc-crm/P115> "1996-05-30" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3BNkxne> <http://www.cidoc-crm.org/cidoc-crm/P116> "1986-07-23" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3BNkxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/itlujxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3BNkxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iaHYjxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3BNkxne> <http://www.w3.org/2000/01/rdf-schema#label> "Andrew & Sarah Ferguson" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i3BNkxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iAwZkxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iAwZkxne> <http://www.w3.org/2000/01/rdf-schema#label> "Beatrice" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iAwZkxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIXkkxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iAwZkxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIXkkxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/i3BNkxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIXkkxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIXkkxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1988-08-08" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIXkkxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Beatrice" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIXkkxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijevkxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijevkxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Edoardo Mapelli Mozzi" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijevkxne> <http://www.w3.org/2000/01/rdf-schema#label> "Edoardo Mozzi" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ijevkxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imL2kxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/ijevkxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imL2kxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imL2kxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1983-11-19" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imL2kxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imL2kxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Edoardo Mozzi" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inwYlxne> <http://www.cidoc-crm.org/cidoc-crm/P116> "2020-07-17" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inwYlxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iAwZkxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inwYlxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/ijevkxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inwYlxne> <http://www.w3.org/2000/01/rdf-schema#label> "Beatrice & Edoardo Mozzi" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inwYlxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWfqlxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWfqlxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Sienna Elizabeth Mapelli Mozzi" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWfqlxne> <http://www.w3.org/2000/01/rdf-schema#label> "Sienna" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWfqlxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ifgzlxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iWfqlxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ifgzlxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/inwYlxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ifgzlxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ifgzlxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2021-09-18" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ifgzlxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Sienna" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ifgzlxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIUNmxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIUNmxne> <http://www.w3.org/2000/01/rdf-schema#label> "Eugenie" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIUNmxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iqOamxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iIUNmxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iqOamxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/i3BNkxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iqOamxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iqOamxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1990-03-23" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iqOamxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Eugenie" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iqOamxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5Xfmxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5Xfmxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Jack Christopher Stamp Brooksbank" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5Xfmxne> <http://www.w3.org/2000/01/rdf-schema#label> "Jack Brooksbank" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i5Xfmxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imDnmxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i5Xfmxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imDnmxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imDnmxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1986-05-03" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imDnmxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Jack Brooksbank" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/imDnmxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ircumxne> <http://www.cidoc-crm.org/cidoc-crm/P116> "2018-10-12" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ircumxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iIUNmxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ircumxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/i5Xfmxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ircumxne> <http://www.w3.org/2000/01/rdf-schema#label> "Eugenie & Jack Brooksbank" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ircumxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ZRnxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ZRnxne> <http://www.w3.org/2000/01/rdf-schema#comment> "August Philip Hawke Brooksbank" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ZRnxne> <http://www.w3.org/2000/01/rdf-schema#label> "August" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ZRnxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ikianxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i6ZRnxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ikianxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/ircumxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ikianxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ikianxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2021-02-09" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ikianxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of August" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ikianxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ognxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ognxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Ernest George Ronnie Brooksbank" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ognxne> <http://www.w3.org/2000/01/rdf-schema#label> "Ernest" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i6ognxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWCsnxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/i6ognxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWCsnxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/ircumxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWCsnxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWCsnxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2023-05-30" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWCsnxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Ernest" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iWCsnxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIUNmxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Eugenie Victoria Helena Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iAwZkxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Beatrice Elizabeth Mary Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLqBpxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLqBpxne> <http://www.w3.org/2000/01/rdf-schema#label> "Edward" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLqBpxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIlNpxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iLqBpxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIlNpxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/iDw0Btne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIlNpxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/irYzesne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIlNpxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1964-03-10" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIlNpxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Edward" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iIlNpxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLqBpxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Edward Antony Richard Louis Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLznpxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLznpxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Sophie Helen Rhys-Jones" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLznpxne> <http://www.w3.org/2000/01/rdf-schema#label> "Sophie Rhys-Jones" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iLznpxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6tpxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iLznpxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6tpxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "1965-01-20" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6tpxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Sophie Rhys-Jones" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6tpxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i53vpxne> <http://www.w3.org/2000/01/rdf-schema#label> "Oxford" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i53vpxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iB6tpxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/i53vpxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ih8Bqxne> <http://www.cidoc-crm.org/cidoc-crm/P116> "1999-06-19" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ih8Bqxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iLqBpxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ih8Bqxne> <https://sdhss.org/ontology/core/P20> <http://geovistory.org/information/iLznpxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ih8Bqxne> <http://www.w3.org/2000/01/rdf-schema#label> "Edward & Sophie Rhys-Jones" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ih8Bqxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C3> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iOhQqxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i6jiIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iOhQqxne> <http://www.w3.org/2000/01/rdf-schema#label> "Louise" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iOhQqxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iOhQqxne> <http://www.w3.org/2000/01/rdf-schema#comment> "Louise Alice Elizabeth Diana Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia8jqxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/iOhQqxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia8jqxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/ih8Bqxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia8jqxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2003-11-08" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia8jqxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of Louise" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia8jqxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inS0qxne> <https://sdhss.org/ontology/core/P23> <http://geovistory.org/information/i2ugIsne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inS0qxne> <http://www.w3.org/2000/01/rdf-schema#comment> "James Alexander Philip Theo Mountbatten-Windsor" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inS0qxne> <http://www.w3.org/2000/01/rdf-schema#label> "James" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/inS0qxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E21> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7E8qxne> <http://www.cidoc-crm.org/cidoc-crm/P98> <http://geovistory.org/information/inS0qxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7E8qxne> <https://sdhss.org/ontology/core/P22> <http://geovistory.org/information/ih8Bqxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7E8qxne> <http://www.cidoc-crm.org/cidoc-crm/P82> "2007-12-17" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7E8qxne> <http://www.w3.org/2000/01/rdf-schema#label> "Birth of James" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7E8qxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.cidoc-crm.org/cidoc-crm/E67> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iow9qxne> <http://www.w3.org/2000/01/rdf-schema#label> "Surrey" <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/iow9qxne> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://sdhss.org/ontology/core/C13> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/i7E8qxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iow9qxne> <http://geovistory.org/information/british_royal_family> .
+<http://geovistory.org/information/ia8jqxne> <http://www.cidoc-crm.org/cidoc-crm/P8> <http://geovistory.org/information/iow9qxne> <http://geovistory.org/information/british_royal_family> .
