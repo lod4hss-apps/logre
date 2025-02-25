@@ -1,4 +1,5 @@
 from typing import Optional
+from enum import Enum
 from pydantic import BaseModel, Field
 from schema.enums import EndpointTechnology, OntologyFramework
 
@@ -24,8 +25,8 @@ class Endpoint(BaseModel):
         """Convert the Endpoint instance to a dictionary"""
 
         model_dump = self.model_dump()
-        model_dump['technology'] = self.technology.value
-        model_dump['ontology_framework'] = self.ontology_framework.value
+        model_dump['technology'] = self.technology.value if isinstance(self.technology, Enum) else self.technology
+        model_dump['ontology_framework'] = self.ontology_framework.value if isinstance(self.ontology_framework, Enum) else self.technology
 
         return model_dump
 
