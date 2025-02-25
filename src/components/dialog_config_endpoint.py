@@ -77,11 +77,12 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
             # Otherwise tell the GUI that a configuration is present
             if state.get_configuration() == 'local': 
                 save_config()
+                # Validation message
+                state.set_toast('Endpoint saved', icon=':material/done:')
             else: 
                 state.set_configuration('uploaded')
 
-            # Finalization: validation message and reload
-            state.set_toast('Endpoint saved', icon=':material/done:')
+            # Reload
             st.rerun()
         
         else:
