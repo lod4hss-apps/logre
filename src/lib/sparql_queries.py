@@ -494,6 +494,8 @@ def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
     classes_dict = ontology.get_classes_named_dict()
     properties_dict = ontology.get_properties_named_dict()
 
+    entity_uris = list(map(lambda uri: ensure_uri(uri), entity_uris))
+
     # Prepare the query
     text = """            
         SELECT DISTINCT
