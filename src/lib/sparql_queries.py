@@ -278,7 +278,7 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
             ('""" + entity.label + """' as ?subject_label)
             ('""" + entity.class_uri + """' as ?subject_class_uri)
             ('""" + (entity.comment or '') + """' as ?subject_comment)
-            (isBlank(""" + entity_uri + """) as ?object_is_blank)
+            (isBlank(""" + entity_uri + """) as ?subject_is_blank)
             ?predicate_uri
             ?object_uri
             (COALESCE(?object_label_, '') as ?object_label)
