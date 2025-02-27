@@ -15,7 +15,7 @@ def get_shacl_classes() -> List[OntologyClass]:
     text = """
         SELECT 
             ?uri 
-            (COALESCE(?label_, 'Unknown Class Name') as ?label)
+            (COALESCE(?label_, '') as ?label)
         WHERE {
             """ + ("GRAPH " + ensure_uri(endpoint.ontology_uri) + " {" if endpoint.ontology_uri else "") + """
                 ?node a sh:NodeShape .

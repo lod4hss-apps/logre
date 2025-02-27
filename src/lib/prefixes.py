@@ -16,14 +16,23 @@ prefixes = [
     Prefix(short='ontome', url='https://ontome.net/ontology/'),
 ]
 
+def get_all_prefixes() -> list[Prefix]:
+    """
+    Return a list of prefixes based on the default one, 
+    the endpoint base one, 
+    plus all those added by the user
+    """
+
+    return prefixes + state.get_prefixes() + [Prefix(short='base', url=state.get_endpoint().base_uri)]
+
 
 def get_prefixes_str(format: Literal['sparql', 'turtle'] = 'sparql') -> str:
     """
     Transform the list of prefixes into a valid SPARQL.
     Done to avoid to put manually all prefixes everywhere.
     """
-    # Add the dynamic one (base)
-    all_prefixes = prefixes + [Prefix(short='base', url=state.get_endpoint().base_uri)]
+
+    all_prefixes = get_all_prefixes()
 
     # Transform to list of string
     prefixes_str = list(map(lambda p: p.to_sparql() if format == 'sparql' else p.to_turtle(), all_prefixes))
@@ -49,12 +58,12 @@ def shorten_uri(uri: str) -> str:
     Usefull to display in the GUI.
     """
 
-    # Add the dynamic one (base)
-    all_prefixes = prefixes + [Prefix(short='base', url=state.get_endpoint().base_uri)]
-    
+    all_prefixes = get_all_prefixes()
+
     for prefix in all_prefixes:
         uri = prefix.shorten(uri)
     return uri
+
 
 def explicits_uri(uri: str) -> str:
     """
@@ -62,15 +71,17 @@ def explicits_uri(uri: str) -> str:
     Usefull to display in the GUI.
     """
 
-    # Add the dynamic one (base)
-    all_prefixes = prefixes + [Prefix(short='base', url=state.get_endpoint().base_uri)]
-    
+    all_prefixes = get_all_prefixes()
+
     for prefix in all_prefixes:
         uri = prefix.explicit(uri)
     return uri
 
+
 def is_prefix(supposed_prefix: str) -> bool:
     """Check if the given supposed prefix is listed as a prefix."""
+    
+    all_prefixes = get_all_prefixes()
 
-    found = [prefix for prefix in prefixes if prefix.short == supposed_prefix]
+    found = [prefix for prefix in all_prefixes if prefix.short == supposed_prefix]
     return len(found) == 0

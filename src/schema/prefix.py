@@ -23,3 +23,13 @@ class Prefix(BaseModel):
     def explicit(self, short: str) -> str:
         """Replace the given short uri by its explicit version."""
         return short.replace(self.short + ':', self.url)
+    
+
+    def to_dict(self) -> dict:
+        """Convert the Prefix instance to a dictionary"""
+        return self.model_dump()
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Prefix':
+        """Create an Prefix instance from a dictionary"""
+        return cls(**data)

@@ -6,7 +6,7 @@ import lib.state as state
 
 @st.dialog('Create a graph')
 def dialog_config_graph():
-    """Dialog function to provide a formular  for the graph creation."""
+    """Dialog function to provide a formular for the graph creation."""
 
     # Formular
     graph_name = st.text_input('Name ❗️', value="", help="Will be used as the rdfs:label, but also transformed to snake-case to identify the graph. It should be unique.")

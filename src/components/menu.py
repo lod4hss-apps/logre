@@ -1,6 +1,7 @@
 import streamlit as st
 from schema import Graph
 from lib.sparql_queries import list_graphs
+from lib.configuration import load_config
 import lib.state as state
 from components.dialog_find_entity import dialog_find_entity
 from components.dialog_create_entity import dialog_create_entity
@@ -27,7 +28,6 @@ def menu() -> None:
 
     # Fetch variables from State
     version = state.get_version()
-    config = state.get_configuration()
     all_endpoints = state.get_endpoints()
     endpoint = state.get_endpoint()
     all_graphs = state.get_graphs()
@@ -40,9 +40,9 @@ def menu() -> None:
     # Page links
     st.sidebar.page_link("pages/documentation.py", label="Documentation")
     st.sidebar.page_link("pages/configuration.py", label="Configuration")
-    st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not config)
-    st.sidebar.page_link("pages/import.py", label="Import", disabled=not config)
-    st.sidebar.page_link("pages/entity.py", label="Entity", disabled=not config)
+    st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not all_endpoints)
+    st.sidebar.page_link("pages/import.py", label="Import", disabled=not all_endpoints)
+    st.sidebar.page_link("pages/entity.py", label="Entity", disabled=not all_endpoints)
 
     st.sidebar.divider()
 
@@ -50,7 +50,7 @@ def menu() -> None:
     ##### SET CONFIGURATION #####
 
     # If there is not configuration, allow user to upload a toml file
-    if not config:
+    if not all_endpoints:
         
         # TOML file uploader
         config_file = st.sidebar.file_uploader('Set a configuration:', 'toml', accept_multiple_files=False)
@@ -58,7 +58,7 @@ def menu() -> None:
         # On file upload, load its content to state
         if config_file:
             file_content = config_file.getvalue().decode("utf-8")
-            state.load_config(file_content, 'uploaded')
+            load_config(file_content)
             st.rerun()
 
 

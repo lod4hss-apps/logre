@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## v1.10.0 - Date
+## v1.11.0 - Date 2025-02-27
+
+- Remove all "Unknown" labels to avoid confusion
+- Add a way of detecting if the logre instance is running on prod mode or local mode
+- Change the graph colors so that each class has a color
+- Add prefixes management
+
+
+## v1.10.0 - Date 2025-02-22
 
 - Allow to import multiples .ttl and .csv files at once
 - Add visualization for entities

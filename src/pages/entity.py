@@ -306,7 +306,7 @@ else:
         # Values are black, blank nodes are grey
         nodes_colors = []
         for node in nodes:
-            if '\n(' in node: nodes_colors.append(__get_hex_color(node[node.index('\n(')]))
+            if '\n(' in node: nodes_colors.append(__get_hex_color(node[node.index('\n('):]))
             elif node.startswith('(blank)'): nodes_colors.append('#535353')
             else: nodes_colors.append('#000')
         network.add_nodes(nodes, color=nodes_colors)

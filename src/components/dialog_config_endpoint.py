@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 import streamlit as st
 from schema import EndpointTechnology, OntologyFramework, Endpoint
@@ -73,14 +74,12 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
             # Also, to avoid error, here selected endpoint is just reset
             state.clear_endpoint()
 
-            # If Logre is running locally and has a configuration: save the config on disk
+            # If Logre is running locally, save the config on disk
             # Otherwise tell the GUI that a configuration is present
-            if state.get_configuration() == 'local': 
+            if os.getenv('ENV') != 'streamlit':
                 save_config()
                 # Validation message
                 state.set_toast('Endpoint saved', icon=':material/done:')
-            else: 
-                state.set_configuration('uploaded')
 
             # Reload
             st.rerun()

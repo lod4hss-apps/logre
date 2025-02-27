@@ -58,8 +58,8 @@ class Entity(BaseModel):
 
             # Set the string variables
             uri = values.get('uri')
-            label = values.get("label") or uri
-            class_label = values.get("class_label") or values.get("class_uri") or "Unknown Class"
+            label = values.get("label") or uri or ''
+            class_label = values.get("class_label") or values.get("class_uri") or ""
             comment = values.get("comment") or ""
             display_label = f"{label} ({class_label})" if class_label else label
             display_label_comment = display_label if not comment else display_label + ": " + comment

@@ -37,7 +37,7 @@ def dialog_triple_info(triple: DisplayTriple) -> None:
 
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Label**")
-    col2.markdown(triple.predicate.label)
+    col2.markdown(triple.predicate.label or '')
 
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Order**")
@@ -45,15 +45,17 @@ def dialog_triple_info(triple: DisplayTriple) -> None:
 
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Cardinality**")
-    col2.markdown(f"{triple.predicate.min_count if triple.predicate.min_count is not None else 'n'} to {triple.predicate.max_count if triple.predicate.max_count != 1000000000000000000 else 'n' }")
+    from_count = triple.predicate.min_count or '0'
+    to_count = triple.predicate.max_count or 'n' if triple.predicate.max_count != 1000000000000000000 else 'n'
+    col2.markdown(f"{from_count} to {to_count}")
     
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Domain class**")
-    col2.markdown(triple.predicate.domain_class_uri)
+    col2.markdown(triple.predicate.domain_class_uri or '')
 
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Range class**")
-    col2.markdown(triple.predicate.range_class_uri)
+    col2.markdown(triple.predicate.range_class_uri or '')
     
 
     st.divider()
@@ -83,7 +85,9 @@ def dialog_triple_info(triple: DisplayTriple) -> None:
 
         col1, col2 = st.columns([1, 3])
         col1.markdown(f"**Class**")
-        col2.markdown(f"{triple.object.class_label} ([{triple.object.class_uri}]({explicits_uri(triple.object.class_uri)}))")
+        first_part = triple.object.class_label or ''
+        second_part = f" ([{triple.object.class_uri}]({explicits_uri(triple.object.class_uri)}))" if triple.object.class_uri else ""
+        col2.markdown(first_part + second_part)
 
 
 

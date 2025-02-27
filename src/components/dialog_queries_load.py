@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pyperclip
 from lib.configuration import save_config
@@ -41,7 +42,7 @@ def dialog_queries_load() -> None:
             state.set_queries(all_queries)
 
             # Save on disk if we are local
-            if state.get_configuration() == 'local':
+            if os.getenv('ENV') != 'streamlit':
                 save_config()   
 
             # Finalization: validation message and reload

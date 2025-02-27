@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from schema import Query
 from lib.configuration import save_config
@@ -19,8 +20,8 @@ def dialog_queries_save(text: str) -> None:
         all_queries.append(Query(name=new_name, text=text))
         state.set_queries(all_queries)
 
-        # If Logre is running locally and has a configuration: save the config on disk
-        if state.get_configuration() == 'local': 
+        # If Logre is running locally, save the config on disk
+        if os.getenv('ENV') != 'streamlit':
             save_config()
 
         # Finalization: validation message and reload

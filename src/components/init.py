@@ -2,6 +2,7 @@ from typing import Literal
 import os
 import streamlit as st
 import lib.state as state
+from lib.configuration import read_config
 
 
 def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
@@ -21,12 +22,9 @@ def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
         file.close()
         state.set_version(version)
 
-    # If there is a local config, load it
-    if os.path.exists('./logre-config.toml') and not state.get_endpoints():
-        file = open('./logre-config.toml', 'r')
-        content = file.read()
-        file.close()
-        state.load_config(content, 'local')
+    # If it is a local instance and there is a config, load it
+    if os.getenv('ENV') != 'streamlit' and os.path.exists('./logre-config.toml') and not state.get_endpoints():
+        read_config()
 
     # State initialization
     if not state.get_queries(): state.set_queries([])

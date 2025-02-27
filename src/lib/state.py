@@ -1,7 +1,8 @@
 from typing import List, Any, Literal
+import os
 import toml
 from streamlit import session_state as state
-from schema import Query, Endpoint, Graph, Entity, OntologyProperty
+from schema import Query, Endpoint, Graph, Entity, OntologyProperty, Prefix
 
 
 def get_element(key: str) -> Any:
@@ -37,15 +38,6 @@ def get_version() -> str:
 
 ###
 
-def set_configuration(source: Literal['local', 'uploaded']) -> None:
-    state['configuration'] = source
-
-def get_configuration() -> Literal['local', 'uploaded']:
-    if 'configuration' not in state: return None
-    return state['configuration']
-
-###
-
 def set_queries(queries: List[Query]) -> None:
     state['all_queries'] = queries
 
@@ -62,15 +54,30 @@ def get_endpoints() -> List[Endpoint]:
     if 'all_endpoints' not in state: return None
     return state['all_endpoints']
 
-###
-
 def delete_endpoint(endpoint: Endpoint) -> None:
     all_endpoints = get_endpoints()
     if not all_endpoints:
         raise Exception('In lib.state.delete_endpoint, there is no endpoint in session')
-    endpoints_labels = [e.name for e in get_endpoints()]
+    endpoints_labels = [e.name for e in all_endpoints]
     index = endpoints_labels.index(endpoint.name)
     del state['all_endpoints'][index]
+
+###
+
+def set_prefixes(prefixes: List[Prefix]) -> None:
+    state['all_prefixes'] = prefixes
+
+def get_prefixes() -> List[Prefix]:
+    if 'all_prefixes' not in state: return []
+    return state['all_prefixes']
+
+def delete_prefix(prefix: Prefix) -> None:
+    all_prefixes = get_prefixes()
+    if not all_prefixes:
+        raise Exception('In lib.state.delete_prefix, there is no prefix in session')
+    prefixes_shorts = [e.short for e in all_prefixes]
+    index = prefixes_shorts.index(prefix.short)
+    del state['all_prefixes'][index]
 
 ###
 
@@ -84,24 +91,7 @@ def get_endpoint() -> Endpoint:
 def clear_endpoint() -> None:
     if 'endpoint' in state:
         del state['endpoint']
-
-###
-
-def load_config(file_content: str, source: Literal['local', 'uploaded']) -> None:
-    """From a file content, parse it as configuration and set it in session"""
-
-    config = toml.loads(file_content)
-
-    set_configuration(source)
-
-    if 'all_endpoints' in config: 
-        # Parse into instances of endpoints
-        all_endpoints = list(map(lambda obj: Endpoint.from_dict(obj), config['all_endpoints']))
-        set_endpoints(all_endpoints)
-    if 'all_queries' in config: 
-        all_queries = list(map(lambda obj: Query.from_dict(obj), config['all_queries']))
-        set_queries(all_queries)
-
+        
 ###
 
 def set_graphs(graphs: List[Graph]) -> None:

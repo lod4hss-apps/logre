@@ -10,8 +10,8 @@ class OntologyClass(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def set_display_label(cls, values):
-        label = values.get("label") or "Unknown class name"
-        uri = values.get("uri") or "Unknown class URI"
+        label = values.get("label") or ""
+        uri = values.get("uri") or ""
         values["display_label"] = f"{label} ({uri})" if uri else label
         return values
 
