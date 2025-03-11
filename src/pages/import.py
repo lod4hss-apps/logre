@@ -77,7 +77,6 @@ def __upload_turtle_file(ttl_datas: List[str], graph_uri: str) -> None | Literal
     
     # Make the request
     for ttl_data in ttl_datas:
-        st.write('url', url)
         response = requests.post(url, data=ttl_data, headers=headers, auth=auth)
 
         # Check response

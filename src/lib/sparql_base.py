@@ -156,7 +156,8 @@ def insert(triples: List[Triple] | Triple, graph: str = None, delete_before=True
 
     # Special use case for allegrograph: tt allows multiple same triples to exist simultaneously.
     # So on inserting, we first delete the existing, to be sure
-    if delete_before and state.get_endpoint().technology == EndpointTechnology.ALLEGROGRAPH:
+    technology = state.get_endpoint().technology
+    if delete_before and (technology == EndpointTechnology.ALLEGROGRAPH or technology == EndpointTechnology.ALLEGROGRAPH.value):
         delete(triples, graph)
 
     # If only a single triple is given, transform it into a list
