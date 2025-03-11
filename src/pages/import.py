@@ -33,7 +33,7 @@ def __get_import_url(graph_uri: str = "") -> str | None:
     endpoint_url = endpoint.url
 
     # Allegrograph endpoint
-    if technology == EndpointTechnology.ALLEGROGRAPH:
+    if technology == EndpointTechnology.ALLEGROGRAPH or technology == EndpointTechnology.ALLEGROGRAPH.value:
         # If in the Allegrograph endpoint, there is the trailing '/sparql', remove it: 
         # import does not work on this URL
         allegrograph_base_url = endpoint_url.replace('/sparql', '')
@@ -51,7 +51,7 @@ def __get_import_url(graph_uri: str = "") -> str | None:
             url = f"{allegrograph_base_url}/statements"
         return url
     
-    elif technology == EndpointTechnology.FUSEKI:
+    elif technology == EndpointTechnology.FUSEKI or technology == EndpointTechnology.FUSEKI.value:
         # If it is a Fuseki endpoint
         if graph_uri:
             graph_uri = graph_uri.replace('base:', 'http://geovistory.org/information/')
@@ -77,6 +77,7 @@ def __upload_turtle_file(ttl_datas: List[str], graph_uri: str) -> None | Literal
     
     # Make the request
     for ttl_data in ttl_datas:
+        st.write('url', url)
         response = requests.post(url, data=ttl_data, headers=headers, auth=auth)
 
         # Check response
