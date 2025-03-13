@@ -70,12 +70,14 @@ def dialog_create_entity() -> None:
         entity_label = col_range.text_input('Label ❗️')
         mandatories.append('rdfs:label')
         if entity_label:
-            triples.append(Triple(entity_uri, 'rdfs:label', f"'{entity_label.strip()}'"))
+            label = entity_label.strip().replace("'", "\\'")
+            triples.append(Triple(entity_uri, 'rdfs:label', f"'{label}'"))
 
         # Input field to set the comment label
         entity_comment = st.text_input('Comment')
         if entity_comment and entity_comment.strip() != '':
-            triples.append(Triple(entity_uri, 'rdfs:comment', f"'{entity_comment.strip()}'"))
+            comment = entity_comment.strip().replace("'", "\\'")
+            triples.append(Triple(entity_uri, 'rdfs:comment', f"'{comment}'"))
 
         st.divider()
 
@@ -145,7 +147,8 @@ def dialog_create_entity() -> None:
                     """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
                     string_value = col_range.text_input(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
                     if string_value and string_value.strip() != '':
-                        triples.append(Triple(entity_uri, prop.uri, f"'{string_value.strip()}'"))
+                        value = string_value.strip().replace("'", "\\'")
+                        triples.append(Triple(entity_uri, prop.uri, f"'{value}'"))
                     if string_value and index < prop.max_count:
                         recursive_call_xsdstring(index + 1)
                 recursive_call_xsdstring(1)   
@@ -164,7 +167,8 @@ def dialog_create_entity() -> None:
                     """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
                     html_value = col_range.text_area(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
                     if html_value and html_value.strip() != '':
-                        triples.append(Triple(entity_uri, prop.uri, f"'{html_value.strip()}'"))
+                        value = html_value.strip().replace("'", "\\'")
+                        triples.append(Triple(entity_uri, prop.uri, f"'{value}'"))
                     if html_value and index < prop.max_count:
                         recursive_call_xsdhtml(index + 1)
                 recursive_call_xsdhtml(1)   

@@ -162,9 +162,9 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
     text = """
         SELECT DISTINCT
             ('""" + entity_uri + """' as ?subject_uri)
-            ('""" + entity.label + """' as ?subject_label)
+            ('""" + entity.label.replace("'", "\\'") + """' as ?subject_label)
             ('""" + entity.class_uri + """' as ?subject_class_uri)
-            ('""" + (entity.comment or '') + """' as ?subject_comment)
+            ('""" + (entity.comment.replace("'", "\\'") or '') + """' as ?subject_comment)
             ('false' as ?subject_is_blank)
             ?predicate_uri
             ?object_uri
@@ -197,9 +197,9 @@ def get_entity_card(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
             (COALESCE(?subject_comment_, '') as ?subject_comment)
             ?predicate_uri
             ('""" + entity.uri + """' as ?object_uri)
-            ('""" + entity.label + """' as ?object_label)
+            ('""" + entity.label.replace("'", "\\'") + """' as ?object_label)
             ('""" + entity.class_uri + """' as ?object_class_uri)
-            ('""" + (entity.comment or '') + """' as ?object_comment)
+            ('""" + (entity.comment.replace("'", "\\'") or '') + """' as ?object_comment)
             ('false' as ?object_is_literal)
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
@@ -275,9 +275,9 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
     text = """
         SELECT DISTINCT
             ('""" + entity_uri + """' as ?subject_uri)
-            ('""" + entity.label + """' as ?subject_label)
+            ('""" + entity.label.replace("'", "\\'") + """' as ?subject_label)
             ('""" + entity.class_uri + """' as ?subject_class_uri)
-            ('""" + (entity.comment or '') + """' as ?subject_comment)
+            ('""" + (entity.comment.replace("'", "\\'") or '') + """' as ?subject_comment)
             (isBlank(""" + entity_uri + """) as ?subject_is_blank)
             ?predicate_uri
             ?object_uri
@@ -355,9 +355,9 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
             (isBlank(?subject_uri) as ?subject_is_blank)
             ?predicate_uri
             ('""" + entity.uri + """' as ?object_uri)
-            ('""" + entity.label + """' as ?object_label)
+            ('""" + entity.label.replace("'", "\\'") + """' as ?object_label)
             ('""" + entity.class_uri + """' as ?object_class_uri)
-            ('""" + (entity.comment or '') + """' as ?object_comment)
+            ('""" + (entity.comment.replace("'", "\\'") or '') + """' as ?object_comment)
             ('false' as ?object_is_literal)
             (isBlank(?object_uri) as ?object_is_blank)
         WHERE {

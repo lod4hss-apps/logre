@@ -93,6 +93,16 @@ else:
     # Filter out rdf:type, rdfs:label, rdfs:comment they are already in the header
     card_triples = [triple for triple in card_triples if triple.predicate.uri not in ['rdf:type', 'rdfs:label', 'rdfs:comment']]
 
+    # Make sure triples are unique (can happen if multiple ontology has been imported for a class)
+    have_triple = set()
+    unique_card_triples: List[DisplayTriple] = []
+    for triple in card_triples:
+        key = f"{triple.subject.uri}-{triple.predicate.uri}-{triple.object.uri}"
+        if key not in have_triple:
+            have_triple.add(key)
+            unique_card_triples.append(triple)
+    card_triples = unique_card_triples
+
     # Since we have a card (ie an ontology), we give the edit button triples from the card
     col_edit.button('Edit', icon=':material/edit:', type='primary', on_click=dialog_edit_entity, kwargs={'entity': entity, 'triples': card_triples})
 

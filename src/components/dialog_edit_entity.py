@@ -66,7 +66,8 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
     # Otherwise, delete the existing one, and create the new one
     elif new_entity_label != entity.label:
         triples_to_delete.append(Triple(entity.uri, 'rdfs:label', f"'{entity.label}'"))
-        triples_to_create.append(Triple(entity.uri, 'rdfs:label', f"'{new_entity_label.strip()}'"))
+        label = new_entity_label.strip().replace("'", "\\'")
+        triples_to_create.append(Triple(entity.uri, 'rdfs:label', f"'{label}'"))
 
     # 3/ Input field to set the comment label
     new_entity_comment = st.text_input('Comment', value=entity.comment)
@@ -74,7 +75,8 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
         triples_to_delete.append(Triple(entity.uri, 'rdfs:comment', f"'{entity.comment}'"))
         # Only append the new if it not an empty string
         if new_entity_comment.strip() != '': 
-            triples_to_create.append(Triple(entity.uri, 'rdfs:comment', f"'{new_entity_comment.strip()}'"))
+            comment = new_entity_comment.strip().replace("'", "\\'")
+            triples_to_create.append(Triple(entity.uri, 'rdfs:comment', f"'{comment}'"))
 
     st.divider()
 
@@ -150,7 +152,9 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
                     # Delete the old one, if there is any
                     if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, f"'{existing_value}'"))
                     # Only append the new if it not an empty string (not mandatory here)
-                    if new_string_value.strip() != '': triples_to_create.append(Triple(entity.uri, prop.uri, f"'{new_string_value.strip()}'"))
+                    if new_string_value.strip() != '': 
+                        value = new_string_value.strip().replace("'", "\\'")
+                        triples_to_create.append(Triple(entity.uri, prop.uri, f"'{value}'"))
    
             # Dedicated behavior:
             # Here, if the property have a max count greater that 1,
@@ -163,7 +167,8 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
                 """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
                 string_value = col_range.text_input(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{len(existing_values)+index}", placeholder="Start writing to add a new value")
                 if string_value and string_value.strip() != '':
-                    triples_to_create.append(Triple(entity.uri, prop.uri, f"'{string_value.strip()}'"))
+                    value = string_value.strip().replace("'", "\\'")
+                    triples_to_create.append(Triple(entity.uri, prop.uri, f"'{value}'"))
                 if string_value and index + 1 < prop.max_count:
                     recursive_call_xsdstring(index + 1)
 
@@ -188,7 +193,9 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
                     # Delete the old one, if there is any
                     if existing_triple: triples_to_delete.append(Triple(entity.uri, prop.uri, f"'{existing_value}'"))
                     # Only append the new if it not an empty string (not mandatory here)
-                    if new_html_value.strip() != '': triples_to_create.append(Triple(entity.uri, prop.uri, f"'{new_string_value.strip()}'"))
+                    if new_html_value.strip() != '': 
+                        value = new_string_value.strip().replace("'", "\\'")
+                        triples_to_create.append(Triple(entity.uri, prop.uri, f"'{value}'"))
    
             # Dedicated behavior:
             # Here, if the property have a max count greater that 1,
@@ -201,7 +208,8 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
                 """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
                 html_value = col_range.text_area(ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{len(existing_values)+index}", placeholder="Start writing to add a new value")
                 if html_value and html_value.strip() != '':
-                    triples_to_create.append(Triple(entity.uri, prop.uri, f"'{html_value.strip()}'"))
+                    value = new_string_value.strip().replace("'", "\\'")
+                    triples_to_create.append(Triple(entity.uri, prop.uri, f"'{value}'"))
                 if html_value and index + 1 < prop.max_count:
                     recursive_call_xsdhtml(index + 1)
 
