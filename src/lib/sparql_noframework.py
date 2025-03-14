@@ -41,6 +41,7 @@ def get_noframework_properties() -> List[OntologyProperty]:
     # Prepare the query
     text = """
         SELECT DISTINCT 
+            ('' as ?card_of_class_uri)
             ?uri 
             (COALESCE(?label_, ?uri) as ?label)
             (0 as ?order)
