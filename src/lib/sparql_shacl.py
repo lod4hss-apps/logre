@@ -41,7 +41,7 @@ def get_shacl_properties() -> OntologyProperty:
     endpoint = state.get_endpoint()
 
     text = """
-        SELECT
+        SELECT DISTINCT
             (COALESCE(?target_class_, '') as ?card_of_class_uri)
             (COALESCE(?label_, ?uri) as ?label)
             (COALESCE(?order_, '') as ?order)
