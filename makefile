@@ -13,6 +13,7 @@ help:
 	@echo "[make install-verbose]: Prepare everything so that the tool can be used (with full logs)"
 	@echo "[make start]: Update, install and start Logre"
 	@echo "[make start-verbose]: Update, install and start Logre (with full logs)"
+	@echo "[make get-sdhss-shacls]: from Semantic-Data-for-Humanities/SDHSS-Profiles repository, put all Turtle file in the ontology folder"
 
 
 update: 
@@ -71,3 +72,12 @@ start-verbose: update-verbose install-verbose
 	@echo "[makefile] Selecting environment $(PIPENV_NAME)..."
 	@source $(PIPENV_NAME)/bin/activate && \
 	cd src; pipenv run $(PYTHON) -m streamlit run server.py
+
+
+get-sdhss-shacls: 
+	@rm -rf ./SDHSS-Profiles
+	@mkdir -p ontologies
+	@git clone --depth 1 --filter=blob:none --sparse https://github.com/Semantic-Data-for-Humanities/SDHSS-Profiles.git
+	@cd SDHSS-Profiles && git sparse-checkout set sdhss_shacl_profiles
+	@mv SDHSS-Profiles/sdhss_shacl_profiles/*.ttl ./ontologies
+	@rm -rf ./SDHSS-Profiles

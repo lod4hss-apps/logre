@@ -3,3 +3,4 @@ __pycache__
 data
 .DS_Store
 logre-config.toml
+ontologies

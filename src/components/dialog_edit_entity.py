@@ -62,7 +62,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
     mandatory_suffix = ' ❗️' if ontology.is_property_mandatory(entity.class_uri, 'rdfs:label') else ''
     new_entity_label = col_range.text_input('Label' + mandatory_suffix, value=entity.label)
     # If the label is nothing, we forbid it: label is mandatory
-    if new_entity_label.strip() == '':
+    if new_entity_label.strip() == '' and ontology.is_property_mandatory(entity.class_uri, 'rdfs:label'):
         st.warning('This will have no effect: the label is mandatory')
     # Otherwise, delete the existing one, and create the new one
     elif new_entity_label != entity.label:

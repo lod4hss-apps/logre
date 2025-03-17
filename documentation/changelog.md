@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.11.1 - Date 2025-03-17
+
+- Make the "mandatory" check for label and comment according to the ontoloy. Before it was mandatory by default
+- Reduce the size of titles "Outgoing properties" and "Incoming properties"
+- Remove the default link provided by Streamllit on every title
+- On Entity page (triples tab), by default fetch 5 incoming properties
+- The folder `./ontologies` is now gitignored to allow users to add their own ontologies without them being deleted on each launch
+- Add a make command to download all SDHSS profile and add them into the `./ontologies` folder (`make get-sdhss-shacls`)
+- Change the way the graph URI is created: now the user has to manually set the graph URI
+- Now, when importing an ontology, users have the possibility to append to current ontology, or to clear the ontology and import the selected one
+
 ## v1.11.0 - Date 2025-02-27
 
 - Remove all "Unknown" labels to avoid confusion

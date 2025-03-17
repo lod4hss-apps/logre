@@ -328,7 +328,7 @@ def get_entity_outgoing_triples(entity: Entity, graph: Graph = None) -> List[Dis
 
 
 @st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
-def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[DisplayTriple]:
+def get_entity_incoming_triples(entity: Entity, graph: Graph = None, limit=None) -> List[DisplayTriple]:
     """Fetch all incoming triples from the given graph about the given entity."""
 
     # In case the entity is a blank node, do nothing
@@ -368,6 +368,7 @@ def get_entity_incoming_triples(entity: Entity, graph: Graph = None) -> List[Dis
                 OPTIONAL { ?subject_uri rdfs:comment ?subject_comment_ . }
             """ + ("}" if graph_uri else "") + """
         }
+        """ + (f"LIMIT {limit}" if limit else "") + """
     """
 
     # Execute the request (Incoming properties)

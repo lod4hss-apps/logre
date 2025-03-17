@@ -9,7 +9,8 @@ def dialog_config_graph():
     """Dialog function to provide a formular for the graph creation."""
 
     # Formular
-    graph_name = st.text_input('Name ❗️', value="", help="Will be used as the rdfs:label, but also transformed to snake-case to identify the graph. It should be unique.")
+    graph_name = st.text_input('Name ❗️', value="", help="Will be used as the rdfs:label.")
+    graph_uri = st.text_input('Graph URI ❗️', value="base:", help="Value of the graph URI. You can use shortcuts.")
     graph_comment = st.text_area('Comment ❗️', value="", help="Brief description of what is in the graph.")
 
     st.text("")
@@ -17,11 +18,7 @@ def dialog_config_graph():
     # User commands: name and comment are mandatory
     if st.button('Save'):
         
-        if graph_name and graph_comment:
-
-            # Generate the graph name and uri
-            name = to_snake_case(graph_name)
-            graph_uri = 'base:' + name
+        if graph_name and graph_uri and graph_comment:
 
             # Create triples in default graph
             triple_name = Triple(graph_uri, 'rdfs:label', f"'{graph_name}'")

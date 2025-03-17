@@ -4,6 +4,7 @@ import pandas as pd
 from io import StringIO
 import streamlit as st
 from schema import EndpointTechnology, Triple, Graph
+from lib.sparql_base import delete
 from components.init import init
 from components.menu import menu
 from components.dialog_confirmation import dialog_confirmation
@@ -60,11 +61,20 @@ def __get_import_url(graph_uri: str = "") -> str | None:
             return endpoint_url
 
 
-def __upload_turtle_file(ttl_datas: List[str], graph_uri: str) -> None | Literal['error']:
+def __upload_turtle_file(ttl_datas: List[str], graph_uri: str, way: Literal['clear', 'append']) -> None | Literal['error']:
     """
     Function to import raw turtle data (as string) into the given graph.
     Specifying the graph is mandatory, otherwise import it into default graph.
     """
+
+    # Clear the graph if needed
+    if way == 'clear':
+        # Delete all statements in the ontology graph    
+        triple = Triple('?s', '?p', '?o')
+        delete(triple, graph=graph_uri)
+        # Delete all statement related to the graph itself from default graph
+        triple = Triple(graph_uri, '?p', '?o')
+        delete(triple)
 
     # Upload
     url = __get_import_url(graph_uri)
@@ -89,6 +99,7 @@ def __upload_turtle_file(ttl_datas: List[str], graph_uri: str) -> None | Literal
     # Which won't happen if the cache is not cleared.
     st.cache_data.clear()
 
+    state.clear_graphs()
     state.set_toast('Data inserted', ':material/file_upload:')
 
 
@@ -276,11 +287,12 @@ else:
 
     ### TAB ONTOLOGIES ###
     
-    tab_data.text('')
+    tab_ontologies.text('')
 
     # Loop through all ontologies files
     folder = Path('./ontologies')
     files = [{ 'name': __format_filename(f.name), 'path': f.name } for f in folder.iterdir()]
+    files.sort(key=lambda x: x['name'])
     onto_names = [file['name'] for file in files]
     onto_paths = [file['path'] for file in files]
     
@@ -306,11 +318,15 @@ else:
         f.close()
         tab_ontologies.text('')
 
+        upload_way = tab_ontologies.radio('', ['Append to current ontology', 'Clear current ontology'], label_visibility='collapsed')
+        tab_ontologies.text('')
+
         if file_content and tab_ontologies.button('Upload ontology', icon=':material/upload:'):
             dialog_confirmation(
-                f'You are about to upload the ontology named **{ontology_name.upper()}** into **{selected_graph_uri}**.', 
+                f'You are about to upload the ontology named **{ontology_name.upper()}** into **{selected_graph_uri}**. The way is: **{upload_way}**', 
                 callback=__upload_turtle_file, 
                 ttl_datas=[file_content],
-                graph_uri=selected_graph_uri
+                graph_uri=selected_graph_uri,
+                way='append' if upload_way == 'Append to current ontology' else 'clear'
             )
 

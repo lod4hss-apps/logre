@@ -137,7 +137,7 @@ else:
 
     # PART 1: outgoing triples
 
-    tab2.markdown('## Outgoing triples')
+    tab2.markdown('#### Outgoing triples')
     tab2.text('')
     # col1, col2 = tab2.columns([1, 2], vertical_alignment='center')
 
@@ -177,37 +177,36 @@ else:
     # PART 2: incoming triples
 
     col1, col2 = tab2.columns([1, 3], vertical_alignment='bottom')
-    col1.markdown('## Incoming triples')
-    fetch_incoming = col2.checkbox('Fetch incoming triples', value=False)
+    col1.markdown('#### Incoming triples')
     tab2.text('')
 
-    if fetch_incoming: 
-        with st.spinner('Fetching incoming statements'):
-            incoming_triples = get_entity_incoming_triples(entity, graph)
-    
-        # Col 1: here the first column (subject) is always the selected entity because we are listing the outgoing entities
-        # if len(incoming_triples):
-        #     col2.markdown(entity.display_label)
+    # By default, we only fetch the first fives
+    incoming_triples = get_entity_incoming_triples(entity, graph, limit=5)
 
-        # For each triple, we display as a list all triples
-        for i, triple in enumerate(incoming_triples):
-            col1_, col2_, col3_, col4_ = tab2.columns([3, 3, 1, 1], vertical_alignment='center')
+    # Give the possibility to fetch more
+    if len(incoming_triples) == 5:
+        if col2.button('Fetch more incoming triples', help="For performance reasons, only first 5 have been fetched. Keep in mind that fetching all other incoming can lead to overload the page if they are too many."):
+            incoming_triples =get_entity_incoming_triples(entity, graph)
 
-            # Col 2: the predicate
-            col1_.markdown(f"*{triple.predicate.display_label}*")
+    # For each triple, we display as a list all triples
+    for i, triple in enumerate(incoming_triples):
+        col1_, col2_, col3_, col4_ = tab2.columns([3, 3, 1, 1], vertical_alignment='center')
 
-            # Col3: Subject information
-            # Allow user to jump from the card of another entity by clicking on it
-            col2_.button(triple.subject.display_label_comment, type='tertiary', key=f"entity-triple-jump-inc-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
+        # Col 2: the predicate
+        col1_.markdown(f"*{triple.predicate.display_label}*")
 
-            # Also, for each triple allow user to have all detailed information about the triple
-            col3_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"entity-triple-info-inc-{i}")
-            
-            # Allow user to delete this triple
-            if col4_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-inc-{i}"):
-                dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
+        # Col3: Subject information
+        # Allow user to jump from the card of another entity by clicking on it
+        col2_.button(triple.subject.display_label_comment, type='tertiary', key=f"entity-triple-jump-inc-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
 
-            tab2.text('')
+        # Also, for each triple allow user to have all detailed information about the triple
+        col3_.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs={'triple': triple}, key=f"entity-triple-info-inc-{i}")
+        
+        # Allow user to delete this triple
+        if col4_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-inc-{i}"):
+            dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
+
+        tab2.text('')
 
 
 

@@ -15,6 +15,9 @@ def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
         layout=layout
     )
 
+    # Hide anchor link for titles
+    st.html("<style>[data-testid='stHeaderActionElements'] {display: none;}</style>")
+
     # Load version number
     if 'VERSION' not in st.session_state:
         file = open('./VERSION', 'r')
