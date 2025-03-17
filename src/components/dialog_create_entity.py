@@ -52,7 +52,7 @@ def dialog_create_entity() -> None:
 
     ### First part: mandatory fields ###
 
-    # In all case, we make 3 statements mandatory, independant of the entology.
+    # In all case, we make 3 statements mandatory, independant of the ontology.
     # They are: the class (rdf:type), the label (rdfs:label) and the comment (rdfs:comment).
     col_label, col_range = st.columns([2, 3])
 
@@ -66,15 +66,22 @@ def dialog_create_entity() -> None:
         selected_class = ontology.classes[class_index]
         triples.append(Triple(entity_uri, 'rdf:type', selected_class.uri))
 
-        # Input field to set the entity label: it is mandatory
-        entity_label = col_range.text_input('Label ❗️')
-        mandatories.append('rdfs:label')
+        # Input field to set the entity label
+        mandatory_suffix = ''
+        if ontology.is_property_mandatory(selected_class.uri, 'rdfs:label'):
+            mandatory_suffix = ' ❗️'
+            mandatories.append('rdfs:label')
+        entity_label = col_range.text_input('Label' + mandatory_suffix)
         if entity_label:
             label = entity_label.strip().replace("'", "\\'")
             triples.append(Triple(entity_uri, 'rdfs:label', f"'{label}'"))
 
         # Input field to set the comment label
-        entity_comment = st.text_input('Comment')
+        mandatory_suffix = ''
+        if ontology.is_property_mandatory(selected_class.uri, 'rdfs:comment'):
+            mandatory_suffix = ' ❗️'
+            mandatories.append('rdfs:comment')
+        entity_comment = st.text_input('Comment' + mandatory_suffix)
         if entity_comment and entity_comment.strip() != '':
             comment = entity_comment.strip().replace("'", "\\'")
             triples.append(Triple(entity_uri, 'rdfs:comment', f"'{comment}'"))
@@ -120,7 +127,7 @@ def dialog_create_entity() -> None:
             # Append a special char if the field is mandatory
             # ie if the min cardinality is strictly bigger than 0
             # And add the property to the mandatories accordingly
-            if prop.min_count != 0:
+            if prop.is_mandatory():
                 suffix = "❗️"
                 mandatories.append(prop.uri)
             else:
@@ -158,7 +165,7 @@ def dialog_create_entity() -> None:
                 
                 # Dedicated behavior:
                 # Here, if the property have a max count greater that 1,
-                # We would like to give the user the possibility to add them accrodingly
+                # We would like to give the user the possibility to add them accordingly
                 # So the strategy is the following:
                 # Each time the user fill a value, we display another empty field so that he can add another value
                 # Of course it is limited by the max count of the cardinality, once it is reached

@@ -43,3 +43,7 @@ class OntologyProperty(BaseModel):
     def get_key(self) -> str:
         """Create a key to identify a property and its vision for a class (eg "was born" on the Person class, but "brought into life" for a Birth card)"""
         return f"{self.domain_class_uri or self.range_class_uri}-{self.uri}"
+    
+    def is_mandatory(self) -> str:
+        """Check to have the information: is the property mandatory for those instances?"""
+        return self.min_count != 0

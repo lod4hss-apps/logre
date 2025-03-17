@@ -59,7 +59,8 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
     col_label.selectbox('Class ❗️', options=[entity.class_label], index=0, disabled=True)
 
     # 2/ Input field to set the entity label
-    new_entity_label = col_range.text_input('Label ❗️', value=entity.label)
+    mandatory_suffix = ' ❗️' if ontology.is_property_mandatory(entity.class_uri, 'rdfs:label') else ''
+    new_entity_label = col_range.text_input('Label' + mandatory_suffix, value=entity.label)
     # If the label is nothing, we forbid it: label is mandatory
     if new_entity_label.strip() == '':
         st.warning('This will have no effect: the label is mandatory')
@@ -70,7 +71,8 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
         triples_to_create.append(Triple(entity.uri, 'rdfs:label', f"'{label}'"))
 
     # 3/ Input field to set the comment label
-    new_entity_comment = st.text_input('Comment', value=entity.comment)
+    mandatory_suffix = ' ❗️' if ontology.is_property_mandatory(entity.class_uri, 'rdfs:comment') else ''
+    new_entity_comment = st.text_input('Comment' + mandatory_suffix, value=entity.comment)
     if new_entity_comment != entity.comment:
         triples_to_delete.append(Triple(entity.uri, 'rdfs:comment', f"'{entity.comment}'"))
         # Only append the new if it not an empty string
@@ -123,7 +125,7 @@ def dialog_edit_entity(entity: Entity, triples: List[DisplayTriple]) -> None:
         # Append a special char if the field is mandatory
         # ie if the min cardinality is strictly bigger than 0
         # And add the property to the mandatories accordingly
-        if prop.min_count != 0: 
+        if prop.is_mandatory(): 
             mandatory = True
             suffix = " ❗️"
         else: 
