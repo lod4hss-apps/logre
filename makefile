@@ -74,10 +74,17 @@ start-verbose: update-verbose install-verbose
 	cd src; pipenv run $(PYTHON) -m streamlit run server.py
 
 
-get-sdhss-shacls: 
+get-sdhss-shacls-sparse: 
 	@rm -rf ./SDHSS-Profiles
 	@mkdir -p ontologies
 	@git clone --depth 1 --filter=blob:none --sparse https://github.com/Semantic-Data-for-Humanities/SDHSS-Profiles.git
 	@cd SDHSS-Profiles && git sparse-checkout set sdhss_shacl_profiles
+	@mv SDHSS-Profiles/sdhss_shacl_profiles/*.ttl ./ontologies
+	@rm -rf ./SDHSS-Profiles
+
+get-sdhss-shacls: 
+	@rm -rf ./SDHSS-Profiles
+	@mkdir -p ontologies
+	@git clone https://github.com/Semantic-Data-for-Humanities/SDHSS-Profiles.git
 	@mv SDHSS-Profiles/sdhss_shacl_profiles/*.ttl ./ontologies
 	@rm -rf ./SDHSS-Profiles
