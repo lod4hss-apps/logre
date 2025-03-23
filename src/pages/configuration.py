@@ -91,41 +91,16 @@ def __endpoint_list() -> None:
 
     # Display all saved endpoints
     for i, endpoint in enumerate(all_endpoints):
-
-        # For some reason, sometimes, especially on hot reload, Enums are lost.
-        # Maybe its my fault, by I can't find the reason why after some clicking around, the enums are lost
-        # This is the way I found to make it work every time
-        technology = endpoint.technology.value if isinstance(endpoint.technology, Enum) else endpoint.technology
-        ontology_framework = endpoint.ontology_framework.value if isinstance(endpoint.ontology_framework, Enum) else endpoint.ontology_framework
-
-        # Display all information from the endpoint as disabled inputs
-        col1, col2 = st.columns([6, 13], vertical_alignment='center')
-        col1.text_input('Name', value=endpoint.name, key=f"config-endpoint-name-{i}", disabled=True)
-        col2.text_input('URL', value=endpoint.url, key=f"config-endpoint-url-{i}", disabled=True)
-        col1, col2, col3 = st.columns([6, 6, 7], vertical_alignment='center')
-        col1.text_input('Username', value=endpoint.username, key=f"config-endpoint-username-{i}", disabled=True)
-        col2.text_input('Password', value=endpoint.password, key=f"config-endpoint-password-{i}", type='password', disabled=True)
-        col3.text_input('Endpoint technology', value=technology, key=f"config-endpoint-technology-{i}", disabled=True)
-        col1, col2, col3 = st.columns([8, 5, 5], vertical_alignment='center')
-        col1.text_input('Base URI', value=endpoint.base_uri, key=f"config-endpoint-base-uri-{i}", disabled=True)
-        col2.text_input('Ontology graph URI', value=endpoint.ontology_uri, key=f"config-endpoint-ontology-graph-uri-{i}", disabled=True)
-        col3.text_input('Ontology Framework', value=ontology_framework, key=f"config-endpoint-ontology-framework-{i}", disabled=True)
-
         st.text('')
-        
-        col1, col2, col3 = st.columns([3, 3, 2])
-
-        # Button to delete an endpoint
-        if col1.button(f'Remove this endpoint', key=f"config-endpoint-delete-{i}", icon=':material/delete:'):
+        col1, col2, col3, col4 = st.columns([2, 2, 1, 1], vertical_alignment='bottom')
+        col1.markdown(endpoint.name)
+        col2.markdown(endpoint.username)
+        if col3.button('Remove', key=f"config-endpoint-delete-{i}", icon=':material/delete:', type='tertiary'):
             dialog_confirmation(f"You are about to delete \"{endpoint.name}\" endpoint.", __delete_endpoint, endpoint=endpoint)
-
-        # Button to edit an endpoint
-        if col2.button(f'Edit this endpoint', key=f"config-endpoint-edit-{i}", icon=":material/edit:"):
+        if col4.button('Edit', key=f"config-endpoint-edit-{i}", icon=":material/edit:", type='tertiary'):
             dialog_config_endpoint(endpoint, i)
 
-        # Divider between endpoints
-        col1, col2, col3 = st.columns([3, 7, 3], vertical_alignment='center')
-        col2.divider()
+        st.text('')
 
 
 def __show_graph_list() -> None:
@@ -239,6 +214,7 @@ col2.button('Show', on_click=__show_endpoint_list, icon=':material/visibility:',
 col3.button('Hide', on_click=__hide_endpoint_list, icon=':material/visibility_off:', key='config-btn-hide-endpoints', type='tertiary')
 col4.button('Add new', on_click=dialog_config_endpoint, icon=':material/add:', key='config-btn-add-endpoint')
 
+st.text('')
 __endpoint_list()
 
 st.divider()
@@ -259,6 +235,7 @@ if endpoint:
     col3.button('Hide', on_click=__hide_graph_list, icon=':material/visibility_off:', key='config-btn-hide-graphs', type='tertiary')
     col4.button('Add new', on_click=dialog_config_graph, icon=':material/add:', key='config-btn-add-graph')
 
+    st.text('')
     __graph_list()
 
     st.divider()
@@ -275,6 +252,7 @@ col2.button('Show', on_click=__show_prefix_list, icon=':material/visibility:', k
 col3.button('Hide', on_click=__hide_prefix_list, icon=':material/visibility_off:', key='config-btn-hide-prefixes', type='tertiary')
 col4.button('Add new', on_click=dialog_config_prefix, icon=':material/add:', key='config-btn-add-prefix')
 
+st.text('')
 __prefix_list()
 
 st.divider()

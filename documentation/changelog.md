@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.12.0 - Date 2025-03-23
+
+- **Introduction of Data tables: a place where user can have an overview of all data contained in his endpoint. For now columns are fixed; in a next version user would be able to configure them.**
+- Change of display of an endpoint: configuration page should be lighter for the eye, so when displayed, endpoints does not show all its information anymore, just a small number of them, and if user wants to see more, he can click on "Edit"
+- Remove the "Entity" link in the menu: this link was actually never used, this page is accessed by "Find an entity" or "Create an entity". It does not make sense to access it from the menu.
+- Pages related to a specific endpoint are not clickable as long as no endpoint is chosen (SPARQL editor, Import, Data tables)
+
+
 ## v1.11.1 - Date 2025-03-17
 
 - Make the "mandatory" check for label and comment according to the ontoloy. Before it was mandatory by default
@@ -12,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Add a make command to download all SDHSS profiles and add them into the `./ontologies` folder (`make get-sdhss-shacls`)
 - Change the way the graph URI is created: now the user has to manually set the graph URI
 - Now, when importing an ontology, users have the possibility to append to current ontology, or to clear the ontology and import the selected one
+
 
 ## v1.11.0 - Date 2025-02-27
 

@@ -1,5 +1,6 @@
 from typing import Dict, List
 import streamlit as st
+import pandas as pd
 from schema import Graph, OntologyFramework, Entity
 from schema import DisplayTriple, Ontology, OntologyClass
 from lib.sparql_base import query
@@ -590,3 +591,85 @@ def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
     display_triples = list(map(lambda triple: DisplayTriple.from_dict(triple), display_triples_list))
 
     return display_triples
+
+
+def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> pd.DataFrame:
+    """
+    Fetch, in the given graph, all instances of given class, and format them in a Dataframe.
+    Dataframe columns are: uri, label, comment, number of incoming triples, number of outgoing triples.
+    """
+
+    # Make sure the given elements are valid URIs
+    class_uri = ensure_uri(class_uri)
+    graph_uri = ensure_uri(graph.uri)
+
+    # Prepare the query (fetch instances)
+    text = """
+        SELECT 
+            ?uri 
+            (COALESCE(?label_, ?uri) as ?label)
+            (COALESCE(?comment_, '') as ?comment)
+            (COALESCE(?inc_count, 0) AS ?incoming_count) 
+            (COALESCE(?out_count, 0) AS ?outgoing_ount)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                ?uri a """ + class_uri + """ .
+                OPTIONAL { ?uri rdfs:label ?label_ . }
+                OPTIONAL { ?uri rdfs:comment ?comment_ . }
+                
+                {
+                    SELECT ?uri (COUNT(?incoming) as ?inc_count) WHERE {
+                        ?uri a """ + class_uri + """ .
+                        ?incoming ?p ?uri .
+                    } GROUP BY ?uri
+                }
+                
+                {
+                    SELECT ?uri (COUNT(?outgoing) as ?out_count) WHERE {
+                        ?uri a """ + class_uri + """ .
+                        ?uri ?p ?outgoing .
+                    } GROUP BY ?uri
+                }
+            """ + ("}" if graph_uri else "") + """
+        }
+        ORDER BY ?uri
+        LIMIT """ + str(limit) + """
+        OFFSET """ + str(offset) + """
+    """
+
+    # Execute the query (fetch instances)
+    instances = query(text)
+    
+    # Create the Dataframe
+    df = pd.DataFrame(data=instances)
+    
+    # Clean column names
+    if len(df) > 0:
+        df.columns = ['URI', 'Label', 'Comment', 'Incoming number', 'Outgoing number']
+
+    return df
+
+    
+
+@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri})
+def get_class_number(graph: Graph, class_uri: str) -> int:
+    """Look in the given graph how much instances of given class there is."""
+
+    # Make sure the given elements are valid URIs
+    class_uri = ensure_uri(class_uri)
+    graph_uri = ensure_uri(graph.uri)
+
+    # Prepare the query (count instances)
+    text = """
+        SELECT (COUNT(?uri) AS ?count)
+        WHERE { 
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                ?uri a """ + class_uri + """ 
+            """ + ("}" if graph_uri else "") + """
+        }
+    """
+
+    # Execute the query (count instances)
+    counts = query(text)
+    
+    return int(counts[0]['count'])

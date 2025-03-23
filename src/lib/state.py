@@ -196,3 +196,11 @@ def clear_create_triple_object() -> None:
     if 'create-triple-object' in state:
         del state['create-triple-object']
 
+### 
+
+def set_data_table_page(page_nb: int) -> None:
+    state['data-table-page'] = page_nb
+
+def get_data_table_page() -> int:
+    if 'data-table-page' not in state: return 1
+    return state['data-table-page']

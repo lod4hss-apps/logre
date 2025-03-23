@@ -37,12 +37,13 @@ def menu() -> None:
     col1.markdown(f"# Logre")
     col2.markdown(f"<small>v{version}</small>", unsafe_allow_html=True)
 
-    # Page links
+    # Page links◊
     st.sidebar.page_link("pages/documentation.py", label="Documentation")
     st.sidebar.page_link("pages/configuration.py", label="Configuration")
-    st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not all_endpoints)
-    st.sidebar.page_link("pages/import.py", label="Import", disabled=not all_endpoints)
-    st.sidebar.page_link("pages/entity.py", label="Entity", disabled=not all_endpoints)
+    st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not endpoint)
+    st.sidebar.page_link("pages/import.py", label="Import", disabled=not endpoint)
+    st.sidebar.page_link("pages/data-tables.py", label="Data tables", disabled=not endpoint)
+    # st.sidebar.page_link("pages/entity.py", label="Entity", disabled=not all_endpoints)
 
     st.sidebar.divider()
 
