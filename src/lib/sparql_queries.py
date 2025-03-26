@@ -609,8 +609,8 @@ def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> p
             ?uri 
             (COALESCE(?label_, ?uri) as ?label)
             (COALESCE(?comment_, '') as ?comment)
-            (COALESCE(?inc_count, 0) AS ?incoming_count) 
             (COALESCE(?out_count, 0) AS ?outgoing_ount)
+            (COALESCE(?inc_count, 0) AS ?incoming_count) 
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
                 ?uri a """ + class_uri + """ .
