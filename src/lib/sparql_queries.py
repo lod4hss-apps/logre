@@ -617,17 +617,21 @@ def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> p
                 OPTIONAL { ?uri rdfs:label ?label_ . }
                 OPTIONAL { ?uri rdfs:comment ?comment_ . }
                 
-                {
+                OPTIONAL {
                     SELECT ?uri (COUNT(?incoming) as ?inc_count) WHERE {
-                        ?uri a """ + class_uri + """ .
-                        ?incoming ?p ?uri .
+                        """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                            ?uri a """ + class_uri + """ .
+                            ?incoming ?p ?uri .
+                        """ + ("}" if graph_uri else "") + """
                     } GROUP BY ?uri
                 }
                 
-                {
+                OPTIONAL {
                     SELECT ?uri (COUNT(?outgoing) as ?out_count) WHERE {
-                        ?uri a """ + class_uri + """ .
-                        ?uri ?p ?outgoing .
+                        """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                            ?uri a """ + class_uri + """ .
+                            ?uri ?p ?outgoing .
+                        """ + ("}" if graph_uri else "") + """
                     } GROUP BY ?uri
                 }
             """ + ("}" if graph_uri else "") + """
