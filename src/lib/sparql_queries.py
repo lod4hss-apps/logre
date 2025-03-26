@@ -649,7 +649,7 @@ def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> p
     
     # Clean column names
     if len(df) > 0:
-        df.columns = ['URI', 'Label', 'Comment', 'Incoming number', 'Outgoing number']
+        df.columns = ['URI', 'Label', 'Comment', 'Outgoing number', 'Incoming number']
 
     return df
 
