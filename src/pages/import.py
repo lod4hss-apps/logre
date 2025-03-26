@@ -244,9 +244,9 @@ else:
             st.markdown("""
                         Also, the content of the file itself should have a specific format.
                         First of all, there should be a column named `uri` (generally the first column).
-                        Then each other column name should be like `rdfs:label_has-name`: 
-                        first the property as a uri, followed by an underscore, and then you're free to put the name you want.
-                        If, for some lines you do not have all the properties, no problem, just let an empty string of None instead.
+                        Then each other column name should be `<predicate>_<label>` like `rdfs:label_has-name`: 
+                        first the predicate as an URI, followed by an underscore, and then you're free to put the name you want.
+                        If, for some lines you do not have all the properties, no problem, just let an empty string or None instead.
             """)
             st.markdown('**Example of CSV to import person instances:**')
             st.markdown('`my-persons.csv`')

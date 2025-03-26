@@ -20,6 +20,7 @@ class Endpoint(BaseModel):
     ontology_framework: Optional[OntologyFramework] = OntologyFramework.NONE
     username: Optional[str] = None
     password: Optional[str] = None
+    metadata_uri: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Convert the Endpoint instance to a dictionary"""

@@ -14,6 +14,7 @@ from components.dialog_download import dialog_download_graph, dialog_dump_endpoi
 from components.dialog_config_endpoint import dialog_config_endpoint
 from components.dialog_config_graph import dialog_config_graph
 from components.dialog_config_prefix import dialog_config_prefix
+from components.dialog_config_data_tables import dialog_config_data_tables
 
 
 def __delete_endpoint(endpoint: Endpoint) -> None:
@@ -44,7 +45,7 @@ def __prune_graph(graph: Graph) -> None:
     if graph.uri:
         # Also, from the default graph, delete all predicates related to the graph (label, comment, ...)
         triple = Triple(graph_uri, '?p', '?o')
-        delete(triple)
+        delete(triple, graph='base:metadata')
 
     state.clear_graphs()
     state.set_toast('Graph deleted', icon=':material/delete:')
@@ -93,8 +94,8 @@ def __endpoint_list() -> None:
     for i, endpoint in enumerate(all_endpoints):
         st.text('')
         col1, col2, col3, col4 = st.columns([2, 2, 1, 1], vertical_alignment='bottom')
-        col1.markdown(endpoint.name)
-        col2.markdown(endpoint.username)
+        col1.markdown(endpoint.name, help="The name you choose to give to this endpoint")
+        col2.markdown(endpoint.username, help="Username used for connection to your endpoint")
         if col3.button('Remove', key=f"config-endpoint-delete-{i}", icon=':material/delete:', type='tertiary'):
             dialog_confirmation(f"You are about to delete \"{endpoint.name}\" endpoint.", __delete_endpoint, endpoint=endpoint)
         if col4.button('Edit', key=f"config-endpoint-edit-{i}", icon=":material/edit:", type='tertiary'):
@@ -157,7 +158,7 @@ def __hide_prefix_list() -> None:
 
 def __prefix_list() -> None:
 
-    # If graph list is deactivated, display nothing
+    # If prefix list is deactivated, display nothing
     # Here, because it is only for here and for display information
     # We took the liberty of handling the session_state directly
     if 'display_prefix_list'not in st.session_state or not st.session_state['display_prefix_list']:
@@ -166,17 +167,39 @@ def __prefix_list() -> None:
     # Fetch from state
     all_prefixes = state.get_prefixes()
 
-    # Display all graphs in sessions
+    # Display all prefixes in sessions
     for i, prefix in enumerate(all_prefixes):
         st.text('')
         col1, col2, col3, col4 = st.columns([2, 7, 1, 1], vertical_alignment='center')
         col1.markdown(prefix.short)
         col2.markdown(prefix.url)
 
-        # Button to cleanse a graph
+        # Button to cleanse a prefix
         if col3.button('', key=f"config-prefix-delete-{i}", icon=":material/delete:", help='This will delete this prefix from your configuration.', type='tertiary'):
             dialog_confirmation(f'You are about to delete this prefix from your configuration.', __delete_prefix, prefix=prefix)
 
+
+def __show_data_tables_list() -> None:
+    # Here, because it is only for here and for display information
+    # We took the liberty of handling the session_state directly
+    st.session_state['display_data_tables_list'] = True
+
+
+def __hide_data_tables_list() -> None:
+    # Here, because it is only for here and for display information
+    # We took the liberty of handling the session_state directly
+    st.session_state['display_data_tables_list'] = False
+
+
+def __data_table_list() -> None:
+
+    # If data tables list is deactivated, display nothing
+    # Here, because it is only for here and for display information
+    # We took the liberty of handling the session_state directly
+    if 'display_data_tables_list'not in st.session_state or not st.session_state['display_data_tables_list']:
+        return
+    
+    st.write('hello world')
 
 
 
@@ -192,7 +215,7 @@ endpoint = state.get_endpoint()
 ### CONFIGURATION ###
 
 col1, col2 = st.columns([6, 2], vertical_alignment='bottom')
-col1.title("Endpoint configuration")
+col1.title("Configuration")
 col2.download_button(
     label='Download', 
     data=unload_config(), 
@@ -220,6 +243,22 @@ __endpoint_list()
 st.divider()
 
 
+### PREFIXES ###
+
+# Title and boxes for graph actions (show/hide graph list)
+col1, col_dump, col2, col3, col4 = st.columns([2, 2, 1, 1, 2], vertical_alignment='bottom')
+col1.markdown('### Prefixes')
+
+col2.button('Show', on_click=__show_prefix_list, icon=':material/visibility:', key='config-btn-show-prefixes', type='tertiary')
+col3.button('Hide', on_click=__hide_prefix_list, icon=':material/visibility_off:', key='config-btn-hide-prefixes', type='tertiary')
+col4.button('Add new', on_click=dialog_config_prefix, icon=':material/add:', key='config-btn-add-prefix')
+
+st.text('')
+__prefix_list()
+
+st.divider()
+
+
 ### GRAPHS ###
 
 # Only display graph section if an endpoint is selected:
@@ -241,18 +280,15 @@ if endpoint:
     st.divider()
 
 
-### PREFIXES ###
+### DATA TABLES ###
 
+    # Title and boxes for graph actions (show/hide graph list)
+    col1, col_dump, col2, col3, col4 = st.columns([2, 2, 1, 1, 2], vertical_alignment='bottom')
+    col1.markdown('### Data tables')
 
-# Title and boxes for graph actions (show/hide graph list)
-col1, col_dump, col2, col3, col4 = st.columns([2, 2, 1, 1, 2], vertical_alignment='bottom')
-col1.markdown('### Prefixes')
+    col2.button('Show', on_click=__show_data_tables_list, icon=':material/visibility:', key='config-btn-show-data-tables', type='tertiary')
+    col3.button('Hide', on_click=__hide_data_tables_list, icon=':material/visibility_off:', key='config-btn-hide-data-tables', type='tertiary')
+    col4.button('Add new', on_click=dialog_config_data_tables, icon=':material/add:', key='config-btn-add-data-tables')
 
-col2.button('Show', on_click=__show_prefix_list, icon=':material/visibility:', key='config-btn-show-prefixes', type='tertiary')
-col3.button('Hide', on_click=__hide_prefix_list, icon=':material/visibility_off:', key='config-btn-hide-prefixes', type='tertiary')
-col4.button('Add new', on_click=dialog_config_prefix, icon=':material/add:', key='config-btn-add-prefix')
-
-st.text('')
-__prefix_list()
-
-st.divider()
+    st.text('')
+    __data_table_list()

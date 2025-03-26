@@ -95,7 +95,6 @@ def dialog_download_graph(graph: Graph):
         if col1.button('Build the turtle file'):
             try:
                 datas = download_graph(graph)
-                col1.write('File generated')
                 filename = f"logre-{endpoint.name}-{graph.label}.ttl".lower()
                 col2.download_button(label="Click to Download", data=datas, file_name=filename, mime="text/turtle")
             except Exception as e:

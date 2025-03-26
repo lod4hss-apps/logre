@@ -19,12 +19,31 @@ menu()
 
 # Read me
 with st.expander('README'):
-    readme_file = open('./README.md', 'r')
-    content = readme_file.read()
-    readme_file.close()
+    file = open('./README.md', 'r')
+    content = file.read()
+    file.close()
     st.markdown(content)
 
 
-for name, content in contents.items():
-    with st.expander(name):
-        st.markdown(content)
+# Get started
+with st.expander('Get started'):
+    file = open('./documentation/get-started.md', 'r')
+    content = file.read()
+    file.close()
+    st.markdown(content)
+
+
+# Configuration
+with st.expander('Configuration'):
+    file = open('./documentation/configuration.md', 'r')
+    content = file.read()
+    file.close()
+    st.markdown(content)
+
+
+# Changelog
+with st.expander('Changes log'):
+    file = open('./documentation/changelog.md', 'r')
+    content = file.read()
+    file.close()
+    st.markdown(content)

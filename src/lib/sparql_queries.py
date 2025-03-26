@@ -15,27 +15,44 @@ import lib.state as state
 def list_graphs() -> List[Graph]:
     """List all graphs available in the SPARQL endpoint."""
 
-    # Prepare the query
+    # Prepare the query (existing graphs)
     text = """
         SELECT DISTINCT
+            ?uri 
+        WHERE {
+            GRAPH ?uri { ?s ?p ?o . }
+        }
+    """    
+    with st.spinner("Listing all graphs..."):
+        existing_graphs = query(text)
+
+    # Prepare query (metadata graphs)
+    text = """
+        SELECT 
             ?uri 
             (COALESCE(?label_, ?uri) as ?label)
             (COALESCE(?comment_, '') as ?comment)
         WHERE {
-            GRAPH ?uri { ?s ?p ?o . }
-            optional { ?uri rdfs:label ?label_ . }
-            optional { ?uri rdfs:comment ?comment_ . }
+            GRAPH base:metadata {
+                ?uri a base:Graph .
+                optional { ?uri rdfs:label ?label_ . }
+                optional { ?uri rdfs:comment ?comment_ . }
+            }
         }
-    """    
-
-    # Execute the query
+    """
     with st.spinner("Listing all graphs..."):
-        response = query(text, caller='sparql_queries.list_graphs')
+        metadata_graphs = query(text)
+
+    all_graphs = metadata_graphs
+    have_graphs = set(list(map(lambda g: g['uri'], all_graphs)))
+    for graph in existing_graphs:
+        if graph['uri'] not in have_graphs:
+            all_graphs.append({'uri': graph['uri'], 'label': graph['uri'], 'comment': ''})
+            have_graphs.add(graph['uri'])
+        
     
     # Transform list of objects into list of graphs
-    if response: return list(map(lambda obj: Graph.from_dict(obj), response))
-    # And ensure a list is returned
-    else: return []
+    return list(map(lambda obj: Graph.from_dict(obj), all_graphs))
 
 
 def count_graph_triples(graph: Graph) -> int:
@@ -664,7 +681,7 @@ def get_class_number(graph: Graph, class_uri: str) -> int:
         SELECT (COUNT(?uri) AS ?count)
         WHERE { 
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
-                ?uri a """ + class_uri + """ 
+                ?uri a """ + class_uri + """ .
             """ + ("}" if graph_uri else "") + """
         }
     """

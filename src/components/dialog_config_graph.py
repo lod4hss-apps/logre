@@ -21,16 +21,17 @@ def dialog_config_graph():
         if graph_name and graph_uri and graph_comment:
 
             # Create triples in default graph
+            triple_type = Triple(graph_uri, 'rdf:type', 'base:Graph')
             triple_name = Triple(graph_uri, 'rdfs:label', f"'{graph_name}'")
             triple_comment = Triple(graph_uri, 'rdfs:comment', f'"""{graph_comment}"""')       
 
             # Also, in order to make the graph visible in queries, it needs to have at least one triple
             # So here one dummy triple is created. This solution is in test, let see in the future if this triple is disturbing or not
-            dummy_triple = Triple('_:dummy1', 'base:dummyPredicate', '_:dummy2')
+            # dummy_triple = Triple('_:dummy1', 'base:dummyPredicate', '_:dummy2')
 
             # Insert triples
-            insert([triple_name, triple_comment]) # graph label and comment can't be added to the graph itself by convention
-            insert([dummy_triple], graph=graph_uri, delete_before=False)
+            insert([triple_type, triple_name, triple_comment], graph="base:metadata") # graph label and comment can't be added to the graph itself by convention
+            # insert([dummy_triple], graph=graph_uri, delete_before=False)
 
             # And reset the graphs that are in session, so that, they are fetched on rerun
             state.clear_graphs()
