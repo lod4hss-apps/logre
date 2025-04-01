@@ -2,6 +2,7 @@ from schema import EntityType
 import re
 import unicodedata
 import time
+from .prefixes import is_prefix
 
 
 def ensure_uri(supposed_uri: str) -> str | None:
@@ -15,10 +16,10 @@ def ensure_uri(supposed_uri: str) -> str | None:
     if not supposed_uri:
         return None
 
-    # First check if the given URI has a prefix
-    prefixes = ["xsd", "rdf", "rdfs", "owl", "sh", "crm", "sdh", "sdh-shortcut", "sdh-shacl", "ontome", "geov", "base", "_"]
-    for prefix in prefixes:
-        if supposed_uri.startswith(prefix + ":"):
+    # First check if the given URI has a known prefix
+    if ":" in supposed_uri:
+        supposed_prefix = supposed_uri[0:supposed_uri.index(':')]
+        if is_prefix(supposed_prefix):
             return supposed_uri
 
     # Then check if it is a value
