@@ -12,7 +12,7 @@ Logre requires a running SPARQL endpoint, as it does not store data itself. You 
 - Online paid services
 - Free online options (e.g., limited by dataset size)
 
-Recommended: We use [AllegroGraph](https://allegrograph.com/) internally at Geovistory.org, which offers a free plan.
+**Recommended:** We use [AllegroGraph](https://allegrograph.com/) internally at Geovistory.org, which offers a free plan, but also has a lot of nice features.
 
 **Configure Your Endpoint**
 
@@ -20,7 +20,7 @@ Some triple stores require additional setup:
 - AllegroGraph: Create a “repository”
 - Fuseki: Set up a “dataset”
 
-For project organization, we recommend separating named graphs—this can be configured in AllegroGraph.
+For project organization, we recommend separating default named graphs (by default on Fuseki, but needs to be configured with Allegrograph).
 
 ---
 
@@ -30,7 +30,7 @@ Set up Logre by:
 - Connecting your SPARQL endpoint
 - Defining prefixes, graphs, and data tables
 
-For detailed configuration steps, refer to the Configuration section in the documentation.
+For detailed configuration steps, refer to the *Configuration* section in the documentation.
 
 ---
 
@@ -41,18 +41,22 @@ Once your endpoint is connected, you can import data:
 **Ontology Import**
 
 Logre integrates with [Semantic-Data-for-Humanities](https://github.com/Semantic-Data-for-Humanities), offering SHACL profiles. To import them:
-- Run: make get-sdhss-shacls in the Logre folder.
-- Go to the Import page → Ontologies tab.
-- Select and import ontologies.
+- Run: `make get-sdhss-shacls` in the Logre folder. This will pull from their public GitHub all their profiles for you to choose from.
+- Go to the *Import* page → *Ontologies* tab.
+- Select and import wanted ontologies.
 
 They will be stored in the ontology graph configured in your endpoint.
 
+If you do want to use the SDHSS ontologies, you can also create/add your own, just import it following the next paragraph in your ontology graph. We recommend using SHACL ontologies.
+
 **Import Existing Data**
 
-- From another SPARQL endpoint → Import n-Quads, Turtle, or CSV files.
-- CSV files → Must follow a specific format (see Import page for details).
+If you already have triples you can also easily import them directly:
 
-If you need help modeling your project, contact us—we have expertise in data modeling.
+- From another SPARQL endpoint → Import n-Quads, Turtle, or CSV files.
+- CSV files → Must follow a specific format (see *Import* page for details).
+
+If you need help modeling your project, contact us, we have expertise in data modeling.
 
 ---
 
@@ -60,7 +64,7 @@ If you need help modeling your project, contact us—we have expertise in data m
 
 You can add data manually via:
 - The SPARQL editor
-- The Create Data button in the menu
+- The *Create Data* button in the menu
 
 ### 4.1 Create an Entity
 
@@ -70,7 +74,7 @@ When creating an entity, the form fields are auto-generated based on your ontolo
 
 If a required predicate isn’t in your ontology, you can:
 - Use the SPARQL editor
-- Click Create Triple → Set Use Ontology to No
+- Click *Create Triple* → Set *Use Ontology* to "No"
 
 
 ---
@@ -81,7 +85,7 @@ Once data is added, you can explore it in two ways:
 
 ### 5.1 Entity Details
 
-Use Find an Entity to view its details. The entity page has:
+Use *Find an Entity* to view its details. The entity page has:
 	•	Card → Displays ontology-defined predicates
 	•	Triples → Shows all linked triples (some incoming links may be hidden by default)
 	•	Visualization → Graph view of entity connections
