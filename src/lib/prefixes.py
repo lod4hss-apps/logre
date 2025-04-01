@@ -1,5 +1,4 @@
 from typing import Literal
-from enum import Enum
 from schema import Prefix, EndpointTechnology
 import lib.state as state
 
@@ -84,4 +83,4 @@ def is_prefix(supposed_prefix: str) -> bool:
     all_prefixes = get_all_prefixes()
 
     found = [prefix for prefix in all_prefixes if prefix.short == supposed_prefix]
-    return len(found) == 0
+    return len(found) != 0
