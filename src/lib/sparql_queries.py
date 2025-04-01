@@ -71,7 +71,6 @@ def count_graph_triples(graph: Graph) -> int:
     return int(response[0]['count'])
 
 
-@st.cache_data(show_spinner=False, ttl='1 day')
 def get_ontology() -> Ontology:
     """Depending on the endpoint configuration, fetch the right ontology."""
 

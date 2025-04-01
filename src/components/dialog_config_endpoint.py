@@ -73,6 +73,8 @@ def dialog_config_endpoint(endpoint: Endpoint = None, index: int = None) -> None
 
             # Also, to avoid error, here selected endpoint is just reset
             state.clear_endpoint()
+            st.cache_data.clear()
+            st.cache_resource.clear()
 
             # If Logre is running locally, save the config on disk
             # Otherwise tell the GUI that a configuration is present

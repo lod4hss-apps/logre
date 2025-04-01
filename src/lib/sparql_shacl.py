@@ -78,7 +78,7 @@ def get_shacl_properties() -> OntologyProperty:
 
     return properties
 
-
+@st.cache_data(show_spinner=False, ttl='1 day')
 def get_shacl_ontology() -> Ontology:
     """
     Get all the classes, and properties from the shacl ontology.
