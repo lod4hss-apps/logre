@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import streamlit as st
 import pandas as pd
 from schema import Graph, OntologyFramework, Entity
@@ -480,7 +480,7 @@ def download_graph(graph: Graph) -> str:
 
 @st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri, Entity: lambda ent: ent.uri})
 def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
-
+    """Get graph of entities of depth 1: get all incoming and outgoing statements of the given entities"""
 
     # In case the entity is a blank node, do nothing
     if any([uri.startswith('_:') for uri in entity_uris]):
@@ -651,7 +651,6 @@ def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> p
         df.columns = ['URI', 'Label', 'Comment', 'Outgoing number', 'Incoming number']
 
     return df
-
     
 
 @st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri})
@@ -676,3 +675,30 @@ def get_class_number(graph: Graph, class_uri: str) -> int:
     counts = query(text)
     
     return int(counts[0]['count'])
+
+def get_entity_basic_infos(graph: Graph, entity_uri: str) -> Tuple[str, str, str]:
+    """Find the basic info needed for a given entity."""
+
+    # Make sure the given elements are valid URIs
+    graph_uri = ensure_uri(graph.uri)
+    entity_uri = ensure_uri(entity_uri)
+
+    # Prepare the query
+    text = """
+        SELECT 
+            (COALESCE(?label_, '') as ?label)
+            (COALESCE(?comment_, '') as ?comment)
+            (COALESCE(?class_uri_, '') as ?class_uri)
+        WHERE {
+            """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
+                OPTIONAL {""" + entity_uri + """ rdfs:label ?label_ . }
+                OPTIONAL {""" + entity_uri + """ rdfs:comment ?comment_ . }
+                OPTIONAL {""" + entity_uri + """ rdf:type ?class_uri_ . }
+            """ + ("}" if graph_uri else "") + """
+        }
+    """
+
+    # Execute the query
+    infos = query(text)
+
+    return infos[0]['label'], infos[0]['comment'], infos[0]['class_uri']

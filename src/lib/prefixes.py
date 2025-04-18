@@ -64,11 +64,12 @@ def shorten_uri(uri: str) -> str:
     return uri
 
 
-def explicits_uri(uri: str) -> str:
+def explicits_uri(uri: str) -> str | None:
     """
     Replace the short URIs by its explicit version.
     Usefull to display in the GUI.
     """
+    if not uri: return None
 
     all_prefixes = get_all_prefixes()
 

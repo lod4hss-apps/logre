@@ -5,7 +5,7 @@ import numpy as np
 import streamlit as st
 from pyvis.network import Network
 from schema import Entity, Triple, Graph, DisplayTriple
-from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples, get_ontology, get_graph_of_entities
+from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples, get_ontology, get_graph_of_entities, get_entity_basic_infos
 from lib.sparql_base import delete
 import lib.state as state
 from components.init import init
@@ -56,6 +56,7 @@ endpoint = state.get_endpoint()
 graph = state.get_graph()
 entity = state.get_entity()
 
+
 # If no endpoint is selected, no entities can be displayed
 if not endpoint:
     st.warning('You need to select an endpoint first (menu on the left).') 
@@ -67,6 +68,22 @@ elif not entity:
 
 # Display all informations about an entity
 else:
+    ontology = get_ontology()
+
+    if state.get_reload_entity():
+        label, comment, class_uri = get_entity_basic_infos(graph, entity.uri)
+        class_label = next((cls.display_label for cls in ontology.classes if cls.uri == class_uri), None)
+        entity = Entity(
+            uri=entity.uri, 
+            label=label, 
+            comment=comment, 
+            class_uri=class_uri,
+            class_label=class_label
+        )
+        state.set_entity(entity)
+        state.set_reload_entity(False)
+
+
 
     # Header: entity name, additional info and description
     col1, col2, col_delete, col_edit = st.columns([20, 1, 1, 4], vertical_alignment='bottom')
@@ -219,7 +236,6 @@ else:
         state.set_element('graph-viz', True)
 
     if state.get_element('graph-viz'):
-        ontology = get_ontology()
         classes_labels = list(map(lambda cls: cls.display_label , ontology.classes))
         excluded_predicate_uris = set(['rdf:type', 'rdfs:label']) # Because there is no point of displaying them on the graph
 

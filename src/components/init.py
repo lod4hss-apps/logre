@@ -41,3 +41,19 @@ def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
 
     # On each page load, clear the confirmation
     state.clear_confirmation()
+
+
+    # Load information from the query params
+    if state.has_query_params():
+
+        # Load the right endpoint
+        endpoint_url = state.get_query_param('endpoint')
+        all_endpoints = state.get_endpoints()
+        endpoint = [x for x in all_endpoints if x.url == endpoint_url][0] # We are sure there is at least one result
+        state.set_endpoint(endpoint)
+
+        # At this point, graph can't be selected, the graph list has not been created yet
+        # Because of that, query params need to be kept for now, they will be removed after graph selection, and entity setting
+        # state.clear_query_param()
+
+

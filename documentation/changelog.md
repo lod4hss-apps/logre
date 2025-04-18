@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v1.12.1 - Date 
+
+- Add the possibility to have link for an entity that directly open its card (shareable)
+- Add the possibility to open an entity on the data tables on a new tab.
+
 ## v1.12.0 - Date 2025-03-23
 
 - **Introduction of Data tables: a place where user can have an overview of all data contained in his endpoint. For now columns are fixed; in a next version user would be able to configure them.**

@@ -1,7 +1,8 @@
 import streamlit as st
-from schema import Graph
+from schema import Graph, Entity
 from lib.sparql_queries import list_graphs
 from lib.configuration import load_config
+from lib.prefixes import explicits_uri, shorten_uri
 import lib.state as state
 from components.dialog_find_entity import dialog_find_entity
 from components.dialog_create_entity import dialog_create_entity
@@ -21,6 +22,9 @@ def __on_graph_selection():
     # Find the selected graph, and set the session variable
     index = graphs_labels.index(graph_label)
     state.set_graph_index(index)
+
+    # Also, because entities can have different information in different graph, reload the entity
+    state.set_reload_entity(True)
 
 
 def menu() -> None:
@@ -111,6 +115,23 @@ def menu() -> None:
                 all_graphs = [default_graph] + other_graphs
                 state.set_graphs(all_graphs)
                 state.set_graph_index(0) # Because default graph is at position 0
+
+            # But, if there is a query param to select a graph, set it
+            graph_uri = state.get_query_param('graph')
+            if graph_uri != None:
+
+                # Find and set the right graph
+                index = next((i for i, graph in enumerate(all_graphs) if explicits_uri(graph.uri) == graph_uri), 0)
+                state.set_graph_index(index)
+
+                # Now entity can also be selected
+                graph = state.get_graph()
+                entity_uri = state.get_query_param('entity')
+                state.set_entity(Entity(uri=shorten_uri(entity_uri)))
+                state.set_reload_entity(True)
+
+                # We clear the query param at this point, because we now have all needed information
+                state.clear_query_param()
 
             st.sidebar.text('')
 

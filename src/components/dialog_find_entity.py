@@ -42,6 +42,10 @@ def dialog_find_entity() -> None:
     # Set the state selected entity as being the one chosen
     for i, entity in enumerate(entities):
         if st.button(entity.display_label_comment, type='tertiary', key=f'dlg-find-entity-{i}'):
+            # Here the entity with all information are directly set, 
+            # (because they are available correctly)
+            # Doing so, information reloading are prevented to be fetched again
+            # in the entity page (through get_entity_basic_infos)
             state.set_entity(entity)
             st.switch_page("pages/entity.py")
 

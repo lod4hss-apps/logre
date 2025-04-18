@@ -1,6 +1,4 @@
-from typing import List, Any, Literal
-import os
-import toml
+from typing import List, Any, Dict
 from streamlit import session_state as state
 from schema import Query, Endpoint, Graph, Entity, OntologyProperty, Prefix
 
@@ -204,3 +202,29 @@ def set_data_table_page(page_nb: int) -> None:
 def get_data_table_page() -> int:
     if 'data-table-page' not in state: return 1
     return state['data-table-page']
+
+### 
+
+def set_query_params(query_params: Dict[str, str]) -> None:
+    state['query'] = {}
+    for key, value in query_params.items():
+        state['query'][key] = value
+
+def has_query_params() -> bool:
+    return 'query' in state and state['query'] != {}
+
+def get_query_param(param) -> str | None:
+    if 'query' not in state: return None
+    return state['query'][param]
+
+def clear_query_param() -> None:
+    del state['query']
+
+###
+
+def set_reload_entity(reload: bool) -> None:
+    state['reload_entity'] = reload
+
+def get_reload_entity() -> str | None:
+    if 'reload_entity' in state: return state['reload_entity']
+    else: return False

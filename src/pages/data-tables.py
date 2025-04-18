@@ -1,6 +1,7 @@
 import streamlit as st
 from components.init import init
 from components.menu import menu
+from lib.prefixes import explicits_uri
 from lib.sparql_queries import get_ontology, get_class_tables, get_class_number
 import lib.state as state
 
@@ -15,8 +16,6 @@ endpoint = state.get_endpoint()
 graph = state.get_graph()
 current_page = state.get_data_table_page()
 
-ontology = get_ontology()
-
 
 # Can't make a SPARQL query if there is no endpoint
 if not endpoint:
@@ -26,6 +25,8 @@ if not endpoint:
     st.warning('You need to select an endpoint first (menu on the left).')
 
 else:
+
+    ontology = get_ontology()
 
     # Title
     st.title("Data tables")
@@ -52,7 +53,9 @@ else:
         st.text('')
         df_instances = get_class_tables(graph, selected_class_uri, limit, offset)
         df_instances.index += 1 * (limit * (current_page - 1)) + 1 # So that indexes appears to start at 1
-        st.dataframe(df_instances, use_container_width=True)
+        if len(df_instances):
+            df_instances['Link'] = [f"/?page=entity&endpoint={explicits_uri(endpoint.url)}&graph={explicits_uri(graph.uri)}&entity={explicits_uri(uri)}" for uri in df_instances['URI']]
+        st.dataframe(df_instances, use_container_width=True, column_config={'Link':st.column_config.LinkColumn(display_text="Open", width='small')})
 
         # Pagination
         st.text('')

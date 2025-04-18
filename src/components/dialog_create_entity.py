@@ -17,6 +17,11 @@ def __create_entity(entity: Entity, triples: List[Triple]) -> None:
 
     # From formular, set the session entity
     state.set_entity(entity)
+    
+    # Here the entity with all information are directly set, 
+    # (because they are available correctly)
+    # Doing so, information reloading are prevented to be fetched again
+    # in the entity page (through get_entity_basic_infos)
 
     # Finalization: validation message and load the created entity
     state.set_toast('Entity Created', ':material/done:')
