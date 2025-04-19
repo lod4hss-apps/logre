@@ -592,11 +592,35 @@ def get_graph_of_entities(entity_uris: List[str]) -> List[DisplayTriple]:
     return display_triples
 
 
-def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> pd.DataFrame:
+def get_data_table_columns() -> Dict[str, str]:
+    return {
+        'uri': 'URI',
+        'label': 'Label',
+        'comment': 'Comment',
+        'outgoing_count': 'Outgoing count',
+        'incoming_count': 'Incoming count',
+    }
+
+ 
+def get_data_table(graph: Graph, class_uri: str, limit: int, offset: int, sort_col: str, sort_way: str, filter_col: str, filter_value: str) -> pd.DataFrame:
     """
     Fetch, in the given graph, all instances of given class, and format them in a Dataframe.
     Dataframe columns are: uri, label, comment, number of incoming triples, number of outgoing triples.
     """
+
+    # Get the columns name, to have them for filter/sort, but also for column renaming
+    display_cols = list(get_data_table_columns().values())
+    query_cols = list(get_data_table_columns().keys())
+
+    # Replace display columns by query columns
+    if sort_col:
+        sort_col = query_cols[display_cols.index(sort_col)]
+        sort = f"ASC(?{sort_col})" if sort_way == 'ASC' else f"DESC(?{sort_col})"
+    else:
+        sort = "DESC(?uri)"
+    if filter_col:
+        filter_col = query_cols[display_cols.index(filter_col)]
+        filter_str = f'FILTER(CONTAINS(LCASE(STR(?{filter_col}_)), "{filter_value}"))'
 
     # Make sure the given elements are valid URIs
     class_uri = ensure_uri(class_uri)
@@ -605,37 +629,38 @@ def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> p
     # Prepare the query (fetch instances)
     text = """
         SELECT 
-            ?uri 
-            (COALESCE(?label_, ?uri) as ?label)
+            (COALESCE(?uri_, '') as ?uri)
+            (COALESCE(?label_, ?uri_) as ?label)
             (COALESCE(?comment_, '') as ?comment)
-            (COALESCE(?out_count, 0) AS ?outgoing_ount)
-            (COALESCE(?inc_count, 0) AS ?incoming_count) 
+            (COALESCE(?outgoing_count_, 0) AS ?outgoing_count)
+            (COALESCE(?incoming_count_, 0) AS ?incoming_count) 
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
-                ?uri a """ + class_uri + """ .
-                OPTIONAL { ?uri rdfs:label ?label_ . }
-                OPTIONAL { ?uri rdfs:comment ?comment_ . }
+                ?uri_ a """ + class_uri + """ .
+                OPTIONAL { ?uri_ rdfs:label ?label_ . }
+                OPTIONAL { ?uri_ rdfs:comment ?comment_ . }
                 
                 OPTIONAL {
-                    SELECT ?uri (COUNT(?outgoing) as ?out_count) WHERE {
+                    SELECT ?uri_ (COUNT(?outgoing) as ?outgoing_count_) WHERE {
                         """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
-                            ?uri a """ + class_uri + """ .
-                            ?uri ?p ?outgoing .
+                            ?uri_ a """ + class_uri + """ .
+                            ?uri_ ?p ?outgoing .
                         """ + ("}" if graph_uri else "") + """
-                    } GROUP BY ?uri
+                    } GROUP BY ?uri_
                 }
 
                 OPTIONAL {
-                    SELECT ?uri (COUNT(?incoming) as ?inc_count) WHERE {
+                    SELECT ?uri_ (COUNT(?incoming) as ?incoming_count_) WHERE {
                         """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
-                            ?uri a """ + class_uri + """ .
-                            ?incoming ?p ?uri .
+                            ?uri_ a """ + class_uri + """ .
+                            ?incoming ?p ?uri_ .
                         """ + ("}" if graph_uri else "") + """
-                    } GROUP BY ?uri
+                    } GROUP BY ?uri_
                 }
+                """ + (filter_str if filter_col and filter_value else "") + """
             """ + ("}" if graph_uri else "") + """
         }
-        ORDER BY ?uri
+        ORDER BY """ + sort + """
         LIMIT """ + str(limit) + """
         OFFSET """ + str(offset) + """
     """
@@ -648,7 +673,10 @@ def get_class_tables(graph: Graph, class_uri: str, limit: int, offset: int) -> p
     
     # Clean column names
     if len(df) > 0:
-        df.columns = ['URI', 'Label', 'Comment', 'Outgoing number', 'Incoming number']
+        rename_dict = {}
+        for i in range(0, len(query_cols)):
+            rename_dict[query_cols[i]] = display_cols[i]
+        df.rename(columns=rename_dict, inplace=True)
 
     return df
     

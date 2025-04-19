@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## v1.12.1 - Date 
 
-- Add the possibility to have link for an entity that directly open its card (shareable)
+- Add the possibility to have link for an entity that directly open its card (shareable).
 - Add the possibility to open an entity on the data tables on a new tab.
+- Add the sorting and filtering possibility on data tables.
 
 ## v1.12.0 - Date 2025-03-23
 
