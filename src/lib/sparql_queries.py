@@ -4,7 +4,7 @@ import pandas as pd
 from schema import Graph, OntologyFramework, Entity
 from schema import DisplayTriple, Ontology, OntologyClass
 from lib.sparql_base import query
-from lib.utils import ensure_uri, to_snake_case
+from lib.utils import ensure_uri, to_snake_case, normalize_text
 from lib.sparql_noframework import get_noframework_ontology
 from lib.sparql_shacl import get_shacl_ontology
 from lib.prefixes import get_prefixes_str
@@ -103,6 +103,9 @@ def find_entities(graph: Graph = None, label_filter: str = None, class_filter: s
     # Make sure the given class is a valid URI
     class_uri = ensure_uri(class_filter)
 
+    # Normalize filter text
+    filter_text = normalize_text(label_filter)
+
     # Prepare query
     text = """
         SELECT
@@ -116,7 +119,7 @@ def find_entities(graph: Graph = None, label_filter: str = None, class_filter: s
                 OPTIONAL { ?uri_ rdfs:label ?label_ . }
                 OPTIONAL { ?uri_ rdfs:comment ?comment_ . }
             """ + ("}" if graph.uri else "") + """
-            """ + (f"FILTER(CONTAINS(LCASE(?label_), '{label_filter.lower()}')) ." if label_filter else "") + """
+            """ + (f"FILTER(CONTAINS(LCASE(?label_), LCASE('{filter_text}'))) ." if label_filter else "") + """
         }
         """ + (f"LIMIT {limit}" if limit else "") + """
     """
@@ -612,15 +615,17 @@ def get_data_table(graph: Graph, class_uri: str, limit: int, offset: int, sort_c
     display_cols = list(get_data_table_columns().values())
     query_cols = list(get_data_table_columns().keys())
 
-    # Replace display columns by query columns
+    # Prepare the sort clause
     if sort_col:
         sort_col = query_cols[display_cols.index(sort_col)]
         sort = f"ASC(?{sort_col})" if sort_way == 'ASC' else f"DESC(?{sort_col})"
     else:
         sort = "DESC(?uri)"
+
+    # Prepare the filter clause
     if filter_col:
         filter_col = query_cols[display_cols.index(filter_col)]
-        filter_str = f'FILTER(CONTAINS(LCASE(STR(?{filter_col}_)), "{filter_value}"))'
+        filter_str = f'FILTER(CONTAINS(LCASE(STR(?{filter_col}_)), LCASE("{normalize_text(filter_value)}")))'
 
     # Make sure the given elements are valid URIs
     class_uri = ensure_uri(class_uri)
@@ -637,6 +642,7 @@ def get_data_table(graph: Graph, class_uri: str, limit: int, offset: int, sort_c
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
                 ?uri_ a """ + class_uri + """ .
+                """ + (filter_str if filter_col and filter_value else "") + """
                 OPTIONAL { ?uri_ rdfs:label ?label_ . }
                 OPTIONAL { ?uri_ rdfs:comment ?comment_ . }
                 
@@ -657,7 +663,6 @@ def get_data_table(graph: Graph, class_uri: str, limit: int, offset: int, sort_c
                         """ + ("}" if graph_uri else "") + """
                     } GROUP BY ?uri_
                 }
-                """ + (filter_str if filter_col and filter_value else "") + """
             """ + ("}" if graph_uri else "") + """
         }
         ORDER BY """ + sort + """
