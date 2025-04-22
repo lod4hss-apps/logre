@@ -240,4 +240,7 @@ def dump_endpoint() -> str:
     # Make the request
     response = requests.get(url, headers=headers, auth=auth)
 
+    print('HERE')
+    print(response)
+
     return response.text

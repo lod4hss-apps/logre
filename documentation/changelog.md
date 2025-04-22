@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## v1.12.1 - Date 
+## v1.12.2 - Date 2025-01-22
+
+- Add Metadata graphs: replace how graphs are created and queried. Now upon creating a graph with Logre, it does add metadata in the Metadata graph.
+- Does not anymore create a dummy triple to "fill" a just created graph
+
+## v1.12.1 - Date 2025-01-21
 
 - Add the possibility to have link for an entity that directly open its card (shareable).
 - Add the possibility to open an entity on the data tables on a new tab.

@@ -15,27 +15,76 @@ import lib.state as state
 def list_graphs() -> List[Graph]:
     """List all graphs available in the SPARQL endpoint."""
 
+    # From state
+    endpoint = state.get_endpoint()
+
+    # Part 1: List graphs that have triples on the endpoint 
+
     # Prepare the query
     text = """
+        # list_graphs: List graphs that have triples on the endpoint
         SELECT DISTINCT
             ?uri 
             (COALESCE(?label_, ?uri) as ?label)
             (COALESCE(?comment_, '') as ?comment)
         WHERE {
             GRAPH ?uri { ?s ?p ?o . }
-            optional { ?uri rdfs:label ?label_ . }
-            optional { ?uri rdfs:comment ?comment_ . }
         }
     """    
 
     # Execute the query
     with st.spinner("Listing all graphs..."):
-        response = query(text, caller='sparql_queries.list_graphs')
-    
-    # Transform list of objects into list of graphs
-    if response: return list(map(lambda obj: Graph.from_dict(obj), response))
-    # And ensure a list is returned
-    else: return []
+        response_existing = query(text)
+
+
+    # Part 2: List graphs created in the metadata graph
+
+    # Prepare the query
+    text = """
+        # list_graphs: List graphs created in the metadata graph
+        SELECT 
+            ?uri 
+            (COALESCE(?label_, ?uri) as ?label)
+            (COALESCE(?comment_, '') as ?comment)
+        WHERE {
+            GRAPH """ + ensure_uri(endpoint.metadata_uri) + """ {
+                ?uri rdf:type <http://www.example.org/Graph> .
+                optional { ?uri rdfs:label ?label_ . }
+                optional { ?uri rdfs:comment ?comment_ . }
+            }
+        }
+    """
+
+    # Execute the query
+    with st.spinner("Listing all graphs..."):
+        response_created = query(text)
+
+
+    # Part 3: Merge everything
+    # The logic is: initialize with ontology and metadata graph.
+    # Add additional exiting graphs (those which already have triples), at this point, they have no label, no comment, just URIs
+    # Add additional created graphs (from UI in metadata graph) which add (or replace, complete) graphs information like labels and comments
+
+    # Initialize with ontology and metadata graphs
+    all_graphs: Dict[str, Graph] = {
+        endpoint.ontology_uri: {"uri": endpoint.ontology_uri, "label": "Ontology", "comment": "Here lies the ontological model."},
+        endpoint.metadata_uri: {"uri": endpoint.metadata_uri, "label": "Metadata", "comment": "Here lies endpoint metadata."}
+    }
+
+    # Take all existing graphs
+    if response_existing:
+        for graph in response_existing:
+            if graph['uri'] not in all_graphs:
+                all_graphs[graph['uri']] = graph
+
+    # Add information fetched from metadata graph
+    if response_created:
+        for graph in response_created:
+            all_graphs[graph['uri']] = graph
+
+    all_graphs = list(all_graphs.values())
+
+    return list(map(lambda obj: Graph.from_dict(obj), all_graphs))
 
 
 def count_graph_triples(graph: Graph) -> int:
@@ -48,7 +97,7 @@ def count_graph_triples(graph: Graph) -> int:
     select = "SELECT (COUNT(*) as ?count)"
     where_begin = "WHERE {"
     where_end = "}"
-    graph_begin = "GRAPH " + graph_uri + "{" if graph_uri else ''
+    graph_begin = "GRAPH " + graph_uri + " {" if graph_uri else ''
     graph_end = "}" if graph_uri else ''
     triples = "?s ?p ?o."
 
@@ -642,8 +691,10 @@ def get_data_table(graph: Graph, class_uri: str, limit: int, offset: int, sort_c
         WHERE {
             """ + ("GRAPH " + graph_uri + " {" if graph_uri else "") + """
                 ?uri_ a """ + class_uri + """ .
-                """ + (filter_str if filter_col and filter_value else "") + """
-                OPTIONAL { ?uri_ rdfs:label ?label_ . }
+                OPTIONAL { 
+                    ?uri_ rdfs:label ?label_ . 
+                    """ + (filter_str if filter_col and filter_value else "") + """
+                }
                 OPTIONAL { ?uri_ rdfs:comment ?comment_ . }
                 
                 OPTIONAL {

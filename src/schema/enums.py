@@ -4,6 +4,7 @@ class EndpointTechnology(Enum):
     NONE = 'None'
     FUSEKI = 'Fuseki'
     ALLEGROGRAPH = 'Allegrograph'
+    GRAPHDB = 'GraphDB'
 
 class OntologyFramework(Enum):
     NONE = 'None'

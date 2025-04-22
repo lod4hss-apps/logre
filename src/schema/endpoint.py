@@ -18,6 +18,7 @@ class Endpoint(BaseModel):
     base_uri: Optional[str] = 'http://www.example.org/'
     ontology_uri: Optional[str] = None
     ontology_framework: Optional[OntologyFramework] = OntologyFramework.NONE
+    metadata_uri: Optional[str] = None
     username: Optional[str] = None
     password: Optional[str] = None
 
