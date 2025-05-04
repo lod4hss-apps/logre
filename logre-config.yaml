@@ -1,0 +1,54 @@
+endpoints:
+- name: gm_allegrograph
+  url: https://ag1k3x48w8r6fq56.allegrograph.cloud/repositories/gaetanmuck
+  technology: Fuseki
+  username: admin
+  password: vIZnRN5xGbAHD98XaVfD1t
+  base_uri:
+    short: base
+    long: http://geovistory.org/information/
+  data_sets:
+  - name: British Royal Bloodline
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: base:british_royal_family
+    graph_ontology_uri: base:shacl
+    graph_metadata_uri: base:british_royal_bloodline_metadata
+  prefixes:
+  - short: base
+    long: http://geovistory.org/information/
+  - short: rdf
+    long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
+  - short: rdfs
+    long: http://www.w3.org/2000/01/rdf-schema#
+  - short: owl
+    long: http://www.w3.org/2002/07/owl#
+  - short: sh
+    long: http://www.w3.org/ns/shacl#
+  - short: crm
+    long: http://www.cidoc-crm.org/cidoc-crm/
+  - short: sdh
+    long: https://sdhss.org/ontology/core/
+  - short: sdh-shortcut
+    long: https://sdhss.org/ontology/shortcuts/
+  - short: sdh-shacl
+    long: https://sdhss.org/shacl/profiles/
+  - short: ontome
+    long: https://ontome.net/ontology/
+- name: Test endpoint
+  url: aaa
+  technology: Fuseki
+  username: ''
+  password: ''
+  base_uri:
+    short: base
+    long: http://example.org/
+  data_sets: []
+  prefixes:
+  - short: base
+    long: http://example.org/
+queries: []

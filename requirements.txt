@@ -1,8 +1,7 @@
 streamlit
 streamlit_code_editor
-SPARQLWrapper
 pandas
-toml
-pydantic
 pyperclip
 pyvis
+pyyaml
+python-dotenv

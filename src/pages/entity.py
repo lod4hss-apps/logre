@@ -1,38 +1,41 @@
-import os, shutil
+import streamlit as st, numpy as np, hashlib, os, shutil
 from typing import List
-import hashlib
-import numpy as np
-import streamlit as st
 from pyvis.network import Network
-from schema import Entity, Triple, Graph, DisplayTriple
-from lib.sparql_queries import get_entity_card, get_entity_outgoing_triples, get_entity_incoming_triples, get_ontology, get_graph_of_entities, get_entity_basic_infos
-from lib.sparql_base import delete
 import lib.state as state
 from components.init import init
 from components.menu import menu
-from components.dialog_entity_info import dialog_entity_info
-from components.dialog_triple_info import dialog_triple_info
-from components.dialog_edit_entity import dialog_edit_entity
-from components.dialog_confirmation import dialog_confirmation
+from dialogs import dialog_confirmation, dialog_entity_info
+from model import OntoEntity, DataSet, Statement
+from dialogs import dialog_triple_info
 
-def __delete_triple(display_triple: DisplayTriple, graph: Graph=None):
-    """Delete a single triple from the endpoint."""
 
-    triple = Triple(display_triple.subject.uri, display_triple.predicate.uri, display_triple.object.uri)
-
-    delete([triple], graph=graph.uri)
-    state.set_toast('Triple deleted', icon=':material/done:')
-    
-
-def __delete_entity(entity: Entity, graph: Graph=None):
+def __delete_entity(entity: OntoEntity) -> None:
     """Delete all triples of a given entity in the given graph."""
 
-    delete([Triple(entity.uri, '?p', '?o')], graph=graph.uri)
-    delete([Triple('?s', '?p', entity.uri)], graph=graph.uri)
+    # From state
+    data_set = state.get_data_set()
+
+    data_set.graph_data.delete([ 
+        (entity.uri, '?p', '?o'),
+        ('?s', '?p', entity.uri)
+    ])
 
     state.clear_entity()
     state.set_toast('Entity deleted', icon=':material/done:')
 
+
+def __delete_triple(display_triple: Statement) -> None:
+    """Delete a single triple from the endpoint."""
+
+    # From state
+    data_set = state.get_data_set()
+
+    data_set.graph_data.delete([ 
+        (display_triple.subject.uri, display_triple.predicate.uri, display_triple.object.uri)
+    ])
+
+    state.set_toast('Triple deleted', icon=':material/done:')
+    
 
 def __get_hex_color(label: str):
     """From a given label, determine an associated color."""
@@ -42,55 +45,34 @@ def __get_hex_color(label: str):
     return f"#{hash_val[:6]}"  # Take the first 6 characters for a hex color
 
 
-
 ##### The page #####
 
 init(layout='wide')
 menu()
 
-# By default, for performance, he disable the graph tab
-state.set_element('entity-viz', False)
-
 # From state
 endpoint = state.get_endpoint()
-graph = state.get_graph()
+data_set = state.get_data_set()
 entity = state.get_entity()
+
 
 
 # If no endpoint is selected, no entities can be displayed
 if not endpoint:
     st.warning('You need to select an endpoint first (menu on the left).') 
-    
+
 # If no entity is selected, can't display its triples
 elif not entity:
-    
     st.warning('If an entity is selected (menu on the left), details about it will be on this page.')
 
-# Display all informations about an entity
 else:
-    ontology = get_ontology()
-
-    if state.get_reload_entity():
-        label, comment, class_uri = get_entity_basic_infos(graph, entity.uri)
-        class_label = next((cls.display_label for cls in ontology.classes if cls.uri == class_uri), None)
-        entity = Entity(
-            uri=entity.uri, 
-            label=label, 
-            comment=comment, 
-            class_uri=class_uri,
-            class_label=class_label
-        )
-        state.set_entity(entity)
-        state.set_reload_entity(False)
-
-
 
     # Header: entity name, additional info and description
     col1, col2, col_delete, col_edit = st.columns([20, 1, 1, 4], vertical_alignment='bottom')
     col1.markdown(f'# {entity.display_label} <small style="font-size: 16px; color: gray; text-decoration: none;">{entity.uri}</small>', unsafe_allow_html=True)
     col2.button('', icon=':material/info:', type='tertiary', on_click=dialog_entity_info, kwargs={'entity': entity})
     if col_delete.button('', icon=':material/delete:', type='primary'):
-        dialog_confirmation("You are about to delete this entity (including all triples) in this graph.", __delete_entity, entity=entity, graph=graph)
+        dialog_confirmation("You are about to delete this entity (including all triples) in this graph.", __delete_entity, entity=entity)
     st.markdown(entity.comment or '')
 
     st.text('')
@@ -99,32 +81,29 @@ else:
     tab1, tab2, tab3 = st.tabs(['Card', 'Triples', 'Visualization'])
 
 
-
     ### 1ST TAB: CARD ###
-    # Since this is the default we load everything anyways
 
-    # Get all triples linked to the ontology (and only!)
-    # We fetch them here so we have them for edition
-    card_triples = get_entity_card(entity, graph)
+    # Get the card statements
+    card = data_set.get_card(entity)
 
     # Filter out rdf:type, rdfs:label, rdfs:comment they are already in the header
-    card_triples = [triple for triple in card_triples if triple.predicate.uri not in ['rdf:type', 'rdfs:label', 'rdfs:comment']]
+    card = [triple for triple in card if triple.predicate.uri not in [data_set.type_property, data_set.label_property, data_set.comment_property]]
 
     # Make sure triples are unique (can happen if multiple ontology has been imported for a class)
     have_triple = set()
-    unique_card_triples: List[DisplayTriple] = []
-    for triple in card_triples:
+    unique_card_triples: List[Statement] = []
+    for triple in card:
         key = f"{triple.subject.uri}-{triple.predicate.uri}-{triple.object.uri}"
         if key not in have_triple:
             have_triple.add(key)
             unique_card_triples.append(triple)
-    card_triples = unique_card_triples
+    card = unique_card_triples
 
     # Since we have a card (ie an ontology), we give the edit button triples from the card
-    col_edit.button('Edit', icon=':material/edit:', type='primary', on_click=dialog_edit_entity, kwargs={'entity': entity, 'triples': card_triples})
+    col_edit.button('Edit', icon=':material/edit:', type='primary',)# on_click=dialog_edit_entity, kwargs={'entity': entity, 'triples': card})
 
     # Loop through all card triples to display them correctly
-    for i, triple in enumerate(card_triples):
+    for i, triple in enumerate(card):
         col1, col2, col3 = tab1.columns([3, 3, 1], vertical_alignment='center')
 
         # (outgoing triple) On the middle: display the object info: can be a literal or an entity
@@ -139,7 +118,7 @@ else:
         # (incoming triple) Add an additional information on the predicate label that it is incoming
         # and display the subject (as a clickable button: no subject can be a literal)
         elif triple.object.uri == entity.uri:
-            col1.markdown(f"##### [incoming] {triple.predicate.display_label}")
+            col1.markdown(f'##### <small style="font-size: 12px; color: gray;">(incoming)</small> {triple.predicate.display_label}', unsafe_allow_html=True)
             col2.button(triple.subject.display_label_comment, type='tertiary', key=f"entity-card-jump-{i}", on_click=state.set_entity, kwargs={'entity': triple.subject})
 
         # Also, for each triple allow user to have all detailed information about the triple
@@ -148,25 +127,19 @@ else:
         tab1.text('')
         tab1.text('')
 
-
-
+        
     ### 2ND TAB: ALL TRIPLES ###
 
     # PART 1: outgoing triples
 
     tab2.markdown('#### Outgoing triples')
     tab2.text('')
-    # col1, col2 = tab2.columns([1, 2], vertical_alignment='center')
 
     # Fetch all outgoing triples
-    all_triples = get_entity_outgoing_triples(entity, graph)
-
-    # Col 1: here the first column (subject) is always the selected entity because we are listing the outgoing entities
-    # if len(all_triples):
-    #     col1.markdown(entity.display_label)
+    outgoing_triples = data_set.get_outgoing_statements(entity)
 
     # For each triple, we display as a list all triples
-    for i, triple in enumerate(all_triples):
+    for i, triple in enumerate(outgoing_triples):
         col1_, col2_, col3_, col4_ = tab2.columns([3, 3, 1, 1], vertical_alignment='center')
 
         # Col 2: the predicate
@@ -184,7 +157,7 @@ else:
 
         # Allow user to delete this triple
         if col4_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-out-{i}"):
-            dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
+            dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple)
 
         tab2.text('')
 
@@ -197,13 +170,13 @@ else:
     col1.markdown('#### Incoming triples')
     tab2.text('')
 
-    # By default, we only fetch the first fives
-    incoming_triples = get_entity_incoming_triples(entity, graph, limit=5)
+    # Fetch all incoming triples
+    incoming_triples = data_set.get_incoming_statements(entity, limit=5)
 
     # Give the possibility to fetch more
     if len(incoming_triples) == 5:
         if col2.button('Fetch more incoming triples', help="For performance reasons, only first 5 have been fetched. Keep in mind that fetching all other incoming can lead to overload the page if they are too many."):
-            incoming_triples =get_entity_incoming_triples(entity, graph)
+            incoming_triples = data_set.get_incoming_statements(entity)
 
     # For each triple, we display as a list all triples
     for i, triple in enumerate(incoming_triples):
@@ -221,7 +194,7 @@ else:
         
         # Allow user to delete this triple
         if col4_.button('', icon=':material/delete:', type='tertiary', key=f"entity-triple-delete-inc-{i}"):
-            dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple, graph=graph)
+            dialog_confirmation('You are about to delete the triple.', __delete_triple, display_triple=triple)
 
         tab2.text('')
 
@@ -231,12 +204,14 @@ else:
     
     col1, col2, col3, col4 = tab3.columns([2, 1, 4, 4], vertical_alignment='bottom')
 
+    classes = data_set.ontology.get_classes()
+
     # To avoid to do heavy request on each entity card, we ask the user to confirm the loading
     if col1.button('Load visualization', help='Depending on information on your entities, this can take a while'):
         state.set_element('graph-viz', True)
 
     if state.get_element('graph-viz'):
-        classes_labels = list(map(lambda cls: cls.display_label , ontology.classes))
+        classes_labels = list(map(lambda cls: cls.display_label , classes))
         excluded_predicate_uris = set(['rdf:type', 'rdfs:label']) # Because there is no point of displaying them on the graph
 
         # Also for performance reasons, we set the value of graph depth on each page back to 2.
@@ -250,7 +225,7 @@ else:
         if excluded_classes_labels:
             for class_label in excluded_classes_labels:
                 idx = classes_labels.index(class_label)
-                excluded_classes_uris.add(ontology.classes[idx].uri)
+                excluded_classes_uris.add(classes[idx].uri)
 
         # Option to only display a certain list of classes
         included_classes_labels = col4.multiselect('Include classes', options=['All'] + classes_labels, default=['All'])
@@ -263,28 +238,28 @@ else:
                     included_classes_uris.add('All')
                 else:
                     idx = classes_labels.index(class_label)
-                    included_classes_uris.add(ontology.classes[idx].uri)
+                    included_classes_uris.add(classes[idx].uri)
 
         # Get the asked graph
-        graph_triples: List[DisplayTriple] = []
+        graph_triples: List[Statement] = []
         uris_done = set()
         for depth in range(0, graph_depth):
 
             # List all entities
-            subjects_uris = [triple.subject.uri for triple in graph_triples if (not triple.subject.is_blank)]
-            objects_uris = [triple.object.uri for triple in graph_triples if (not triple.object.is_literal) and (not triple.object.is_blank)]
-            uris = [entity.uri] + subjects_uris + objects_uris
+            subjects = [triple.subject for triple in graph_triples if (not triple.subject.is_blank)]
+            objects = [triple.object for triple in graph_triples if (not triple.object.is_literal) and (not triple.object.is_blank)]
+            to_fetch = [entity] + subjects + objects
 
             # Filter out those already done
-            uris = [uri for uri in uris if uri not in uris_done]
+            to_fetch = [ent for ent in to_fetch if ent.uri not in uris_done]
 
             # Fetch triples (if there at least one entity to fetch)
-            if len(uris) == 0: 
-                break
-            triples = get_graph_of_entities(uris)
-
-            # List the asked
-            for uri in uris: uris_done.add(uri)
+            if len(to_fetch) == 0: break
+            triples: List[Statement] = []
+            for ent in to_fetch:
+                triples += data_set.get_outgoing_statements(ent)
+                triples += data_set.get_incoming_statements(ent)
+                uris_done.add(ent.uri)
 
             # Filter out excluded classes: if the triples has subject or object of one excluded class, 
             # triple is itself excluded

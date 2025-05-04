@@ -1,56 +1,21 @@
-from schema import EntityType
-import re
-import unicodedata
+from typing import List
 import time
-from .prefixes import is_prefix
+import unicodedata, re, io, zipfile
 
 
-def ensure_uri(supposed_uri: str) -> str | None:
-    """
-    Make sure that the given URI has the correct format.
-    Knows a list of prefixes.
-    eg: "https://.../i1234" -> "<https://.../i1234>"
-    eg: "geov:i1234" -> "geov:i1234"
-    """
-
-    if not supposed_uri:
-        return None
-
-    # First check if the given URI has a known prefix
-    if ":" in supposed_uri:
-        supposed_prefix = supposed_uri[0:supposed_uri.index(':')]
-        if is_prefix(supposed_prefix):
-            return supposed_uri
-
-    # Then check if it is a value
-    if (supposed_uri.startswith("'") and supposed_uri.endswith("'")) or (supposed_uri.startswith('"') and supposed_uri.endswith('"')):
-        return supposed_uri
+def normalize_text(text: str):
+    """Normalize the given text (remove accents, caps, ...)."""
     
-    # If there is the "a" keyword, keep it
-    if supposed_uri == "a": 
-        return supposed_uri
+    if not text: 
+        return text
 
-    # If it is a variable
-    if supposed_uri.startswith('?'):
-        return supposed_uri
+    # Remove diacritics (accents) by filtering out non-ASCII characters
+    to_return = "".join([c for c in text if not unicodedata.combining(c)])
 
-    # Finally, it then should be a real URI, adds the "<" and ">" if needed
-    uri = supposed_uri.strip()
-    if not uri.startswith("<"):
-        uri = "<" + uri
-    if not uri.endswith(">"):
-        uri = uri + ">"
-    return uri
+    # Lower case
+    to_return = to_return.lower()
 
-
-def readable_number(number: float) -> str:
-    """Convert the given number into a more readable string"""
-
-    for x in ["", "k", "M", "B"]:
-        if number < 1000.0:
-            return str(round(number, 1)) + x
-        number /= 1000.0
-    raise Exception("This Exception should never happen")
+    return to_return
 
 
 def to_snake_case(text: str) -> str:
@@ -71,7 +36,27 @@ def to_snake_case(text: str) -> str:
     return snake_case_text
 
 
-def generate_id(entity_type: EntityType = EntityType.RESOURCE) -> str:
+def from_snake_case(text: str) -> str:
+    """From a snake cased string, get a normal string."""
+    return text.replace('_', ' ').title()
+
+
+def build_zip_file(file_names: List[str], file_contents: List[str]) -> io.BytesIO:
+    """Transform the result of the endpoint extract into one single zip file."""
+
+    zip_buffer = io.BytesIO()
+
+    # Create a zip archive in the buffer
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for name, content in zip(file_names, file_contents):
+            zip_file.writestr(name, content)
+
+    zip_buffer.seek(0)
+    return zip_buffer
+
+
+# GERER les wait(1ms)
+def generate_id() -> str:
     "Generate a uuid base on the current time"
 
     # The seed (now's timestamp in ms)
@@ -80,34 +65,15 @@ def generate_id(entity_type: EntityType = EntityType.RESOURCE) -> str:
     # The used alphabet
     BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
-    # Should never occur
-    # if timestamp_ms == 0: 
-    #     return BASE64_ALPHABET[0]
-    
     # Generate the id
     result = ""
     while timestamp_ms:
         timestamp_ms, remainder = divmod(timestamp_ms, 62)
         result = BASE64_ALPHABET[remainder] + result
 
-    # Prepend a prefix so that it is clearer what it is
-    # Also it makes sure that all entities will then start with a letter
-    if entity_type == EntityType.RESOURCE: prefix = 'i'
-    elif entity_type == EntityType.GRAPH: prefix = 'g'
-    else: prefix = 'i'
+    # Make sure that the id generation took at least 1 ms, 
+    # Doing so, we ensure that each generated ids are different
+    if int(time.time() * 1000) - timestamp_ms < 1:
+        time.sleep(0.001)
 
-    return prefix + result[::-1]
-
-
-def normalize_text(text: str):
-    """Normalize the given text (remove accents, caps, ...)."""
-
-    # Remove diacritics (accents) by filtering out non-ASCII characters
-    to_return = "".join([c for c in text if not unicodedata.combining(c)])
-
-    # Lower case
-    to_return = to_return.lower()
-
-    return to_return
-
-
+    return 'i' + result[::-1]

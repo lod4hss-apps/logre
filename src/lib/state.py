@@ -1,7 +1,36 @@
 from typing import List, Any, Dict
 from streamlit import session_state as state
-from schema import Query, Endpoint, Graph, Entity, OntologyProperty, Prefix
+from model import Query, Endpoint, DataSet, OntoEntity
 
+###
+
+def set_query_params(query_params: Dict[str, str]) -> None:
+    state['query_params'] = {}
+    for key, value in query_params.items():
+        state['query_params'][key] = value
+
+def has_query_params(param_name: str) -> bool:
+    if 'query_params' not in state: return False
+    return param_name in state['query_params']
+
+def get_query_param(param: str) -> str | None:
+    if 'query_params' not in state: return None
+    return state['query_params'][param]
+
+def clear_query_param() -> None:
+    if 'query_params' in state:
+        del state['query_params']
+
+###
+
+def set_version(version: str) -> None:
+    state['version'] = version
+
+def get_version() -> str:
+    if 'version' not in state: return None
+    return state['version']
+
+###
 
 def get_element(key: str) -> Any:
     if key not in state: return None
@@ -24,15 +53,6 @@ def get_toast() -> tuple[str, str]:
 def clear_toast() -> None:
     if 'toast-text' in state: del state['toast-text']
     if 'toast-icon' in state: del state['toast-icon']
-
-###
-
-def set_version(version: str) -> None:
-    state['version'] = version
-
-def get_version() -> str:
-    if 'version' not in state: return None
-    return state['version']
 
 ###
 
@@ -62,25 +82,9 @@ def delete_endpoint(endpoint: Endpoint) -> None:
 
 ###
 
-def set_prefixes(prefixes: List[Prefix]) -> None:
-    state['all_prefixes'] = prefixes
-
-def get_prefixes() -> List[Prefix]:
-    if 'all_prefixes' not in state: return []
-    return state['all_prefixes']
-
-def delete_prefix(prefix: Prefix) -> None:
-    all_prefixes = get_prefixes()
-    if not all_prefixes:
-        raise Exception('In lib.state.delete_prefix, there is no prefix in session')
-    prefixes_shorts = [e.short for e in all_prefixes]
-    index = prefixes_shorts.index(prefix.short)
-    del state['all_prefixes'][index]
-
-###
-
 def set_endpoint(endpoint: Endpoint) -> None:
     state['endpoint'] = endpoint
+    clear_data_set()
 
 def get_endpoint() -> Endpoint:
     if 'endpoint' not in state: return None
@@ -89,38 +93,19 @@ def get_endpoint() -> Endpoint:
 def clear_endpoint() -> None:
     if 'endpoint' in state:
         del state['endpoint']
-        
-###
-
-def set_graphs(graphs: List[Graph]) -> None:
-    state['all_graphs'] = graphs
-
-def get_graphs() -> List[Graph]:
-    if 'all_graphs' not in state: return None
-    return state['all_graphs']
 
 ###
 
-def clear_graphs() -> None:
-    if 'all_graphs' in state:
-        del state['all_graphs']
+def set_data_set(data_set: DataSet) -> None:
+    state['data_set'] = data_set
 
-def get_graph() -> Graph:
-    if 'activated_graph_index' not in state: return None
-    return get_graphs()[state['activated_graph_index']]
+def get_data_set() -> DataSet:
+    if 'data_set' not in state: return None
+    return state['data_set']
 
-###
-
-def get_graph_index() -> int:
-    if 'activated_graph_index' not in state: return None
-    return state['activated_graph_index']
-
-def set_graph_index(index: int) -> None:
-    state['activated_graph_index'] = index
-
-def clear_graph() -> None:
-    if 'activated_graph_index' in state:
-        del state['activated_graph_index']
+def clear_data_set() -> None:
+    if 'data_set' in state:
+        del state['data_set']
 
 ###
 
@@ -146,10 +131,10 @@ def clear_confirmation() -> None:
 
 ###
 
-def set_entity(entity: Entity) -> None:
+def set_entity(entity: OntoEntity) -> None:
     state['selected-entity'] = entity
 
-def get_entity() -> Entity:
+def get_entity() -> OntoEntity:
     if 'selected-entity' not in state: return None
     return state['selected-entity']
 
@@ -157,42 +142,14 @@ def clear_entity() -> None:
     if 'selected-entity' in state:
         del state['selected-entity']
 
-### 
+###
 
-def set_create_triple_subject(entity: Entity) -> None:
-    state['create-triple-subject'] = entity
+def set_has_config(has: bool) -> None:
+    state['has_config'] = has
 
-def get_create_triple_subject() -> Entity:
-    if 'create-triple-subject' not in state: return None
-    return state['create-triple-subject']
-
-def clear_create_triple_subject() -> None:
-    if 'create-triple-subject' in state:
-        del state['create-triple-subject']
-### 
-
-def set_create_triple_property(property: OntologyProperty) -> None:
-    state['create-triple-property'] = property
-
-def get_create_triple_property() -> Entity:
-    if 'create-triple-property' not in state: return None
-    return state['create-triple-property']
-
-def clear_create_triple_predicate() -> None:
-    if 'create-triple-predicate' in state:
-        del state['create-triple-predicate']
-### 
-
-def set_create_triple_object(entity: Entity) -> None:
-    state['create-triple-object'] = entity
-
-def get_create_triple_object() -> Entity:
-    if 'create-triple-object' not in state: return None
-    return state['create-triple-object']
-
-def clear_create_triple_object() -> None:
-    if 'create-triple-object' in state:
-        del state['create-triple-object']
+def get_has_config() -> bool:
+    if 'has_config' not in state: return False
+    return state['has_config']
 
 ### 
 
@@ -204,27 +161,3 @@ def get_data_table_page() -> int:
     return state['data-table-page']
 
 ### 
-
-def set_query_params(query_params: Dict[str, str]) -> None:
-    state['query'] = {}
-    for key, value in query_params.items():
-        state['query'][key] = value
-
-def has_query_params() -> bool:
-    return 'query' in state and state['query'] != {}
-
-def get_query_param(param) -> str | None:
-    if 'query' not in state: return None
-    return state['query'][param]
-
-def clear_query_param() -> None:
-    del state['query']
-
-###
-
-def set_reload_entity(reload: bool) -> None:
-    state['reload_entity'] = reload
-
-def get_reload_entity() -> str | None:
-    if 'reload_entity' in state: return state['reload_entity']
-    else: return False

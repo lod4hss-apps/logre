@@ -1,13 +1,11 @@
 import pandas as pd
 from code_editor import code_editor
 import streamlit as st
-from lib.prefixes import get_prefixes_str
-import lib.sparql_base as sparql
 import lib.state as state
 from components.init import init
 from components.menu import menu
-from components.dialog_queries_save import dialog_queries_save
-from components.dialog_queries_load import dialog_queries_load
+from dialogs import dialog_queries_save, dialog_queries_load
+
 
 
 ##### The page #####
@@ -15,9 +13,9 @@ from components.dialog_queries_load import dialog_queries_load
 init(layout='wide')
 menu()
 
-
 # From state
 endpoint = state.get_endpoint()
+data_set = state.get_data_set()
 
 
 # Can't make a SPARQL query if there is no endpoint
@@ -29,21 +27,28 @@ if not endpoint:
 
 else:
 
-    # The default query that is shown on first load of the page
-    default_query = (get_prefixes_str() + """
-                     
+    graph_begin = "GRAPH " + endpoint.sparql.prepare_uri(data_set.graph_data.uri) + " {" if data_set else ""
+    graph_end = "}\n" if data_set else "\n"
+
+    default_query = """        
 SELECT ?subject ?predicate ?object
 WHERE {
-    ?subject ?predicate ?object
+    """ + graph_begin + """
+        ?subject ?predicate ?object .
+    """ + graph_end + """
 }
 LIMIT 10
-    """).strip()
+    """.strip()
 
 
     # Title and load query option
-    col1, col2 = st.columns([5, 3], vertical_alignment='bottom')
+    col1, col2 = st.columns([12, 2], vertical_alignment='bottom')
     col1.title("SPARQL Editor")
     col2.button('Load saved queries', on_click=dialog_queries_load, icon=':material/list:')
+
+    # Display prefixes for user to know
+    prefixes_str = '`, `'.join([p.short for p in endpoint.sparql.prefixes])
+    st.markdown('Available prefixes are: `' + prefixes_str + '`')
 
     # Code editor
     sparql_query = code_editor(
@@ -59,7 +64,7 @@ LIMIT 10
     if sparql_query['type'] == 'submit':
 
         # Run (ie query or execute) the query
-        result = sparql.run(sparql_query['text'], add_prefix=False)
+        result = endpoint.sparql.run(sparql_query['text'])
     
         # If there is a result, display result and options:
         #       Option1: Save the query that gave this result
