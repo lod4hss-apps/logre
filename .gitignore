@@ -2,5 +2,5 @@ pipenv_logre
 __pycache__
 data
 .DS_Store
-logre-config.toml
+logre-config.yaml
 ontologies
