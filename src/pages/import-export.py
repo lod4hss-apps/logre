@@ -63,7 +63,7 @@ else:
                                 dialog_confirmation(
                                     f'You are about to upload the file {file.name}.', 
                                     callback=endpoint.sparql.upload_turtle, 
-                                    ttl_content=file_content,
+                                    turtle_content=file_content,
                                     named_graph_uri=graph_uri
                                 )
                         
