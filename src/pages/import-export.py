@@ -113,7 +113,7 @@ else:
         col1, col2 = st.columns([1, 1])
         if export_type == export_type_options[0] and col1.button('Build the n-Quad file (can be long)'):
 
-            with st.spinner("Building the n-quad", show_time=True):
+            with st.spinner("Building the n-quad"):
                 file_content = endpoint.sparql.dump()
                 file_name =f"logre_{to_snake_case(endpoint.name)}_dump.nq".lower()
 
@@ -138,7 +138,7 @@ else:
                 col1, col2 = st.columns([1, 1])
                 if col1.button('Build export file (can be long)'):
 
-                    with st.spinner("Building the export file", show_time=True):
+                    with st.spinner("Building the export file"):
                         dump = selected_data_set.dump(file_format)
 
                         if file_format == 'nq':

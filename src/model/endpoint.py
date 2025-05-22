@@ -11,6 +11,7 @@ from .data_set import DataSet
 class Endpoint:
 
     name: str
+    base_uri: str
     sparql: SPARQL = None
     data_sets: List[DataSet] = None
     
@@ -22,6 +23,7 @@ class Endpoint:
         self.sparql = Technology(url, username, password)
 
         # Add the base prefix
+        self.base_uri = base_uri
         self.sparql.prefixes.append(Prefix('base', base_uri))
 
         # Set other attributes
@@ -49,7 +51,7 @@ class Endpoint:
             username=obj.get('username'), password=obj.get('password')
         )
         endpoint.data_sets = [DataSet.from_dict(obj_data_set, endpoint.sparql) for obj_data_set in obj.get('data_sets')]
-        endpoint.sparql.prefixes = [Prefix.from_dict(obj_prefix) for obj_prefix in obj.get('prefixes', [])]
+        endpoint.sparql.prefixes += [Prefix.from_dict(obj_prefix) for obj_prefix in obj.get('prefixes', [])]
         
         return endpoint
 
@@ -62,7 +64,7 @@ class Endpoint:
             'technology': self.sparql.name,
             'username': self.sparql.username,
             'password': self.sparql.password,
-            'base_uri': list(filter(lambda p: p.short == 'base', self.sparql.prefixes))[0].to_dict(),
+            'base_uri': self.base_uri,
             'data_sets': [data_set.to_dict() for data_set in self.data_sets],
-            'prefixes': [prefix.to_dict() for prefix in self.sparql.prefixes],
+            'prefixes': [prefix.to_dict() for prefix in self.sparql.prefixes if prefix.short != 'base'],
         }

@@ -27,8 +27,8 @@ if not endpoint:
 
 else:
 
-    graph_begin = "GRAPH " + endpoint.sparql.prepare_uri(data_set.graph_data.uri) + " {" if data_set else ""
-    graph_end = "}\n" if data_set else "\n"
+    graph_begin = "GRAPH " + endpoint.sparql.prepare_uri(data_set.graph_data.uri) + " {" if data_set.graph_data.uri else ""
+    graph_end = "}\n" if data_set.graph_data.uri else "\n"
 
     default_query = """        
 SELECT ?subject ?predicate ?object

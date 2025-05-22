@@ -81,6 +81,7 @@ class SPARQL:
             query = '\n'.join(list(map(lambda line: line[index:], query_lines)))
 
             # Add prefixes
+            print(self.prefixes)
             query = '\n'.join(list(map(lambda prefix: prefix.to_sparql(), self.prefixes))) + '\n' + query
 
             # DEBUG

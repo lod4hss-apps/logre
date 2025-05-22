@@ -16,7 +16,9 @@ def __save() -> None:
     st.rerun()
 
 def __del_endpoint(endpoint: Endpoint) -> None:
+    all_endpoints = state.get_endpoints()
     all_endpoints = list(filter(lambda e: e != endpoint, all_endpoints))
+    state.set_endpoints(all_endpoints)
     save_config()
 
 def __del_data_set(endpoint: Endpoint, data_set: DataSet) -> None:
@@ -104,10 +106,9 @@ for index_endpoint, endpoint in enumerate(all_endpoints):
 
     # Base URI
     col, col_save = st.columns([11, 1], vertical_alignment='bottom')
-    base_uri_prefix = list(filter(lambda p: p.short == 'base', endpoint.sparql.prefixes))[0]
-    base_uri = col.text_input(label='Base URI', value=base_uri_prefix.long, key=f'configuration-endpoint-base-uri-{index_endpoint}')
-    if base_uri_prefix.long != base_uri and col_save.button('', icon=':material/save:', type='tertiary', key=f'configuration-endpoint-base-uri-{index_endpoint}-save'): 
-        base_uri_prefix.long = base_uri
+    base_uri = col.text_input(label='Base URI', value=endpoint.base_uri, key=f'configuration-endpoint-base-uri-{index_endpoint}')
+    if endpoint.base_uri != base_uri and col_save.button('', icon=':material/save:', type='tertiary', key=f'configuration-endpoint-base-uri-{index_endpoint}-save'): 
+        endpoint.base_uri = base_uri
         __save()
 
     st.text('')

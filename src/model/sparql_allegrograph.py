@@ -3,6 +3,7 @@ from typing import List
 
 from .sparql import SPARQL
 from .errors import HTTPError
+from .prefix import Prefix
 
 class Allegrograph(SPARQL):
     
@@ -10,6 +11,7 @@ class Allegrograph(SPARQL):
     def __init__(self, url: str, username: str, password: str) -> None:
         super().__init__(url, username, password)
         self.name = 'Allegrograph'
+        self.prefixes.append(Prefix('franzOption_defaultDatasetBehavior', 'franz:rdf'))
 
 
     def insert(self, triples: List[tuple] | tuple, graph_uri: str | None = None) -> None:
@@ -47,7 +49,7 @@ class Allegrograph(SPARQL):
         url = self.url if not self.url.endswith('/sparql') else self.url.replace('/sparql', '')
         url = f"{url}/statements"
         if named_graph_uri: url += "?context=" + named_graph_uri
-        headers = {"Content-Type": "application/turtle"}
+        headers = {"Content-Type": "text/turtle"}
         auth = (self.username, self.password)
 
         # Make the request
