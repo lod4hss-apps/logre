@@ -19,7 +19,8 @@ help:
 update: 
 	@echo "[makefile] Current version:" $$(cat VERSION)
 	@echo "[makefile] Updating code base..."
-	@git pull origin main > /dev/null 2<&1
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	git push origin $$branch > /dev/null 2<&1
 	@echo "[makefile] Now having version:" $$(cat ./VERSION)
 
 
