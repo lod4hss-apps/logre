@@ -90,7 +90,7 @@ def get_ontology() -> Ontology:
     return ontology
     
 
-@st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri})
+# @st.cache_data(show_spinner=False, ttl='30 seconds', hash_funcs={Graph: lambda graph: graph.uri})
 def find_entities(graph: Graph = None, label_filter: str = None, class_filter: str = None, limit: int = None) -> List[Entity]:
     """
     Fetch the list of entities on the endpoint with:

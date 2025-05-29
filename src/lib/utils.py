@@ -101,6 +101,7 @@ def generate_id(entity_type: EntityType = EntityType.RESOURCE) -> str:
 
 def normalize_text(text: str):
     """Normalize the given text (remove accents, caps, ...)."""
+    if text == None: return
 
     # Remove diacritics (accents) by filtering out non-ASCII characters
     to_return = "".join([c for c in text if not unicodedata.combining(c)])
