@@ -4,7 +4,7 @@ import streamlit as st
 import lib.state as state
 from lib.configuration import read_config
 from lib.version import read_version
-from model import NotExistingEndpoint, NotExistingDataSet
+from model import NotExistingEndpoint, NotExistingDataBundle
 
 
 def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
@@ -55,21 +55,21 @@ def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
             else: endpoint = selection[0]
             state.set_endpoint(endpoint)
 
-        # Load information from the query params: DataSet
-        if state.has_query_params('data_set'):
+        # Load information from the query params: DataBundle
+        if state.has_query_params('data_bundle'):
             # Get the endpoint (just set above)
             endpoint = state.get_endpoint() 
-            data_set_name = state.get_query_param('data_set')
-            selection = [e for e in endpoint.data_sets if e.name == data_set_name]
-            if len(selection) == 0: raise NotExistingDataSet(data_set_name)
-            else: data_set = selection[0]
-            state.set_data_set(data_set)
+            data_bundle_name = state.get_query_param('data_bundle')
+            selection = [e for e in endpoint.data_bundles if e.name == data_bundle_name]
+            if len(selection) == 0: raise NotExistingDataBundle(data_bundle_name)
+            else: data_bundle = selection[0]
+            state.set_data_bundle(data_bundle)
 
         # Load information from the query params: Entity
         if state.has_query_params('entity'):
-            data_set = state.get_data_set()
+            data_bundle = state.get_data_bundle()
             entity_uri = state.get_query_param('entity')
-            entity = data_set.get_entity_infos(entity_uri)
+            entity = data_bundle.get_entity_infos(entity_uri)
             state.set_entity(entity)
 
         # Once everythings is loaded from query params, clear them (from state)

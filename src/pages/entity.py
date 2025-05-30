@@ -5,7 +5,7 @@ import lib.state as state
 from components.init import init
 from components.menu import menu
 from dialogs import dialog_confirmation, dialog_entity_info
-from model import OntoEntity, DataSet, Statement
+from model import OntoEntity, DataBundle, Statement
 from dialogs import dialog_triple_info
 
 
@@ -13,9 +13,9 @@ def __delete_entity(entity: OntoEntity) -> None:
     """Delete all triples of a given entity in the given graph."""
 
     # From state
-    data_set = state.get_data_set()
+    data_bundle = state.get_data_bundle()
 
-    data_set.graph_data.delete([ 
+    data_bundle.graph_data.delete([ 
         (entity.uri, '?p', '?o'),
         ('?s', '?p', entity.uri)
     ])
@@ -28,9 +28,9 @@ def __delete_triple(display_triple: Statement) -> None:
     """Delete a single triple from the endpoint."""
 
     # From state
-    data_set = state.get_data_set()
+    data_bundle = state.get_data_bundle()
 
-    data_set.graph_data.delete([ 
+    data_bundle.graph_data.delete([ 
         (display_triple.subject.uri, display_triple.predicate.uri, display_triple.object.uri)
     ])
 
@@ -52,7 +52,7 @@ menu()
 
 # From state
 endpoint = state.get_endpoint()
-data_set = state.get_data_set()
+data_bundle = state.get_data_bundle()
 entity = state.get_entity()
 
 
@@ -84,10 +84,10 @@ else:
     ### 1ST TAB: CARD ###
 
     # Get the card statements
-    card = data_set.get_card(entity)
+    card = data_bundle.get_card(entity)
 
     # Filter out rdf:type, rdfs:label, rdfs:comment they are already in the header
-    card = [triple for triple in card if triple.predicate.uri not in [data_set.type_property, data_set.label_property, data_set.comment_property]]
+    card = [triple for triple in card if triple.predicate.uri not in [data_bundle.type_property, data_bundle.label_property, data_bundle.comment_property]]
 
     # Make sure triples are unique (can happen if multiple ontology has been imported for a class)
     have_triple = set()
@@ -136,7 +136,7 @@ else:
     tab2.text('')
 
     # Fetch all outgoing triples
-    outgoing_triples = data_set.get_outgoing_statements(entity)
+    outgoing_triples = data_bundle.get_outgoing_statements(entity)
 
     # For each triple, we display as a list all triples
     for i, triple in enumerate(outgoing_triples):
@@ -171,12 +171,12 @@ else:
     tab2.text('')
 
     # Fetch all incoming triples
-    incoming_triples = data_set.get_incoming_statements(entity, limit=5)
+    incoming_triples = data_bundle.get_incoming_statements(entity, limit=5)
 
     # Give the possibility to fetch more
     if len(incoming_triples) == 5:
         if col2.button('Fetch more incoming triples', help="For performance reasons, only first 5 have been fetched. Keep in mind that fetching all other incoming can lead to overload the page if they are too many."):
-            incoming_triples = data_set.get_incoming_statements(entity)
+            incoming_triples = data_bundle.get_incoming_statements(entity)
 
     # For each triple, we display as a list all triples
     for i, triple in enumerate(incoming_triples):
@@ -204,7 +204,7 @@ else:
     
     col1, col2, col3, col4 = tab3.columns([2, 1, 4, 4], vertical_alignment='bottom')
 
-    classes = data_set.ontology.get_classes()
+    classes = data_bundle.ontology.get_classes()
 
     # To avoid to do heavy request on each entity card, we ask the user to confirm the loading
     if col1.button('Load visualization', help='Depending on information on your entities, this can take a while'):
@@ -257,8 +257,8 @@ else:
             if len(to_fetch) == 0: break
             triples: List[Statement] = []
             for ent in to_fetch:
-                triples += data_set.get_outgoing_statements(ent)
-                triples += data_set.get_incoming_statements(ent)
+                triples += data_bundle.get_outgoing_statements(ent)
+                triples += data_bundle.get_incoming_statements(ent)
                 uris_done.add(ent.uri)
 
             # Filter out excluded classes: if the triples has subject or object of one excluded class, 

@@ -1,5 +1,5 @@
 import requests
-from typing import List
+from typing import List, Dict
 
 from .sparql import SPARQL
 from .errors import HTTPError
@@ -11,8 +11,11 @@ class Allegrograph(SPARQL):
     def __init__(self, url: str, username: str, password: str) -> None:
         super().__init__(url, username, password)
         self.name = 'Allegrograph'
-        self.prefixes.append(Prefix('franzOption_defaultDatasetBehavior', 'franz:rdf'))
+        if 'franzOption_defaultDatasetBehavior' not in list(map(lambda p: p.short, self.prefixes)):
+            self.prefixes.append(Prefix('franzOption_defaultDatasetBehavior', 'franz:rdf'))
 
+    def get_prefixes(self) -> List[Prefix]:
+        return [prefix for prefix in self.prefixes if prefix.short not in ['base', 'franzOption_defaultDatasetBehavior']]
 
     def insert(self, triples: List[tuple] | tuple, graph_uri: str | None = None) -> None:
         # Because we can not be sure user has set the option, 
@@ -48,12 +51,12 @@ class Allegrograph(SPARQL):
         # Prepare query
         url = self.url if not self.url.endswith('/sparql') else self.url.replace('/sparql', '')
         url = f"{url}/statements"
-        if named_graph_uri: url += "?context=" + named_graph_uri
+        if named_graph_uri: url += "?context=%3C" + self.unroll_uri(named_graph_uri).replace(':', '%3A').replace('/', '%2F') + '%3E'
         headers = {"Content-Type": "text/turtle"}
         auth = (self.username, self.password)
 
         # Make the request
-        response = requests.post(self.url, data=turtle_content, headers=headers, auth=auth)
+        response = requests.post(url, data=turtle_content, headers=headers, auth=auth)
         try:
             response.raise_for_status()  # Raise error for bad responses
         except requests.exceptions.HTTPError as error:

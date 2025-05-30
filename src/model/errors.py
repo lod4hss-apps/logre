@@ -29,9 +29,9 @@ class NotExistingEndpoint(Exception):
         super().__init__(f"The endpoint <{endpoint_url}> does not exist in current configuration.")
 
 
-class NotExistingDataSet(Exception):
-    def __init__(self, data_set_name: str) -> None:
-        super().__init__(f"The data_set named <{data_set_name}> does not exist in current configuration.")
+class NotExistingDataBundle(Exception):
+    def __init__(self, data_bundle_name: str) -> None:
+        super().__init__(f"The data_bundle named <{data_bundle_name}> does not exist in current configuration.")
 
 
 class MalformedCSV(Exception):

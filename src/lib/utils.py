@@ -24,14 +24,17 @@ def to_snake_case(text: str) -> str:
     # Normalize text to decompose accented characters (e.g., é -> e)
     normalized_text = unicodedata.normalize("NFKD", text)
 
+    # Replace underscores by dashes
+    no_underscores = normalized_text.replace('_', '-')
+
     # Remove diacritics (accents) by filtering out non-ASCII characters
-    no_accents_text = "".join([c for c in normalized_text if not unicodedata.combining(c)])
+    no_accents_text = "".join([c for c in no_underscores if not unicodedata.combining(c)])
 
     # Remove punctuation
-    cleaned_text = re.sub(r"[^\w\s]", "", no_accents_text)
+    cleaned_text = re.sub(r"[^\w\s-]", "", no_accents_text)
 
     # Replace spaces with dashs and convert to lowercase
-    snake_case_text = re.sub(r"\s+", "_", cleaned_text.strip()).lower()
+    snake_case_text = re.sub(r"\s+", "-", cleaned_text.strip()).lower()
 
     return snake_case_text
 

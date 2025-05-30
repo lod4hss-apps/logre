@@ -1,12 +1,23 @@
-  prefixes:
-  - short: base
-    long: http://geovistory.org/information/
+queries:
+  - name: Delete all data
+    query: |
+      CLEAR ALL
+  - name: List all graphs
+    query: |
+      SELECT DISTINCT ?graph
+      WHERE {
+        GRAPH ?graph { 
+          ?s ?p ?o .
+        }
+      }
+
+prefixes:
   - short: rdf
     long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
-  - short: xsd
-    long: http://www.w3.org/2001/XMLSchema#
   - short: rdfs
     long: http://www.w3.org/2000/01/rdf-schema#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
   - short: owl
     long: http://www.w3.org/2002/07/owl#
   - short: sh

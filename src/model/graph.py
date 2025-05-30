@@ -32,11 +32,13 @@ class Graph:
         graph_begin = "GRAPH " + self.uri_ + " {" if self.uri else ""
         graph_end = "}" if self.uri else ""
         query = """
-            # DataSet.download_graph_turtle()
+            # DataBundle.download_graph_turtle()
             SELECT 
                 (COALESCE(?subject , '') as ?s)
+                (isBlank(?subject) as ?subject_blank)
                 (COALESCE(?predicate , '') as ?p)
                 (COALESCE(?object, '') as ?o)
+                (isBlank(?object) as ?object_blank)
                 (isLiteral(?object) as ?literal)
             WHERE {
                 """ + graph_begin + """
@@ -60,9 +62,11 @@ class Graph:
 
         # Build the output: add all triples
         for triple in triples:
-            subject = self.sparql.prepare_uri(triple.get('s'))
+            if triple.get('subject_blank') == 'true': subject = '_:' + triple.get('s')
+            else: subject = self.sparql.prepare_uri(triple.get('s'))
             predicate = self.sparql.prepare_uri(triple.get('p'))
             if triple.get('literal') == 'true': object = f"'{triple.get('o')}'"
+            elif triple.get('object_blank') == 'true': object = '_:' + triple.get('o')
             else: object = self.sparql.prepare_uri(triple.get('o'))
 
             content += f"{subject} {predicate} {object} .\n"
@@ -76,13 +80,13 @@ class Graph:
         triples = self.dump()
 
         # Build the output: add all quads
-        graph_uri = self.sparql.prepare_uri(self.sparql.lenghten_prefix(self.uri_)) if self.uri else ''
+        graph_uri = self.sparql.prepare_uri(self.sparql.unroll_uri(self.uri_)) if self.uri else ''
         content = ""
         for triple in triples:
-            subject = self.sparql.prepare_uri(self.sparql.lenghten_prefix(triple.get('s')))
-            predicate = self.sparql.prepare_uri(self.sparql.lenghten_prefix(triple.get('p')))
+            subject = self.sparql.prepare_uri(self.sparql.unroll_uri(triple.get('s')))
+            predicate = self.sparql.prepare_uri(self.sparql.unroll_uri(triple.get('p')))
             if triple.get('literal') == 'true': object = f"'{triple.get('o')}'"
-            else: object = self.sparql.prepare_uri(self.sparql.lenghten_prefix(triple.get('o')))
+            else: object = self.sparql.prepare_uri(self.sparql.unroll_uri(triple.get('o')))
 
             content += f"{subject} {predicate} {object} {graph_uri} .\n"
 

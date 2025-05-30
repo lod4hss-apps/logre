@@ -1,9 +1,10 @@
-from typing import Any
+from typing import Any, Tuple, List
 import os
 import yaml
 from model import Endpoint, Query, Prefix
 import lib.state as state
 
+DEFAULT_PATH = './defaults.yaml'
 CONFIG_PATH = './logre-config.yaml'
 
 
@@ -39,10 +40,27 @@ def load_config(file_content: str) -> str:
         all_queries = list(map(lambda obj: Query.from_dict(obj), config.get('queries', [])))
         state.set_queries(all_queries)
 
+    # In any case, add default queries at the beginning
+    all_queries = state.get_queries()
+    have_queries = set(list(map(lambda q: q.name, all_queries)))
+    for query in state.get_default_queries():
+        if query.name not in have_queries: 
+            all_queries.insert(0, query)
+    state.set_queries(all_queries)
+
     # Load saved endpoints
     if 'endpoints' in config: 
         # Parse into instances of Endpoint
         all_endpoints = list(map(lambda obj: Endpoint.from_dict(obj), config.get('endpoints', [])))
+
+        # For all endpoints, add all default prefixes
+        for endpoint in all_endpoints: 
+            have_prefixes = set(list(map(lambda p: p.short, endpoint.sparql.prefixes)))
+            for prefix in state.get_default_prefixes():
+                if prefix.short not in have_prefixes:
+                    endpoint.sparql.prefixes.append(prefix)
+
+        # Save all endpoints in state
         state.set_endpoints(all_endpoints)
 
 
@@ -70,6 +88,11 @@ def read_config() -> None:
     Otherwise, do nothing
     """
 
+    # Load defaults
+    default_file = open(DEFAULT_PATH, 'r')
+    parse_defaults(default_file.read())
+    default_file.close()
+
     # Safegard: check if we are on streamlit or not
     if os.getenv('ENV') == 'streamlit': 
         return 
@@ -81,3 +104,18 @@ def read_config() -> None:
         file.close()
 
         load_config(content)
+
+
+def parse_defaults(default_content: str) -> Tuple[List[Query], List[Prefix]]:
+    
+    obj = yaml.safe_load(default_content)
+    queries = []
+    prefixes = []
+
+    for query_raw in obj.get('queries', []):
+        queries.append(Query(query_raw['name'], query_raw['query']))
+    
+    for prefix_raw in obj.get('prefixes', []):
+        prefixes.append(Prefix(prefix_raw['short'], prefix_raw['long']))
+
+    state.set_defaults(queries, prefixes)

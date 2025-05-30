@@ -5,7 +5,7 @@ from .sparql_fuseki import Fuseki
 from .sparql_graphdb import GraphDB
 from .errors import EndpointTechnologyNotSupported
 from .prefix import Prefix
-from .data_set import DataSet
+from .data_bundle import DataBundle
 
 
 class Endpoint:
@@ -13,7 +13,7 @@ class Endpoint:
     name: str
     base_uri: str
     sparql: SPARQL = None
-    data_sets: List[DataSet] = None
+    data_bundles: List[DataBundle] = None
     
 
     def __init__(self, technology: str, name: str, url: str, username: str, password: str, base_uri: str) -> 'Endpoint':
@@ -24,13 +24,14 @@ class Endpoint:
 
         # Add the base prefix
         self.base_uri = base_uri
-        self.sparql.prefixes.append(Prefix('base', base_uri))
+        if 'base' not in list(map(lambda p: p.short, self.sparql.prefixes)):
+            self.sparql.prefixes.append(Prefix('base', base_uri))
 
         # Set other attributes
         self.name = name
 
-        # Initialize others
-        self.data_sets = []
+        # Initialize others things
+        self.data_bundles = []
 
 
     @staticmethod
@@ -50,8 +51,10 @@ class Endpoint:
             name=obj.get('name'), url=obj.get('url'),
             username=obj.get('username'), password=obj.get('password')
         )
-        endpoint.data_sets = [DataSet.from_dict(obj_data_set, endpoint.sparql) for obj_data_set in obj.get('data_sets')]
-        endpoint.sparql.prefixes += [Prefix.from_dict(obj_prefix) for obj_prefix in obj.get('prefixes', [])]
+        endpoint.data_bundles = [DataBundle.from_dict(obj_data_bundle, endpoint.sparql) for obj_data_bundle in obj.get('data_bundles')]
+
+        prefixes_have = set(list(map(lambda p: p.short, endpoint.sparql.prefixes)))
+        endpoint.sparql.prefixes += [Prefix.from_dict(obj_prefix) for obj_prefix in obj.get('prefixes', []) if obj_prefix.get('short') not in prefixes_have]
         
         return endpoint
 
@@ -65,6 +68,6 @@ class Endpoint:
             'username': self.sparql.username,
             'password': self.sparql.password,
             'base_uri': self.base_uri,
-            'data_sets': [data_set.to_dict() for data_set in self.data_sets],
-            'prefixes': [prefix.to_dict() for prefix in self.sparql.prefixes if prefix.short != 'base'],
+            'data_bundles': [data_bundle.to_dict() for data_bundle in self.data_bundles],
+            'prefixes': [p.to_dict() for p in self.sparql.get_prefixes()],
         }

@@ -12,4 +12,4 @@ from .sparql_fuseki import Fuseki
 from .sparql_graphdb import GraphDB
 from .sparql import SPARQL
 from .statement import Statement
-from .data_set import DataSet
+from .data_bundle import DataBundle

@@ -80,29 +80,29 @@ def menu() -> None:
 
             ##### SEGMENT SELECTION #####
 
-            data_set = state.get_data_set()
+            data_bundle = state.get_data_bundle()
 
-            # By default, select the first DataSet
-            if not data_set and len(endpoint.data_sets): 
-                data_set = endpoint.data_sets[0]
-                state.set_data_set(data_set)
+            # By default, select the first DataBundle
+            if not data_bundle and len(endpoint.data_bundles): 
+                data_bundle = endpoint.data_bundles[0]
+                state.set_data_bundle(data_bundle)
 
             st.sidebar.text('')
 
             # Allow user to choose the graph to activate
-            data_sets_labels = [s.name for s in endpoint.data_sets]
+            data_bundles_labels = [s.name for s in endpoint.data_bundles]
 
             # Manage the graph selection
-            if len(endpoint.data_sets):
-                data_sets_label = st.sidebar.radio(
-                    label='Working DataSet', 
-                    options=data_sets_labels, 
-                    index=endpoint.data_sets.index(data_set), 
-                    key='radio-btn-data_set-selection', 
+            if len(endpoint.data_bundles):
+                data_bundles_label = st.sidebar.radio(
+                    label='Working DataBundle', 
+                    options=data_bundles_labels, 
+                    index=endpoint.data_bundles.index(data_bundle), 
+                    key='radio-btn-data_bundle-selection', 
                 )
-                state.set_data_set([d for d in endpoint.data_sets if d.name == data_sets_label][0])
+                state.set_data_bundle([d for d in endpoint.data_bundles if d.name == data_bundles_label][0])
             else:
-                st.sidebar.markdown("*No Data Set configured*")
+                st.sidebar.markdown("*No Data Bundle configured*")
 
             st.sidebar.divider()
 

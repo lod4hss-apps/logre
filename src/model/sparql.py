@@ -1,5 +1,5 @@
 import requests, os, pandas as pd
-from typing import List
+from typing import List, Dict
 from requests.auth import HTTPBasicAuth
 from io import StringIO
 
@@ -20,6 +20,9 @@ class SPARQL:
         self.url = url
         self.username = username
         self.password = password
+
+    def get_prefixes(self) -> List[Prefix]:
+        return [prefix for prefix in self.prefixes if prefix.short != 'base']
 
     def prepare_uri(self, supposed_uri: str) -> str:
         # If None is given, make the call transparent
@@ -61,12 +64,11 @@ class SPARQL:
         return supposed_prefix in all_prefixes_short
 
 
-    def lenghten_prefix(self, short_uri: str) -> str:
+    def unroll_uri(self, short_uri: str) -> str:
         long_uri = short_uri
         for prefix in self.prefixes:
             long_uri = prefix.lengthen(long_uri)
         return long_uri
-
 
     def run(self, query: str) -> list[dict]:
         """Make a HTTP POST request with all needed params to the SPARQL endpoint."""
@@ -81,13 +83,14 @@ class SPARQL:
             query = '\n'.join(list(map(lambda line: line[index:], query_lines)))
 
             # Add prefixes
-            print(self.prefixes)
             query = '\n'.join(list(map(lambda prefix: prefix.to_sparql(), self.prefixes))) + '\n' + query
 
             # DEBUG
             print('==============')
             print(query)
         else:
+            # Add prefixes
+            query = '\n'.join(list(map(lambda prefix: prefix.to_sparql(), self.prefixes))) + '\n' + query
             # Strip all lines
             query = '\n'.join(list(map(lambda line: line.strip(), query.split('\n'))))
 
@@ -215,43 +218,10 @@ class SPARQL:
         raise Exception(f'Method <upload_nquads> not implemented in {self.name}')
     
 
-    def upload_turtle(self, ttl_content: str, named_graph_uri: str) -> None:
+    def upload_turtle(self, turtle_content: str, named_graph_uri: str) -> None:
         """
         Function to import raw turtle data (as string) into the given graph.
         Specifying the graph is mandatory, otherwise import it into default graph.
         """
         raise Exception(f'Method <upload_turtle> not implemented in {self.name}')
-    
-
-    def upload_csv(self, csv_content: str, named_graph_uri: str) -> None:
-        """
-        Function to import CSV raw file into the endpoint.
-        Specifying the graph is mandatory, otherwise import it into default graph.
-        """
-
-        # Build triples
-        try: 
-            triples = []
-            df = pd.read_csv(StringIO(csv_content))
-            for _, row in df.iterrows():
-                # Get the URI of the entity
-                uri = row['uri']
-                # For each properties available
-                for col in df.columns:
-                    # Do not do anything with the uri
-                    if col == 'uri': continue
-                    # If the cell is empty, skip
-                    if pd.isna(row[col]) or row[col] is None or row[col] == '': continue
-
-                    # Is the range a URI or a literal?
-                    if row[col].startswith('http://') or (':' in row[col] and self.is_known_prefix(row[col][:row[col].index(':')])):
-                        triples.append((uri, col, row[col]))
-                    else:
-                        triples.append((uri, col, f"'{row[col]}'"))
-        except Exception as error:
-            print(error)
-            raise MalformedCSV('CSV import went wrong, the file is probably malformed: the file format (column names) needs to be respected in order to import those files.')
-
-        # Insert all triples into the right graph
-        self.insert(triples, named_graph_uri)
     

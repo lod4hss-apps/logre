@@ -14,7 +14,7 @@ def dialog_triple_info(triple: Statement) -> None:
 
     col1, col2 = st.columns([1, 3])
     col1.markdown(f"**URI**")
-    col2.markdown(f"[{triple.subject.uri}]({endpoint.sparql.lenghten_prefix(triple.subject.uri)})")
+    col2.markdown(f"[{triple.subject.uri}]({endpoint.sparql.unroll_uri(triple.subject.uri)})")
 
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Label**")
@@ -26,7 +26,7 @@ def dialog_triple_info(triple: Statement) -> None:
 
     col1, col2 = st.columns([1, 3])
     col1.markdown(f"**Class**")
-    col2.markdown(f"{triple.subject.class_label} ([{triple.subject.class_uri}]({endpoint.sparql.lenghten_prefix(triple.subject.class_uri)}))")
+    col2.markdown(f"{triple.subject.class_label} ([{triple.subject.class_uri}]({endpoint.sparql.unroll_uri(triple.subject.class_uri)}))")
 
     st.divider()
 
@@ -36,7 +36,7 @@ def dialog_triple_info(triple: Statement) -> None:
 
     col1, col2 = st.columns([1, 3])
     col1.markdown(f"**URI**")
-    col2.markdown(f"[{triple.predicate.uri}]({endpoint.sparql.lenghten_prefix(triple.predicate.uri)})")
+    col2.markdown(f"[{triple.predicate.uri}]({endpoint.sparql.unroll_uri(triple.predicate.uri)})")
 
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Label**")
@@ -76,7 +76,7 @@ def dialog_triple_info(triple: Statement) -> None:
 
         col1, col2 = st.columns([1, 3])
         col1.markdown(f"**URI**")
-        col2.markdown(f"[{triple.object.uri}]({endpoint.sparql.lenghten_prefix(triple.object.uri)})")
+        col2.markdown(f"[{triple.object.uri}]({endpoint.sparql.unroll_uri(triple.object.uri)})")
 
         col1, col2 = st.columns([1, 3])
         col1.markdown("**Label**")
@@ -89,7 +89,7 @@ def dialog_triple_info(triple: Statement) -> None:
         col1, col2 = st.columns([1, 3])
         col1.markdown(f"**Class**")
         first_part = triple.object.class_label or ''
-        second_part = f" ([{triple.object.class_uri}]({endpoint.sparql.lenghten_prefix(triple.object.class_uri)}))" if triple.object.class_uri else ""
+        second_part = f" ([{triple.object.class_uri}]({endpoint.sparql.unroll_uri(triple.object.class_uri)}))" if triple.object.class_uri else ""
         col2.markdown(first_part + second_part)
 
 

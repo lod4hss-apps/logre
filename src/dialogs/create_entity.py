@@ -1,17 +1,17 @@
 from typing import List, Any
 import streamlit as st
 import lib.state as state
-from model import OntoEntity, DataSet
+from model import OntoEntity, DataBundle
 from lib import generate_id
 
 
 def __create_entity(entity: OntoEntity, triples: List[tuple[str, str, str]]) -> None:
 
     # From state
-    data_set = state.get_data_set()
+    data_bundle = state.get_data_bundle()
 
     # Create all the triples
-    data_set.graph_data.insert(triples)
+    data_bundle.graph_data.insert(triples)
 
     # From formular, set the session entity
     state.set_entity(entity)
@@ -35,9 +35,9 @@ def dialog_create_entity() -> None:
     """
 
     # From state
-    data_set = state.get_data_set()
-    classes = data_set.ontology.get_classes()
-    properties = data_set.ontology.get_properties()
+    data_bundle = state.get_data_bundle()
+    classes = data_bundle.ontology.get_classes()
+    properties = data_bundle.ontology.get_properties()
 
     # Save triples that are going to be created on create click
     triples: List[tuple[str, str, str]] = []
@@ -60,34 +60,34 @@ def dialog_create_entity() -> None:
     # Class selection
     classes_labels = list(map(lambda cls: cls.display_label, classes))
     class_label = col_label.selectbox('Class ❗️', options=classes_labels, index=None)
-    mandatories.append(data_set.type_property)
+    mandatories.append(data_bundle.type_property)
     if class_label:
         # Find the selected class from the selected label
         class_index = classes_labels.index(class_label)
         selected_class = classes[class_index]
 
         # Add the entity type triple
-        triples.append((entity_uri, data_set.type_property, selected_class.uri))
+        triples.append((entity_uri, data_bundle.type_property, selected_class.uri))
 
         # Input field to set the entity label
         mandatory_suffix = ''
-        if data_set.ontology.is_property_mandatory(selected_class.uri, data_set.label_property):
+        if data_bundle.ontology.is_property_mandatory(selected_class.uri, data_bundle.label_property):
             mandatory_suffix = ' ❗️'
-            mandatories.append(data_set.label_property)
+            mandatories.append(data_bundle.label_property)
         entity_label = col_range.text_input('Label' + mandatory_suffix)
         if entity_label:
             label = entity_label.strip().replace("'", "\\'")
-            triples.append((entity_uri, data_set.label_property, f"'{label}'"))
+            triples.append((entity_uri, data_bundle.label_property, f"'{label}'"))
 
         # Input field to set the comment label
         mandatory_suffix = ''
-        if data_set.ontology.is_property_mandatory(selected_class.uri, data_set.comment_property):
+        if data_bundle.ontology.is_property_mandatory(selected_class.uri, data_bundle.comment_property):
             mandatory_suffix = ' ❗️'
-            mandatories.append(data_set.comment_property)
+            mandatories.append(data_bundle.comment_property)
         entity_comment = st.text_input('Comment' + mandatory_suffix)
         if entity_comment and entity_comment.strip() != '':
             comment = entity_comment.strip().replace("'", "\\'")
-            triples.append((entity_uri, data_set.comment_property, f"'{comment}'"))
+            triples.append((entity_uri, data_bundle.comment_property, f"'{comment}'"))
 
         st.divider()
 
@@ -98,7 +98,7 @@ def dialog_create_entity() -> None:
         # Only outgoing ones!
         props_to_create = [prop for prop in properties if prop.domain_class_uri == selected_class.uri]
         # Also, remove those that are mandatory, in order to not set them multiple times
-        props_to_create = [prop for prop in props_to_create if prop.uri not in [data_set.type_property, data_set.label_property, data_set.comment_property]]
+        props_to_create = [prop for prop in props_to_create if prop.uri not in [data_bundle.type_property, data_bundle.label_property, data_bundle.comment_property]]
         # And we order it so that it appears in the correct order
         props_to_create.sort(key=lambda p: p.order)
 
@@ -155,7 +155,7 @@ def dialog_create_entity() -> None:
 
                 def recursive_call_xsdstring(index: int) -> None:
                     """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
-                    string_value = col_range.text_input(data_set.ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
+                    string_value = col_range.text_input(data_bundle.ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
                     if string_value and string_value.strip() != '':
                         value = string_value.strip().replace("'", "\\'")
                         triples.append((entity_uri, prop.uri, f"'{value}'"))
@@ -175,7 +175,7 @@ def dialog_create_entity() -> None:
 
                 def recursive_call_xsdhtml(index: int) -> None:
                     """Recursive call that add another field each time the previous one has a value (and maxcount not reached)."""
-                    html_value = col_range.text_area(data_set.ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
+                    html_value = col_range.text_area(data_bundle.ontology.get_class_name(prop.range_class_uri), key=field_key + f"-{index}", placeholder="Start writing to add a new value")
                     if html_value and html_value.strip() != '':
                         value = html_value.strip().replace("'", "\\'")
                         triples.append((entity_uri, prop.uri, f"'{value}'"))
@@ -186,18 +186,18 @@ def dialog_create_entity() -> None:
             # If the range is not a Literal, it should then be instances of classes 
             else: 
                 # List all possible existing entities (right class) from the endpoint
-                possible_objects: List[OntoEntity] = data_set.find_entities(class_uri=prop.range_class_uri)
+                possible_objects: List[OntoEntity] = data_bundle.find_entities(class_uri=prop.range_class_uri)
                 # Get their label
                 possible_objects_label = [obj.display_label_comment for obj in possible_objects]
                 # User form input field
                 if prop.max_count == 1: 
-                    object_label = col_range.selectbox(data_set.ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key, index=None)
+                    object_label = col_range.selectbox(data_bundle.ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key, index=None)
                     if object_label:
                         object_index = possible_objects_label.index(object_label)
                         object = possible_objects[object_index]
                         triples.append((entity_uri, prop.uri, object.uri))
                 else: 
-                    object_labels = col_range.multiselect(data_set.ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key)
+                    object_labels = col_range.multiselect(data_bundle.ontology.get_class_name(prop.range_class_uri), options=possible_objects_label, key=field_key)
                     if object_labels:
                         for object_label in object_labels:
                             object_index = possible_objects_label.index(object_label)

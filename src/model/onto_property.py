@@ -16,7 +16,7 @@ class OntoProperty:
     def __init__(self, uri: str = None, label: str = None, order: int = None, min_count: int = None, max_count: int = None, domain_class_uri: str = None, range_class_uri: str = None, card_of_class_uri: str = None) -> None:
         self.uri = uri
         self.label = label or uri
-        self.display_label = f"{label} ({uri})"
+        self.display_label = f"{label} ({uri})" if label else uri
         self.order = order or 1000
         self.min_count = min_count or 0
         self.max_count = max_count or 1000

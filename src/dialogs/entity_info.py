@@ -13,7 +13,7 @@ def dialog_entity_info(entity: OntoEntity) -> None:
     # URI
     col1, col2 = st.columns([1, 3])
     col1.markdown(f"**URI**")
-    col2.markdown(f"[{entity.uri}]({endpoint.sparql.lenghten_prefix(entity.uri)})")
+    col2.markdown(f"[{entity.uri}]({endpoint.sparql.unroll_uri(entity.uri)})")
 
     # Label
     col1, col2 = st.columns([1, 3])
@@ -28,4 +28,4 @@ def dialog_entity_info(entity: OntoEntity) -> None:
     # Class
     col1, col2 = st.columns([1, 3])
     col1.markdown(f"**Class**")
-    col2.markdown(f"{entity.class_label} ([{entity.class_uri}]({endpoint.sparql.lenghten_prefix(entity.class_uri)}))")
+    col2.markdown(f"{entity.class_label} ([{entity.class_uri}]({endpoint.sparql.unroll_uri(entity.class_uri)}))")

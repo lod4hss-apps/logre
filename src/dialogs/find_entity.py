@@ -9,8 +9,8 @@ def dialog_find_entity() -> None:
     """Dialog function to allow user to find an entity and select it."""
     
     # From state
-    data_set = state.get_data_set()
-    classes = data_set.ontology.get_classes()
+    data_bundle = state.get_data_bundle()
+    classes = data_bundle.ontology.get_classes()
 
 
     # All entity filters:
@@ -33,7 +33,7 @@ def dialog_find_entity() -> None:
     st.divider()    
 
     # Fetch the entities
-    entities: List[OntoEntity] = data_set.find_entities(
+    entities: List[OntoEntity] = data_bundle.find_entities(
         label=entity_label if entity_label else None,
         class_uri=selected_class_uri,
         limit=limit

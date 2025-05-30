@@ -42,7 +42,7 @@ class SHACL(Ontology):
         return classes
     
 
-    @st.cache_data(show_spinner=False, ttl=3600, hash_funcs={"model.ontology_shacl.SHACL": lambda x: hash(x.name)})
+    @st.cache_data(show_spinner=False, ttl=3600, hash_funcs={"model.ontology_shacl.SHACL": lambda x: hash(x.name), "model.onto_entity.OntoProperty": lambda x: hash(x.uri)})
     def get_properties(self) -> List[OntoProperty]:
         """Get the list of properties listed with the SHACL framework."""
 

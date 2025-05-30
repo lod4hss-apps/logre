@@ -10,7 +10,7 @@ from .ontology_shacl import SHACL
 from .sparql import SPARQL
 from .statement import Statement
 
-class DataSet:
+class DataBundle:
     
     name: str
     graph_data: Graph
@@ -33,7 +33,7 @@ class DataSet:
         if label_property: self.label_property = label_property
         if comment_property: self.comment_property = comment_property
 
-        OntologyClass = DataSet.get_ontology_framework(ontology_framework)
+        OntologyClass = DataBundle.get_ontology_framework(ontology_framework)
         self.ontology = OntologyClass(self.graph_ontology)
 
 
@@ -43,12 +43,12 @@ class DataSet:
         else: raise OntologyFrameworkNotSupported(framework_name)
 
 
-    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name)})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name)})
     def count_triples(self) -> dict:
-        """Count how much triples there is in the selected dataset/graph"""
+        """Count how much triples there is in the selected data-bundle/graph"""
         
         query = """
-            # DataSet.count_triples
+            # DataBundle.count_triples
             SELECT (COUNT(*) as ?count)
             WHERE {
                 /graph_begin/
@@ -80,7 +80,7 @@ class DataSet:
         }
 
 
-    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name)})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name)})
     def find_entities(self, label: str = None, class_uri: str = None, limit: int = None) -> List[OntoEntity]:
         """
         Fetch the list of entities on the endpoint with:
@@ -98,7 +98,7 @@ class DataSet:
         graph_end = "}" if self.graph_data.uri else ""
         filter_clause = f"FILTER(CONTAINS(LCASE(?label_), LCASE('{filter_text}'))) ." if label else ""
         query = """
-            # DataSet.find_entities()
+            # DataBundle.find_entities()
             SELECT
                 (?uri_ as ?uri)
                 (COALESCE(?label_, '') as ?label)
@@ -158,7 +158,7 @@ class DataSet:
         return statements
 
 
-    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri), "model.onto_entity.OntoProperty": lambda x: hash(x.uri), "builtins.list": lambda x: hash(';'.join(list(map(lambda y: y.uri, x))))})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri), "model.onto_entity.OntoProperty": lambda x: hash(x.uri), "builtins.list": lambda x: hash(';'.join(list(map(lambda y: y.uri, x))))})
     def get_outgoing_statements(self, entity: OntoEntity, only_wanted_properties: List[OntoProperty] = None) -> List[Statement]:
         """
         Fetch all outgoing triples from the data graph about the given entity.
@@ -175,7 +175,7 @@ class DataSet:
         wanted_properties = [self.sparql.prepare_uri(prop.uri) for prop in only_wanted_properties] if only_wanted_properties else ""
         wanted_properties = 'VALUES ?predicate_uri { ' + ' '.join(wanted_properties) + ' }' if only_wanted_properties else ""
         query = """
-            # DataSet.get_outgoing_statements()
+            # DataBundle.get_outgoing_statements()
             SELECT DISTINCT
                 ('""" + entity_uri + """' as ?subject_uri)
                 ('""" + entity.label.replace("'", "\\'") + """' as ?subject_label)
@@ -206,7 +206,7 @@ class DataSet:
         return self.__merge_ontology(result)
 
 
-    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri), "model.onto_entity.OntoProperty": lambda x: hash(x.uri), "builtins.list": lambda x: hash(';'.join(list(map(lambda y: y.uri, x))))})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri), "model.onto_entity.OntoProperty": lambda x: hash(x.uri), "builtins.list": lambda x: hash(';'.join(list(map(lambda y: y.uri, x))))})
     def get_incoming_statements(self, entity: OntoEntity, limit: int = None, only_wanted_properties: List[OntoProperty] = None) -> List[Statement]:
         """
         Fetch incoming triples from the data graph about the given entity.
@@ -224,7 +224,7 @@ class DataSet:
         wanted_properties = [self.sparql.prepare_uri(prop.uri) for prop in only_wanted_properties] if only_wanted_properties else ""
         wanted_properties = 'VALUES ?predicate_uri { ' + ' '.join(wanted_properties) + ' }' if only_wanted_properties else ""
         query = """
-            # DataSet.get_incoming_statements()
+            # DataBundle.get_incoming_statements()
             SELECT DISTINCT
                 ?subject_uri
                 (COALESCE(?subject_label_, 'No label') as ?subject_label)
@@ -286,7 +286,7 @@ class DataSet:
 
 
 
-    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
     def get_data_table(self, cls: OntoEntity, limit: int = None, offset: int = None, sort_col: str = None, sort_way: str = None, filter_col: str = None, filter_value: str = None) -> pd.DataFrame:
         """
         Fetch in the data graph all instances if given class, and format them in a DataFrame.
@@ -301,24 +301,24 @@ class DataSet:
         # Small inner function to build the select statement for a given property
         def get_select_property(property: OntoProperty) -> str:
             if cls.uri == property.domain_class_uri:
-                return f"(COALESCE(?{to_snake_case(property.label)}_, '') as ?{to_snake_case(property.label)})"
+                return f"(COALESCE(?{to_snake_case(property.label).replace('-', '_')}_, '') as ?{to_snake_case(property.label).replace('-', '_')})"
             else:
-                return f"(COALESCE(?{to_snake_case(property.label)}_, '') as ?{to_snake_case(property.label)}_inc)"
+                return f"(COALESCE(?{to_snake_case(property.label).replace('-', '_')}_, '') as ?{to_snake_case(property.label).replace('-', '_')}_inc)"
         # Small inner function to build the where statement for a given property
         def get_where_property(property: OntoProperty) -> str:
             property_uri = self.sparql.prepare_uri(property.uri)
             if cls.uri == property.domain_class_uri:
                 if property_uri == self.label_property or property_uri == self.comment_property:
-                    return "optional { " + f"?uri_ {property_uri} ?{to_snake_case(property.label)}_" + " . }"
+                    return "optional { " + f"?uri_ {property_uri} ?{to_snake_case(property.label).replace('-', '_')}_" + " . }"
                 else:
-                    return "optional { " + f"?uri_ {property_uri} ?{to_snake_case(property.label)}_uri" + " . " + \
-                        "optional { " + f"?{to_snake_case(property.label)}_uri {self.label_property} ?{to_snake_case(property.label)}_" + " . } }"
+                    return "optional { " + f"?uri_ {property_uri} ?{to_snake_case(property.label).replace('-', '_')}_uri" + " . " + \
+                        "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_uri {self.label_property} ?{to_snake_case(property.label).replace('-', '_')}_" + " . } }"
             else:
                 if property_uri == self.label_property or property_uri == self.comment_property:
-                    return "optional { " + f"?{to_snake_case(property.label)}_ {property_uri} ?uri_" + " . }"
+                    return "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_ {property_uri} ?uri_" + " . }"
                 else:
-                    return "optional { " + f"?{to_snake_case(property.label)}_uri {property_uri} ?uri_" + " . " + \
-                           "optional { " + f"?{to_snake_case(property.label)}_uri {self.label_property} ?{to_snake_case(property.label)}_" + " . } }"
+                    return "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_uri {property_uri} ?uri_" + " . " + \
+                           "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_uri {self.label_property} ?{to_snake_case(property.label).replace('-', '_')}_" + " . } }"
 
         # Prepare the query
         class_uri = self.sparql.prepare_uri(cls.uri)
@@ -333,7 +333,7 @@ class DataSet:
         limit = f"LIMIT {limit}" if limit else ""
         offset = f"OFFSET {offset}" if offset else ""
         query = """
-            # DataSet.get_data_table()
+            # DataBundle.get_data_table()
             SELECT
                 (COALESCE(?uri_, '') as ?uri)
                 """ + select_properties + """
@@ -380,7 +380,7 @@ class DataSet:
         return df
     
 
-    # @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
+    # @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
     def get_class_count(self, cls: OntoEntity, filter_col_name: str = None, filter_content: str = None) -> int:    
         """Look in the given graph how much instances of given class there is."""
 
@@ -399,7 +399,7 @@ class DataSet:
         graph_begin = "GRAPH " + self.graph_data.uri_ + " {" if self.graph_data.uri else ""
         graph_end = "}" if self.graph_data.uri else ""
         query = """
-            # DataSet.get_class_count()
+            # DataBundle.get_class_count()
             SELECT (COUNT(?uri) AS ?count)
             WHERE { 
                 """ + graph_begin + """
@@ -415,7 +415,7 @@ class DataSet:
         return int(counts[0]['count'])
 
 
-    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name)})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name)})
     def get_entity_infos(self, uri) -> OntoEntity:
         """Find the basic info needed for a given entity."""
 
@@ -426,7 +426,7 @@ class DataSet:
         graph_begin = "GRAPH " + self.graph_data.uri_ + " {" if self.graph_data.uri else ""
         graph_end = "}" if self.graph_data.uri else ""
         query = """
-            # DataSet.get_entity_basics()
+            # DataBundle.get_entity_basics()
             SELECT 
                 (COALESCE(?label_, '') as ?label)
                 (COALESCE(?comment_, '') as ?comment)
@@ -484,7 +484,7 @@ class DataSet:
             return to_return
         
 
-    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_set.DataSet": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
     def __download_class(self, cls: OntoEntity) -> pd.DataFrame:
         """List all instances with all properties (from the ontology) of a given class."""
         
@@ -494,10 +494,10 @@ class DataSet:
         properties_outgoing.sort(key=lambda x: x.order)
 
         # Prepare the query: make all lines from the query
-        properties_outgoing_names = [f"(COALESCE(?{to_snake_case(prop.label)}_, '') as ?{to_snake_case(prop.label)})" for prop in properties_outgoing]
-        properties_outgoing_names_str = '\n            '.join(properties_outgoing_names)
-        triples_outgoings = [f"optional {{ ?instance {prop.uri} ?{to_snake_case(prop.label)}_ . }}" for prop in properties_outgoing]
-        triples_outgoings_str = '\n                '.join(triples_outgoings)
+        properties_outgoing_names = [f"(COALESCE(?{to_snake_case(prop.label).replace('-', '_')}_, '') as ?{to_snake_case(prop.label).replace('-', '_')})" for prop in properties_outgoing]
+        properties_outgoing_names_str = '\n                '.join(properties_outgoing_names)
+        triples_outgoings = [f"optional {{ ?instance {prop.uri} ?{to_snake_case(prop.label).replace('-', '_')}_ . }}" for prop in properties_outgoing]
+        triples_outgoings_str = '\n                    '.join(triples_outgoings)
 
 
         # Prepare the query
@@ -505,7 +505,7 @@ class DataSet:
         graph_begin = "GRAPH " + self.graph_data.uri_ + " {" if self.graph_data.uri else ""
         graph_end = "}" if self.graph_data.uri else ""
         query = """
-            # DataSet.download_class()
+            # DataBundle.download_class(""" + f"{cls.label} ({cls.uri})" + """)
             SELECT
                 (?instance as ?uri)
                 ('""" + class_uri + """' as ?type)
@@ -525,10 +525,10 @@ class DataSet:
 
 
     @staticmethod
-    def from_dict(obj: dict, sparql: SPARQL) -> 'DataSet':
+    def from_dict(obj: dict, sparql: SPARQL) -> 'DataBundle':
         """Convert an object into a Class instance."""
 
-        return DataSet(
+        return DataBundle(
             sparql=sparql,
             name=obj.get('name'),
             ontology_framework=obj.get('ontology_framework'),

@@ -15,7 +15,7 @@ menu()
 
 # From state
 endpoint = state.get_endpoint()
-data_set = state.get_data_set()
+data_bundle = state.get_data_bundle()
 
 
 # Can't make a SPARQL query if there is no endpoint
@@ -27,14 +27,14 @@ if not endpoint:
 
 else:
 
-    graph_begin = "GRAPH " + endpoint.sparql.prepare_uri(data_set.graph_data.uri) + " {" if data_set.graph_data.uri else ""
-    graph_end = "}\n" if data_set.graph_data.uri else "\n"
+    graph_begin = "GRAPH " + endpoint.sparql.prepare_uri(data_bundle.graph_data.uri) + " {" if data_bundle and data_bundle.graph_data.uri else ""
+    graph_end = "}\n" if data_bundle and data_bundle.graph_data.uri else "\n"
 
     default_query = """        
-SELECT ?subject ?predicate ?object
+SELECT ?s ?p ?o
 WHERE {
     """ + graph_begin + """
-        ?subject ?predicate ?object .
+        ?s ?p ?o .
     """ + graph_end + """
 }
 LIMIT 10
@@ -42,12 +42,12 @@ LIMIT 10
 
 
     # Title and load query option
-    col1, col2 = st.columns([12, 2], vertical_alignment='bottom')
+    col1, col2 = st.columns([12, 3], vertical_alignment='bottom')
     col1.title("SPARQL Editor")
     col2.button('Load saved queries', on_click=dialog_queries_load, icon=':material/list:')
 
     # Display prefixes for user to know
-    prefixes_str = '`, `'.join([p.short for p in endpoint.sparql.prefixes])
+    prefixes_str = '`, `'.join(['`base`'] + [p.short for p in endpoint.sparql.get_prefixes()])
     st.markdown('Available prefixes are: `' + prefixes_str + '`')
 
     # Code editor

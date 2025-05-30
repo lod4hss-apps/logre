@@ -12,6 +12,7 @@ class OntoEntity:
 
     display_label: str
     display_label_comment: str
+    display_label_uri: str
 
 
     def __init__(self, uri: str = None, label: str = None, comment: str = None, is_literal: bool = False, is_blank: bool = False, class_uri: str = None, class_label: str = None) -> None:
@@ -24,6 +25,7 @@ class OntoEntity:
         self.class_label = class_label
         self.display_label = f"{self.label} ({self.class_label or self.class_uri})" if self.class_uri else f"{self.label}"
         self.display_label_comment = f"{self.display_label}: {self.comment}" if self.comment else self.display_label
+        self.display_label_uri = f"{self.label} - {self.uri}"
 
 
     def to_dict(self, prefix: str= '') -> dict:
@@ -36,7 +38,8 @@ class OntoEntity:
             prefix + 'class_uri': self.class_uri,
             prefix + 'class_label': self.class_label,
             prefix + 'display_label': self.display_label,
-            prefix + 'display_label_comment': self.display_label_comment
+            prefix + 'display_label_comment': self.display_label_comment,
+            prefix + 'display_label_uri': self.display_label_uri
         }
     
     

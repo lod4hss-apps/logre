@@ -11,16 +11,16 @@ menu()
 
 # From state
 endpoint = state.get_endpoint()
-data_set = state.get_data_set()
+data_bundle = state.get_data_bundle()
 current_page = state.get_data_table_page()
 
 
 # Can't make a SPARQL query if there is no endpoint
-if not data_set:
+if not data_bundle:
 
     st.title("Data tables")
     st.text('')
-    st.warning('You need to select an endpoint and a data set first (menu on the left).')
+    st.warning('You need to select an endpoint and a Data Bunble first (menu on the left).')
 
 else:
 
@@ -31,8 +31,8 @@ else:
     col1, col2, _, col3, _, col4, col5 = st.columns([2, 1, 1, 2, 1, 2, 2])
 
     # Class filter
-    classes = data_set.ontology.get_classes()
-    classes_labels = list(map(lambda cls: cls.display_label, classes))
+    classes = data_bundle.ontology.get_classes()
+    classes_labels = list(map(lambda cls: cls.display_label_uri, classes))
     class_label = col1.selectbox('Get entity table of class:', options=classes_labels, index=None)
 
     # Number fetched by request
@@ -48,7 +48,7 @@ else:
 
         # # Sort by
         sort_col, sort_way = None, None
-        sort_options = list(map(lambda col: (f"{col}: ASC", f"{col}: DESC"), list(data_set.get_data_table_columns(selected_class))))
+        sort_options = list(map(lambda col: (f"{col}: ASC", f"{col}: DESC"), list(data_bundle.get_data_table_columns(selected_class))))
         sort_options = [x for tpl in sort_options for x in tpl]
         sort_option = col3.selectbox('Column to sort on', sort_options, index=None)
         if sort_option: 
@@ -57,13 +57,13 @@ else:
 
         # Filter by
         filter_col, filter_value = None, None
-        filter_col = col4.selectbox('Column to filter by', list(data_set.get_data_table_columns(selected_class)), index=None)
+        filter_col = col4.selectbox('Column to filter by', list(data_bundle.get_data_table_columns(selected_class)), index=None)
         if filter_col:
             filter_value = col5.text_input('Value to filter by')
         
         # Fetch and display data
         st.text('')
-        df_instances = data_set.get_data_table(selected_class, limit, offset, sort_col, sort_way, filter_col, filter_value)
+        df_instances = data_bundle.get_data_table(selected_class, limit, offset, sort_col, sort_way, filter_col, filter_value)
         df_instances.index += 1 * (limit * (current_page - 1)) + 1 # So that indexes appears to start at 1
         # if len(df_instances):
         #     df_instances['Link'] = [f"/?page=entity&endpoint={explicits_uri(endpoint.url)}&graph={explicits_uri(graph.uri)}&entity={explicits_uri(uri)}" for uri in df_instances['URI']]
@@ -78,7 +78,7 @@ else:
         # Pagination
         st.text('')
         col1, col2 = st.columns([8, 1], vertical_alignment='top')
-        col1.markdown(f'Total number of instances: {data_set.get_class_count(selected_class, filter_col, filter_value)} - Current page: {current_page}')
+        col1.markdown(f'Total number of instances: {data_bundle.get_class_count(selected_class, filter_col, filter_value)} - Current page: {current_page}')
         page_choice = col2.number_input('Go to page', value=current_page, min_value=1)
         if page_choice != current_page:
             state.set_data_table_page(page_choice)

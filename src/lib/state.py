@@ -1,6 +1,6 @@
 from typing import List, Any, Dict
 from streamlit import session_state as state
-from model import Query, Endpoint, DataSet, OntoEntity
+from model import Query, Endpoint, DataBundle, OntoEntity, Prefix
 
 ###
 
@@ -84,7 +84,7 @@ def delete_endpoint(endpoint: Endpoint) -> None:
 
 def set_endpoint(endpoint: Endpoint) -> None:
     state['endpoint'] = endpoint
-    clear_data_set()
+    clear_data_bundle()
 
 def get_endpoint() -> Endpoint:
     if 'endpoint' not in state: return None
@@ -96,16 +96,16 @@ def clear_endpoint() -> None:
 
 ###
 
-def set_data_set(data_set: DataSet) -> None:
-    state['data_set'] = data_set
+def set_data_bundle(data_bundle: DataBundle) -> None:
+    state['data_bundle'] = data_bundle
 
-def get_data_set() -> DataSet:
-    if 'data_set' not in state: return None
-    return state['data_set']
+def get_data_bundle() -> DataBundle:
+    if 'data_bundle' not in state: return None
+    return state['data_bundle']
 
-def clear_data_set() -> None:
-    if 'data_set' in state:
-        del state['data_set']
+def clear_data_bundle() -> None:
+    if 'data_bundle' in state:
+        del state['data_bundle']
 
 ###
 
@@ -161,3 +161,15 @@ def get_data_table_page() -> int:
     return state['data-table-page']
 
 ### 
+
+def set_defaults(queries: List[Query], prefixes: List[Prefix]) -> None:
+    state['defaults_queries'] = queries
+    state['defaults_prefixes'] = prefixes
+
+def get_default_queries() -> List[Query]:
+    if 'defaults_queries' not in state: return []
+    return state['defaults_queries']
+
+def get_default_prefixes() -> List[Prefix]:
+    if 'defaults_prefixes' not in state: return []
+    return state['defaults_prefixes']
