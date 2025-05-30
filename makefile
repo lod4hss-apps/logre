@@ -1,7 +1,7 @@
 default: help
 
 SHELL := /bin/bash
-PYTHON := python3.10
+PYTHON := $(PYTHON_VERSION)
 PIPENV_NAME := pipenv_logre
 REQUIREMENTS_FILE := requirements.txt
 

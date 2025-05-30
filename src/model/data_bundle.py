@@ -300,25 +300,27 @@ class DataBundle:
 
         # Small inner function to build the select statement for a given property
         def get_select_property(property: OntoProperty) -> str:
+            property_label = to_snake_case(property.label).replace('-', '_')
             if cls.uri == property.domain_class_uri:
-                return f"(COALESCE(?{to_snake_case(property.label).replace('-', '_')}_, '') as ?{to_snake_case(property.label).replace('-', '_')})"
+                return f"(GROUP_CONCAT(DISTINCT COALESCE(?{property_label}_, ''); separator=\" - \") as ?{property_label})"
             else:
-                return f"(COALESCE(?{to_snake_case(property.label).replace('-', '_')}_, '') as ?{to_snake_case(property.label).replace('-', '_')}_inc)"
+                return f"(GROUP_CONCAT(DISTINCT COALESCE(?{property_label}_, ''); separator=\" - \") as ?{property_label}_inc)"
         # Small inner function to build the where statement for a given property
         def get_where_property(property: OntoProperty) -> str:
             property_uri = self.sparql.prepare_uri(property.uri)
+            property_label = to_snake_case(property.label).replace('-', '_')
             if cls.uri == property.domain_class_uri:
                 if property_uri == self.label_property or property_uri == self.comment_property:
-                    return "optional { " + f"?uri_ {property_uri} ?{to_snake_case(property.label).replace('-', '_')}_" + " . }"
+                    return "optional { " + f"?uri_ {property_uri} ?{property_label}_" + " . }"
                 else:
-                    return "optional { " + f"?uri_ {property_uri} ?{to_snake_case(property.label).replace('-', '_')}_uri" + " . " + \
-                        "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_uri {self.label_property} ?{to_snake_case(property.label).replace('-', '_')}_" + " . } }"
+                    return "optional { " + f"?uri_ {property_uri} ?{property_label}_uri" + " . " + \
+                        "optional { " + f"?{property_label}_uri {self.label_property} ?{property_label}_" + " . } }"
             else:
                 if property_uri == self.label_property or property_uri == self.comment_property:
-                    return "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_ {property_uri} ?uri_" + " . }"
+                    return "optional { " + f"?{property_label}_ {property_uri} ?uri_" + " . }"
                 else:
-                    return "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_uri {property_uri} ?uri_" + " . " + \
-                           "optional { " + f"?{to_snake_case(property.label).replace('-', '_')}_uri {self.label_property} ?{to_snake_case(property.label).replace('-', '_')}_" + " . } }"
+                    return "optional { " + f"?{property_label}_uri {property_uri} ?uri_" + " . " + \
+                           "optional { " + f"?{property_label}_uri {self.label_property} ?{property_label}_" + " . } }"
 
         # Prepare the query
         class_uri = self.sparql.prepare_uri(cls.uri)
@@ -337,8 +339,8 @@ class DataBundle:
             SELECT
                 (COALESCE(?uri_, '') as ?uri)
                 """ + select_properties + """
-                (COALESCE(?outgoing_count_, 0) AS ?outgoing_count)
-                (COALESCE(?incoming_count_, 0) AS ?incoming_count) 
+                (MIN(COALESCE(?outgoing_count_, 0)) AS ?outgoing_count)
+                (MIN(COALESCE(?incoming_count_, 0)) AS ?incoming_count) 
             WHERE {
                 """ + graph_begin + """
                     ?uri_ """ + self.type_property + """ """ + class_uri + """ .
@@ -351,7 +353,7 @@ class DataBundle:
                                 ?uri_ """ + self.type_property + """ """ + class_uri + """ .
                                 ?uri_ ?p ?outgoing .
                             """ + graph_end + """
-                        } GROUP BY ?uri_
+                           } GROUP BY ?uri_
                     }
 
                     OPTIONAL {
@@ -364,6 +366,7 @@ class DataBundle:
                     }
                 """ + graph_end + """
             }
+            GROUP BY ?uri_
             """ + sort + """
             """ + limit + """
             """ + offset + """
@@ -377,6 +380,7 @@ class DataBundle:
         df.columns = [from_snake_case(col).replace(' Inc', ' (inc)') for col in df.columns]
         df.rename(columns={'Uri': 'URI'}, inplace=True)
 
+        # return df.groupby('URI').agg(lambda x: '; '.join(map(str, sorted(set(x))))).reset_index()
         return df
     
 
