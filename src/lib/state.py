@@ -4,25 +4,6 @@ from model import Query, Endpoint, DataBundle, OntoEntity, Prefix
 
 ###
 
-def set_query_params(query_params: Dict[str, str]) -> None:
-    state['query_params'] = {}
-    for key, value in query_params.items():
-        state['query_params'][key] = value
-
-def has_query_params(param_name: str) -> bool:
-    if 'query_params' not in state: return False
-    return param_name in state['query_params']
-
-def get_query_param(param: str) -> str | None:
-    if 'query_params' not in state: return None
-    return state['query_params'][param]
-
-def clear_query_param() -> None:
-    if 'query_params' in state:
-        del state['query_params']
-
-###
-
 def set_version(version: str) -> None:
     state['version'] = version
 

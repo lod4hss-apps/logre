@@ -48,13 +48,41 @@ def __get_hex_color(label: str):
 ##### The page #####
 
 init(layout='wide')
+
+#### QUERY PARAM HANDLING - BEGIN ####
+# If there are query parameters: endpoint name
+query_param_endpoint_name = st.query_params.get('endpoint', None)
+if query_param_endpoint_name:
+    all_endpoints = state.get_endpoints()
+    targets = list(filter(lambda e: e.name == query_param_endpoint_name, all_endpoints))
+    if len(targets): 
+        endpoint = targets[0]
+        state.set_endpoint(targets[0])
+
+        # If there are query parameters: data bundle name
+        query_param_data_bundle_name = st.query_params.get('databundle', None)
+        if query_param_data_bundle_name:
+            targets = list(filter(lambda e: e.name == query_param_data_bundle_name, endpoint.data_bundles))
+            if len(targets): 
+                data_bundle = targets[0]
+                state.set_data_bundle(data_bundle)
+
+                # If there are query parameters: entity URI
+                query_param_entity_uri = st.query_params.get('entity', None)
+                if query_param_entity_uri:
+                    entity = data_bundle.get_entity_infos(query_param_entity_uri)
+                    state.set_entity(entity)
+    
+                else: state.clear_entity()        
+            else: state.clear_data_bundle()
+    else: state.clear_endpoint()
+#### QUERY PARAM HANDLING - END ####    
 menu()
 
 # From state
 endpoint = state.get_endpoint()
 data_bundle = state.get_data_bundle()
 entity = state.get_entity()
-
 
 
 # If no endpoint is selected, no entities can be displayed
@@ -72,7 +100,7 @@ else:
     col1.markdown(f'# {entity.display_label} <small style="font-size: 16px; color: gray; text-decoration: none;">{entity.uri}</small>', unsafe_allow_html=True)
     col2.button('', icon=':material/info:', type='tertiary', on_click=dialog_entity_info, kwargs={'entity': entity})
     if col_delete.button('', icon=':material/delete:', type='primary'):
-        dialog_confirmation("You are about to delete this entity (including all triples) in this graph.", __delete_entity, entity=entity)
+        dialog_confirmation("You are about to delete this entity, and all its triples.", __delete_entity, entity=entity)
     st.markdown(entity.comment or '')
 
     st.text('')
@@ -98,6 +126,7 @@ else:
             have_triple.add(key)
             unique_card_triples.append(triple)
     card = unique_card_triples
+
 
     # Since we have a card (ie an ontology), we give the edit button triples from the card
     col_edit.button('Edit', icon=':material/edit:', type='primary',)# on_click=dialog_edit_entity, kwargs={'entity': entity, 'triples': card})

@@ -46,7 +46,7 @@ else:
         # Offset calculation
         offset = (current_page - 1) * limit
 
-        # # Sort by
+        # Sort by
         sort_col, sort_way = None, None
         sort_options = list(map(lambda col: (f"{col}: ASC", f"{col}: DESC"), list(data_bundle.get_data_table_columns(selected_class))))
         sort_options = [x for tpl in sort_options for x in tpl]
@@ -65,14 +65,14 @@ else:
         st.text('')
         df_instances = data_bundle.get_data_table(selected_class, limit, offset, sort_col, sort_way, filter_col, filter_value)
         df_instances.index += 1 * (limit * (current_page - 1)) + 1 # So that indexes appears to start at 1
-        # if len(df_instances):
-        #     df_instances['Link'] = [f"/?page=entity&endpoint={explicits_uri(endpoint.url)}&graph={explicits_uri(graph.uri)}&entity={explicits_uri(uri)}" for uri in df_instances['URI']]
+        if len(df_instances):
+            df_instances['Link'] = [f"/entity?endpoint={endpoint.name}&databundle={data_bundle.name}&entity={uri}" for uri in df_instances['URI']]
         
         st.dataframe(df_instances, use_container_width=True, column_config={
-            # 'Link':st.column_config.LinkColumn(display_text="Open", width='small'),
             'URI': st.column_config.TextColumn(width='small'),
             'Outgoing Count': st.column_config.NumberColumn(width='small'),
             'Incoming Count': st.column_config.NumberColumn(width='small'),
+            'Link':st.column_config.LinkColumn(display_text="Open", width='small'),
         })
 
         # Pagination
