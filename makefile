@@ -20,7 +20,7 @@ update:
 	@echo "[makefile] Current version:" $$(cat VERSION)
 	@echo "[makefile] Updating code base..."
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
-	git push origin $$branch > /dev/null 2<&1
+	git pull origin $$branch > /dev/null 2<&1
 	@echo "[makefile] Now having version:" $$(cat ./VERSION)
 
 
@@ -89,3 +89,7 @@ get-sdhss-shacls:
 	@git clone https://github.com/Semantic-Data-for-Humanities/SDHSS-Profiles.git
 	@mv SDHSS-Profiles/sdhss_shacl_profiles/*.ttl ./ontologies
 	@rm -rf ./SDHSS-Profiles
+
+
+temp:
+	echo $(PYTHON)
