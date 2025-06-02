@@ -17,7 +17,7 @@ class SHACL(Ontology):
     def get_classes(self) -> List[OntoEntity]:
         """Get the list of classes listed within the ontology graph."""
         
-        graph_begin = "GRAPH " + self.graph.uri + " {" if self.graph.uri else ""
+        graph_begin = "GRAPH " + self.graph.uri_ + " {" if self.graph.uri else ""
         graph_end = "}" if self.graph.uri else ""
         query = """
             # SHACL.get_classes()
