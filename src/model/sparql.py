@@ -31,6 +31,10 @@ class SPARQL:
         # Make it a string 
         supposed_uri = str(supposed_uri)
 
+        # Make it work when we have a real URI
+        if supposed_uri.startswith('http'):
+            return f"<{supposed_uri}>"
+
         # Check if the given URI has a known prefix: if yes, nothing to do
         if ":" in supposed_uri:
             if self.is_known_prefix(supposed_uri[0:supposed_uri.index(':')]):
