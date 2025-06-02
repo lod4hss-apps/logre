@@ -46,7 +46,7 @@ class SHACL(Ontology):
     def get_properties(self) -> List[OntoProperty]:
         """Get the list of properties listed with the SHACL framework."""
 
-        graph_begin = "GRAPH " + self.graph.uri + " {" if self.graph.uri else ""
+        graph_begin = "GRAPH " + self.graph.uri_ + " {" if self.graph.uri else ""
         graph_end = "}" if self.graph.uri else ""
         query = """
             SELECT DISTINCT

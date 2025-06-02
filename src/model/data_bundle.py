@@ -97,6 +97,7 @@ class DataBundle:
         graph_begin = "GRAPH " + self.graph_data.uri_ + " {" if self.graph_data.uri else ""
         graph_end = "}" if self.graph_data.uri else ""
         filter_clause = f"FILTER(CONTAINS(LCASE(?label_), LCASE('{filter_text}'))) ." if label else ""
+        class_uri = self.sparql.prepare_uri(class_uri)
         query = """
             # DataBundle.find_entities()
             SELECT
