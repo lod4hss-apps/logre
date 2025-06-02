@@ -329,10 +329,10 @@ class DataBundle:
         graph_end = "}" if self.graph_data.uri else ""
         select_properties = "\n                ".join([get_select_property(prop) for prop in wanted_properties])
         where_properties = "\n                    ".join([get_where_property(prop) for prop in wanted_properties])
-        if sort_col: sort = f"ASC(?{to_snake_case(sort_col)})" if sort_way == 'ASC' else f"DESC(?{to_snake_case(sort_col)})"
+        if sort_col: sort = f"ASC(?{to_snake_case(sort_col).replace('-', '_')})" if sort_way == 'ASC' else f"DESC(?{to_snake_case(sort_col).replace('-', '_')})"
         else: sort = "DESC(?uri)"
         sort = 'ORDER BY ' + sort
-        filter = f'FILTER(CONTAINS(LCASE(STR(?{to_snake_case(filter_col)}_)), LCASE("{normalize_text(filter_value)}")))' if filter_value else ""
+        filter = f'FILTER(CONTAINS(LCASE(STR(?{to_snake_case(filter_col).replace('-', '_')}_)), LCASE("{normalize_text(filter_value)}")))' if filter_value else ""
         limit = f"LIMIT {limit}" if limit else ""
         offset = f"OFFSET {offset}" if offset else ""
         query = """
