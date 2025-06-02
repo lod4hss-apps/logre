@@ -344,7 +344,14 @@ class DataBundle:
                 (MIN(COALESCE(?incoming_count_, 0)) AS ?incoming_count) 
             WHERE {
                 """ + graph_begin + """
-                    ?uri_ """ + self.type_property + """ """ + class_uri + """ .
+                    { 
+                        select ?uri_ 
+                        where { 
+                            ?uri_ """ + self.type_property + """ """ + class_uri + """ . 
+                        } 
+                        """ + limit + """
+                        """ + offset + """
+                    }
                     """ + where_properties + """
                     """ + filter + """
                     
@@ -369,8 +376,6 @@ class DataBundle:
             }
             GROUP BY ?uri_
             """ + sort + """
-            """ + limit + """
-            """ + offset + """
         """
 
         # Execute the query (fetch instances)
