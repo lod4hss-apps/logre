@@ -2,6 +2,7 @@ import streamlit as st
 from components.init import init
 from components.menu import menu
 import lib.state as state
+import urllib.parse
 
 
 ##### The page #####
@@ -66,7 +67,9 @@ else:
         df_instances = data_bundle.get_data_table(selected_class, limit, offset, sort_col, sort_way, filter_col, filter_value)
         df_instances.index += 1 * (limit * (current_page - 1)) + 1 # So that indexes appears to start at 1
         if len(df_instances):
-            df_instances['Link'] = [f"/entity?endpoint={endpoint.name}&databundle={data_bundle.name}&entity={uri}" for uri in df_instances['URI']]
+            endpoint_name = urllib.parse.quote(endpoint.name)
+            data_bundle_name = urllib.parse.quote(data_bundle.name)
+            df_instances['Link'] = [f"/entity?endpoint={endpoint_name}&databundle={data_bundle_name}&entity={uri}" for uri in df_instances['URI']]
         
         st.dataframe(df_instances, use_container_width=True, column_config={
             'URI': st.column_config.TextColumn(width='small'),

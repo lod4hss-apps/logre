@@ -1,3 +1,6 @@
+include .env
+export
+
 default: help
 
 SHELL := /bin/bash
@@ -89,7 +92,3 @@ get-sdhss-shacls:
 	@git clone https://github.com/Semantic-Data-for-Humanities/SDHSS-Profiles.git
 	@mv SDHSS-Profiles/sdhss_shacl_profiles/*.ttl ./ontologies
 	@rm -rf ./SDHSS-Profiles
-
-
-temp:
-	echo $(PYTHON)

@@ -4,7 +4,7 @@ from pyvis.network import Network
 import lib.state as state
 from components.init import init
 from components.menu import menu
-from dialogs import dialog_confirmation, dialog_entity_info
+from dialogs import dialog_confirmation, dialog_entity_info, dialog_entity_form
 from model import OntoEntity, DataBundle, Statement
 from dialogs import dialog_triple_info
 
@@ -15,10 +15,9 @@ def __delete_entity(entity: OntoEntity) -> None:
     # From state
     data_bundle = state.get_data_bundle()
 
-    data_bundle.graph_data.delete([ 
-        (entity.uri, '?p', '?o'),
-        ('?s', '?p', entity.uri)
-    ])
+    # Delete data
+    data_bundle.graph_data.delete((entity.uri, '?p', '?o')) # Outgoing
+    data_bundle.graph_data.delete(('?s', '?p', entity.uri)) # Incoming
 
     state.clear_entity()
     state.set_toast('Entity deleted', icon=':material/done:')
@@ -112,10 +111,10 @@ else:
     ### 1ST TAB: CARD ###
 
     # Get the card statements
-    card = data_bundle.get_card(entity)
+    all_card = data_bundle.get_card(entity)
 
     # Filter out rdf:type, rdfs:label, rdfs:comment they are already in the header
-    card = [triple for triple in card if triple.predicate.uri not in [data_bundle.type_property, data_bundle.label_property, data_bundle.comment_property]]
+    card = [triple for triple in all_card if triple.predicate.uri not in [data_bundle.type_property, data_bundle.label_property, data_bundle.comment_property]]
 
     # Make sure triples are unique (can happen if multiple ontology has been imported for a class)
     have_triple = set()
@@ -127,9 +126,9 @@ else:
             unique_card_triples.append(triple)
     card = unique_card_triples
 
-
     # Since we have a card (ie an ontology), we give the edit button triples from the card
-    col_edit.button('Edit', icon=':material/edit:', type='primary',)# on_click=dialog_edit_entity, kwargs={'entity': entity, 'triples': card})
+    triples = [(statement.subject.uri, statement.predicate.uri, statement.object.uri) for statement in all_card]
+    col_edit.button('Edit', icon=':material/edit:', type='primary', on_click=dialog_entity_form, kwargs={'entity': entity, 'triples': triples})
 
     # Loop through all card triples to display them correctly
     for i, triple in enumerate(card):

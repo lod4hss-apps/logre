@@ -7,4 +7,4 @@ from .create_endpoint import dialog_create_endpoint
 from .find_entity import dialog_find_entity
 from .entity_info import dialog_entity_info
 from .triple_info import dialog_triple_info
-from .create_entity import dialog_create_entity
+from .entity_form import dialog_entity_form

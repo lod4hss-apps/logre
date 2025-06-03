@@ -1,7 +1,7 @@
 import streamlit as st
 import lib.state as state
 from lib.configuration import load_config
-from dialogs import dialog_find_entity, dialog_create_entity
+from dialogs import dialog_find_entity, dialog_entity_form
 
 def menu() -> None:
     """Component function: the sidebar."""
@@ -107,7 +107,7 @@ def menu() -> None:
             st.sidebar.divider()
 
             ##### GRAPH COMMANDS #####
-
-            st.sidebar.button('Find entity', icon=':material/search:', on_click=dialog_find_entity)
-            st.sidebar.button('Create an entity', icon=':material/line_start_circle:', on_click=dialog_create_entity)
-            # st.sidebar.button('Create a triple', icon=':material/share:', on_click=dialog_create_triple)
+            if data_bundle:
+                st.sidebar.button('Find entity', icon=':material/search:', on_click=dialog_find_entity)
+                st.sidebar.button('Create an entity', icon=':material/line_start_circle:', on_click=dialog_entity_form)
+                # st.sidebar.button('Create a triple', icon=':material/share:', on_click=dialog_create_triple)

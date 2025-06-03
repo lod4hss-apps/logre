@@ -157,7 +157,7 @@ class SPARQL:
 
             # Prepare the query
             text = """
-                # SPARQ.insert()
+                # SPARQL.insert()
                 INSERT DATA {
                     """ + graph_sparql_open + """
                         """ + triples_str + """
@@ -186,7 +186,7 @@ class SPARQL:
         graph_sparql_open = "GRAPH " + graph_uri + " {" if graph_uri else ""
         graph_sparql_close = "}" if graph_uri else ""
         text = """
-            # SPARQ.delete()
+            # SPARQL.delete()
             DELETE WHERE {
                 """ + graph_sparql_open + """
                     """ + triples_str + """
