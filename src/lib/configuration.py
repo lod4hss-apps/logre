@@ -63,6 +63,9 @@ def load_config(file_content: str) -> str:
         # Save all endpoints in state
         state.set_endpoints(all_endpoints)
 
+        # By default, select the first endpoint
+        state.set_endpoint(all_endpoints[0])
+
 
 def save_config() -> None:
     """
