@@ -264,13 +264,16 @@ class DataBundle:
         ontology_properties = self.ontology.get_properties()
         wanted_properties = [prop for prop in ontology_properties if prop.card_of_class_uri == entity.class_uri]
 
-        # Fetch all statements
-        outgoings = self.get_outgoing_statements(entity, only_wanted_properties=wanted_properties)
-        incomings = self.get_incoming_statements(entity, only_wanted_properties=wanted_properties)
-        statements = outgoings + incomings
-        
-        # Sort on predicate order
-        statements.sort(key=lambda x: x.predicate.order)
+        if len(wanted_properties) != 0:
+            # Fetch all statements
+            outgoings = self.get_outgoing_statements(entity, only_wanted_properties=wanted_properties)
+            incomings = self.get_incoming_statements(entity, only_wanted_properties=wanted_properties)
+            statements = outgoings + incomings
+            
+            # Sort on predicate order
+            statements.sort(key=lambda x: x.predicate.order)
+        else:
+            statements = []
 
         return statements
         
