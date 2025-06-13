@@ -3,6 +3,7 @@ import os
 import yaml
 from model import Endpoint, Query, Prefix
 import lib.state as state
+import streamlit as st
 
 DEFAULT_PATH = './defaults.yaml'
 CONFIG_PATH = './logre-config.yaml'
@@ -64,7 +65,8 @@ def load_config(file_content: str) -> str:
         state.set_endpoints(all_endpoints)
 
         # By default, select the first endpoint
-        state.set_endpoint(all_endpoints[0])
+        if len(all_endpoints) == 1:
+            state.set_endpoint(all_endpoints[0])
 
 
 def save_config() -> None:
@@ -82,6 +84,10 @@ def save_config() -> None:
     file = open(CONFIG_PATH, 'w')
     file.write(unload_config())
     file.close()
+
+    # Clear caches
+    st.cache_data.clear()
+    st.cache_resource.clear()
 
 
 def read_config() -> None:
@@ -107,7 +113,7 @@ def read_config() -> None:
         file.close()
 
         load_config(content)
-
+        
 
 def parse_defaults(default_content: str) -> Tuple[List[Query], List[Prefix]]:
     

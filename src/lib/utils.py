@@ -1,6 +1,7 @@
 from typing import List
 import time
 import unicodedata, re, io, zipfile
+import urllib.parse
 
 
 def normalize_text(text: str):
@@ -80,3 +81,13 @@ def generate_id() -> str:
         time.sleep(0.001)
 
     return 'i' + result[::-1]
+
+
+def get_logre_url(endpoint_name: str, data_bundle_name: str, entity_uri: str):
+
+    endpoint_name = urllib.parse.quote(endpoint_name)
+    data_bundle_name = urllib.parse.quote(data_bundle_name)
+    entity_uri = urllib.parse.quote(entity_uri)
+
+    return f"/entity?endpoint={endpoint_name}&databundle={data_bundle_name}&entity={entity_uri}"
+

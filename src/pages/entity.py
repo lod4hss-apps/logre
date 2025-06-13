@@ -28,12 +28,21 @@ def __delete_triple(display_triple: Statement) -> None:
 
     # From state
     data_bundle = state.get_data_bundle()
+    entity = state.get_entity()
 
-    data_bundle.graph_data.delete([ 
-        (display_triple.subject.uri, display_triple.predicate.uri, display_triple.object.uri)
-    ])
+    subject = display_triple.subject.uri
+    predicate = display_triple.predicate.uri
+    object = f"'{display_triple.object.uri}'" if display_triple.object.is_literal else display_triple.object.uri
+    triple = (subject, predicate, object)
+
+    data_bundle.graph_data.delete([triple])
 
     state.set_toast('Triple deleted', icon=':material/done:')
+    st.cache_data.clear()
+    st.cache_resource.clear()
+
+    entity = data_bundle.get_entity_infos(entity.uri)
+    state.set_entity(entity)
     
 
 def __get_hex_color(label: str):
@@ -76,6 +85,7 @@ if query_param_endpoint_name:
             else: state.clear_data_bundle()
     else: state.clear_endpoint()
 #### QUERY PARAM HANDLING - END ####    
+
 menu()
 
 # From state

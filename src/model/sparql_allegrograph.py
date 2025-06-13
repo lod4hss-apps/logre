@@ -1,5 +1,5 @@
 import requests
-from typing import List, Dict
+from typing import List
 
 from .sparql import SPARQL
 from .errors import HTTPError
@@ -24,7 +24,7 @@ class Allegrograph(SPARQL):
         super().insert(triples, graph_uri) 
 
 
-    def upload_nquads(self, nquad_content: str) -> None:
+    def upload_nquads_chunk(self, nquad_content: str) -> None:
         """
         Function to import raw n-Quads data (as string) into the endpoint.
         As n-quads already include the graph, data can't be imported into a specified graph.
@@ -46,7 +46,7 @@ class Allegrograph(SPARQL):
             raise HTTPError(msg)
 
 
-    def upload_turtle(self, turtle_content: str, named_graph_uri: str = None) -> None:
+    def upload_turtle_chunk(self, turtle_content: str, named_graph_uri: str = None) -> None:
 
         # Prepare query
         url = self.url if not self.url.endswith('/sparql') else self.url.replace('/sparql', '')

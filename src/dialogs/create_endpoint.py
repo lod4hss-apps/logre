@@ -19,6 +19,7 @@ def dialog_create_endpoint(server_technologies: list[str]) -> None:
     can_create = name and technology and url and base_uri
     if st.button('Create', disabled=not can_create):
         all_endpoints = state.get_endpoints()
+
         new_endpoint = Endpoint(technology, name, url, username, password, base_uri)
 
         # Add all default prefixes

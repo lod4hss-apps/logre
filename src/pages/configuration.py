@@ -14,6 +14,8 @@ all_onto_frameworks = ['SHACL']
 def __save() -> None:
     save_config()
     state.set_toast('Configuration saved', icon=':material/done:')
+    st.cache_data.clear()
+    st.cache_resource.clear()
     st.rerun()
 
 def __del_endpoint(endpoint: Endpoint) -> None:
@@ -190,11 +192,10 @@ for index_endpoint, endpoint in enumerate(all_endpoints):
         if st.button('Add a new Data Bundle', icon=':material/add:', key=f"configuration-data-bundle-{index_endpoint}-add"):
             dialog_create_data_bundle(endpoint, all_onto_frameworks)
 
-    st.text('')
 
-    ### PREFIXES ###
-
-    with st.expander(f"### Prefixes"):
+        ### PREFIXES ###
+        st.text('')
+        st.markdown("### Prefixes")
 
         col1, col2 = st.columns([10, 3])
         for index_prefix, prefix in enumerate(sorted(endpoint.sparql.get_prefixes(), key=lambda p: p.short)):

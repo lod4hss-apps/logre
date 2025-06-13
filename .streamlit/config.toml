@@ -1,2 +1,5 @@
 [client]
 showSidebarNavigation = false
+
+[server]
+maxUploadSize = 500

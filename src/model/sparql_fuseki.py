@@ -9,7 +9,7 @@ class Fuseki(SPARQL):
         self.name = 'Fuseki'
 
 
-    def upload_nquads(self, nquad_content: str) -> None:
+    def upload_nquads_chunk(self, nquad_content: str) -> None:
         """
         Function to import raw n-Quads data (as string) into the endpoint.
         As n-quads already include the graph, data can't be imported into a specified graph.
@@ -29,7 +29,7 @@ class Fuseki(SPARQL):
             raise HTTPError(msg)
 
 
-    def upload_turtle(self, turtle_content: str, named_graph_uri: str = None) -> None:
+    def upload_turtle_chunk(self, turtle_content: str, named_graph_uri: str = None) -> None:
 
         # Prepare query
         if named_graph_uri: url = self.url + '?graph=' + named_graph_uri

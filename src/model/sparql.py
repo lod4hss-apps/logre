@@ -1,9 +1,8 @@
-import requests, os, pandas as pd
-from typing import List, Dict
+import requests, os
+from typing import List
 from requests.auth import HTTPBasicAuth
-from io import StringIO
 
-from .errors import HTTPError, MalformedCSV
+from .errors import HTTPError
 from .prefix import Prefix
 
 
@@ -12,14 +11,15 @@ class SPARQL:
     name: str
     url: str
     username: str
-    password: str = ''
-    prefixes: List[Prefix] = []
+    password: str
+    prefixes: List[Prefix]
 
 
     def __init__(self, url: str, username: str, password: str) -> None:
         self.url = url
         self.username = username
         self.password = password
+        self.prefixes = []
 
     def get_prefixes(self) -> List[Prefix]:
         return [prefix for prefix in self.prefixes if prefix.short != 'base']
@@ -74,7 +74,7 @@ class SPARQL:
             long_uri = prefix.lengthen(long_uri)
         return long_uri
 
-    def run(self, query: str) -> list[dict]:
+    def run(self, query: str) -> None | list[dict]:
         """Make a HTTP POST request with all needed params to the SPARQL endpoint."""
 
         if os.getenv('LOGRE_MODE') == "debug":
@@ -215,6 +215,39 @@ class SPARQL:
     
 
     def upload_nquads(self, nquad_content: str) -> None:
+        line_number = 10000
+        lines = nquad_content.splitlines()
+        chunks = ['\n'.join(lines[i:i + line_number]) for i in range(0, len(lines), line_number)]
+
+        for i, chunk in enumerate(chunks):
+            print(f"> Uploading ({line_number * i} / {len(lines)})")
+            self.upload_nquads_chunk(chunk)
+
+
+    def upload_turtle(self, turtle_content: str) -> None:
+
+        line_number = 10000
+        lines = turtle_content.splitlines()
+
+        # Extract prefixes
+        prefixes = []
+        triples = []
+        for line in lines:
+            if line.strip().startswith('@prefix'):
+                prefixes.append(line)
+            else:
+                triples.append(line)
+        
+        prefixes = '\n'.join(prefixes) + "\n"
+        chunks = ['\n'.join(triples[i:i + line_number]) for i in range(0, len(triples), line_number)]
+
+        for i, chunk in enumerate(chunks):
+            print(f"> Uploading ({line_number * i} / {len(triples)})")
+            self.upload_turtle_chunk(prefixes + chunk)
+
+
+
+    def upload_nquads_chunk(self, nquad_content: str) -> None:
         """
         Function to import raw n-Quads data (as string) into the endpoint.
         As n-quads already include the graph, data can't be imported into a specified graph.
@@ -222,7 +255,7 @@ class SPARQL:
         raise Exception(f'Method <upload_nquads> not implemented in {self.name}')
     
 
-    def upload_turtle(self, turtle_content: str, named_graph_uri: str) -> None:
+    def upload_turtle_chunk(self, turtle_content: str, named_graph_uri: str) -> None:
         """
         Function to import raw turtle data (as string) into the given graph.
         Specifying the graph is mandatory, otherwise import it into default graph.

@@ -17,7 +17,6 @@ menu()
 endpoint = state.get_endpoint()
 data_bundle = state.get_data_bundle()
 
-
 # Can't make a SPARQL query if there is no endpoint
 if not endpoint:
 
@@ -82,6 +81,6 @@ LIMIT 10
             # The result itself
             st.dataframe(result_df, use_container_width=True, hide_index=True)
 
-        elif result:
+        else:
             # In case the query was an insert or a delete, display a message to inform user
             state.set_toast('Query executed', icon=':material/done:')
