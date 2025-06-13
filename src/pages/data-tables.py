@@ -33,7 +33,7 @@ else:
 
     # Class filter
     classes = data_bundle.ontology.get_classes()
-    classes_labels = list(map(lambda cls: cls.display_label_uri, classes))
+    classes_labels = list(map(lambda cls: cls.display_label, classes))
     class_label = col1.selectbox('Get entity table of class:', options=classes_labels, index=None)
 
     # Number fetched by request

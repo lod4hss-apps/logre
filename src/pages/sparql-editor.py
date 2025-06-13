@@ -53,8 +53,8 @@ LIMIT 10
     sparql_query = code_editor(
         lang="sparql",
         code=default_query,
-        height="800px",
-        buttons=[{"name": "Run SPARQL Query", "hasText": True, "alwaysOn": True,"style": {"top": "750px", "right": "0.4rem"}, "commands": ["submit"]}]
+        height="400px",
+        buttons=[{"name": "Run SPARQL Query", "hasText": True, "alwaysOn": True,"style": {"top": "350px", "right": "0.4rem"}, "commands": ["submit"]}]
     )
 
     st.text("")
