@@ -291,7 +291,7 @@ class DataBundle:
 
 
     @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
-    def get_data_table(self, cls: OntoEntity, limit: int = None, offset: int = None, sort_col: str = None, sort_way: str = None, filter_col: str = None, filter_value: str = None) -> pd.DataFrame:
+    def get_data_table(self, cls: OntoEntity, limit: int = None, offset: int = 0, sort_col: str = None, sort_way: str = None, filter_col: str = None, filter_value: str = None) -> pd.DataFrame:
         """
         Fetch in the data graph all instances if given class, and format them in a DataFrame.
         DataFrame columns are those defined in the Ontology, added with the number of statements, incoming and outgoings.
@@ -343,8 +343,6 @@ class DataBundle:
             SELECT
                 (COALESCE(?uri_, '') as ?uri)
                 """ + select_properties + """
-                (MIN(COALESCE(?outgoing_count_, 0)) AS ?outgoing_count)
-                (MIN(COALESCE(?incoming_count_, 0)) AS ?incoming_count) 
             WHERE {
                 """ + graph_begin + """
                     { 
@@ -357,24 +355,6 @@ class DataBundle:
                     }
                     """ + where_properties + """
                     """ + filter + """
-                    
-                    OPTIONAL {
-                        SELECT ?uri_ (COUNT(?outgoing) as ?outgoing_count_) WHERE {
-                            """ + graph_begin + """
-                                ?uri_ """ + self.type_property + """ """ + class_uri + """ .
-                                ?uri_ ?p ?outgoing .
-                            """ + graph_end + """
-                           } GROUP BY ?uri_
-                    }
-
-                    OPTIONAL {
-                        SELECT ?uri_ (COUNT(?incoming) as ?incoming_count_) WHERE {
-                            """ + graph_begin + """
-                                ?uri_ """ + self.type_property + """ """ + class_uri + """ .
-                                ?incoming ?p ?uri_ .
-                            """ + graph_end + """
-                        } GROUP BY ?uri_
-                    }
                 """ + graph_end + """
             }
             GROUP BY ?uri_
@@ -384,8 +364,34 @@ class DataBundle:
         # Execute the query (fetch instances)
         instances = self.graph_data.sparql.run(query)
 
+        # Count outgoings and incomings
+        uris = list(map(lambda record: record['uri'], instances))
+        outgoings = self.graph_data.sparql.run(f"""
+            SELECT ?uri (COUNT(?outgoing) as ?outgoing_count) 
+            WHERE {{
+                {graph_begin}
+                    VALUES ?uri {{ {' '.join(uris)} }}
+                    ?uri ?p ?outgoing .
+                {graph_end}
+            }} GROUP BY ?uri
+        """)
+        outgoings = pd.DataFrame(outgoings)
+        incomings = self.graph_data.sparql.run(f"""
+            SELECT ?uri (COUNT(?incoming) as ?incoming_count) 
+            WHERE {{
+                {graph_begin}
+                    VALUES ?uri {{ {' '.join(uris)} }}
+                    ?incoming ?p ?uri .
+                {graph_end}
+            }} GROUP BY ?uri
+        """)
+        incomings = pd.DataFrame(incomings)
+
         # Create the Dataframe
         df = pd.DataFrame(data=instances)
+        df = df.merge(outgoings, how='left').merge(incomings, how='left')
+        df['outgoing_count'].fillna(0, inplace=True)
+        df['incoming_count'].fillna(0, inplace=True)
         df.columns = [from_snake_case(col).replace(' Inc', ' (inc)') for col in df.columns]
         df.rename(columns={'Uri': 'URI'}, inplace=True)
 

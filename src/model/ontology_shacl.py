@@ -49,6 +49,7 @@ class SHACL(Ontology):
         graph_begin = "GRAPH " + self.graph.uri_ + " {" if self.graph.uri else ""
         graph_end = "}" if self.graph.uri else ""
         query = """
+            # SHACL.get_properties()
             SELECT DISTINCT
                 (COALESCE(?target_class_, '') as ?card_of_class_uri)
                 (COALESCE(?label_, ?uri) as ?label)
