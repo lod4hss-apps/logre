@@ -399,7 +399,7 @@ class DataBundle:
         return df
     
 
-    # @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
+    @st.cache_data(show_spinner=False, ttl=10, hash_funcs={"model.data_bundle.DataBundle": lambda x: hash(x.name), "model.onto_entity.OntoEntity": lambda x: hash(x.uri)})
     def get_class_count(self, cls: OntoEntity, filter_col_name: str = None, filter_content: str = None) -> int:    
         """Look in the given graph how much instances of given class there is."""
 
