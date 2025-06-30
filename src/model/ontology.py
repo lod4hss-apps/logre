@@ -9,7 +9,7 @@ class Ontology:
     name: str
     graph: Graph
 
-    def __init__(self, graph: Graph) -> None:
+    def __init__(self, graph: Graph, *args, **kwargs) -> None:
         self.graph = graph
 
 

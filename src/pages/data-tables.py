@@ -65,23 +65,28 @@ else:
         # Fetch and display data
         st.text('')
         df_instances = data_bundle.get_data_table(selected_class, limit, offset, sort_col, sort_way, filter_col, filter_value)
-        df_instances.index += 1 * (limit * (current_page - 1)) + 1 # So that indexes appears to start at 1
-        if len(df_instances):
-            df_instances['Link'] = [u.get_logre_url(endpoint.name, data_bundle.name, uri) for uri in df_instances['URI']]
-        
-        st.dataframe(df_instances, use_container_width=True, column_config={
-            'URI': st.column_config.TextColumn(width='small'),
-            'Outgoing Count': st.column_config.NumberColumn(width='small'),
-            'Incoming Count': st.column_config.NumberColumn(width='small'),
-            'Link':st.column_config.LinkColumn(display_text="Open", width='small'),
-        })
 
-        # Pagination
-        st.text('')
-        col1, col2 = st.columns([8, 1], vertical_alignment='top')
-        col1.markdown(f'Total number of instances: {data_bundle.get_class_count(selected_class, filter_col, filter_value)} - Current page: {current_page}')
-        page_choice = col2.number_input('Go to page', value=current_page, min_value=1)
-        if page_choice != current_page:
-            state.set_data_table_page(page_choice)
-            st.rerun()
-        
+        if len(df_instances) > 0:
+            df_instances.columns = data_bundle.get_data_table_columns(selected_class)
+            df_instances.index += 1 * (limit * (current_page - 1)) + 1 # So that indexes appears to start at 1
+            if len(df_instances):
+                df_instances['Link'] = [u.get_logre_url(endpoint.name, data_bundle.name, uri) for uri in df_instances['URI']]
+            
+            st.dataframe(df_instances, use_container_width=True, column_config={
+                'URI': st.column_config.TextColumn(width='small'),
+                'Outgoing Count': st.column_config.NumberColumn(width='small'),
+                'Incoming Count': st.column_config.NumberColumn(width='small'),
+                'Link':st.column_config.LinkColumn(display_text="Open", width='small'),
+            })
+
+            # Pagination
+            st.text('')
+            col1, col2 = st.columns([8, 1], vertical_alignment='top')
+            col1.markdown(f'Total number of instances: {data_bundle.get_class_count(selected_class, filter_col, filter_value)} - Current page: {current_page}')
+            page_choice = col2.number_input('Go to page', value=current_page, min_value=1)
+            if page_choice != current_page:
+                state.set_data_table_page(page_choice)
+                st.rerun()
+        else:
+            st.markdown('*No records found*')
+            

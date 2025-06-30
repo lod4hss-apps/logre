@@ -35,6 +35,11 @@ class OntoProperty:
         return self.min_count != 0
 
 
+    def range_is_value(self) -> str:
+        """Check if the range class of the is a value class"""
+        return self.range_class_uri in ['xsd:string']
+    
+
     def to_dict(self, prefix='') -> dict:
         return {
             prefix + 'uri': self.uri,
@@ -51,12 +56,12 @@ class OntoProperty:
     @staticmethod
     def from_dict(obj: dict, prefix='') -> 'OntoProperty':
         return OntoProperty(
-            uri=obj.get(prefix + 'uri'),
-            label=obj.get(prefix + 'label'),
+            uri=obj.get(prefix + 'uri', ''),
+            label=obj.get(prefix + 'label', obj.get(prefix + 'uri')),
             order=obj.get(prefix + 'order', 1000),
-            min_count=obj.get(prefix + 'min_count'),
-            max_count=obj.get(prefix + 'max_count'),
-            domain_class_uri=obj.get(prefix + 'domain_class_uri'),
-            range_class_uri=obj.get(prefix + 'range_class_uri'),
-            card_of_class_uri=obj.get(prefix + 'card_of_class_uri'),
+            min_count=obj.get(prefix + 'min_count', 0),
+            max_count=obj.get(prefix + 'max_count', 1000),
+            domain_class_uri=obj.get(prefix + 'domain_class_uri', ''),
+            range_class_uri=obj.get(prefix + 'range_class_uri', ''),
+            card_of_class_uri=obj.get(prefix + 'card_of_class_uri', obj.get(prefix + 'domain_class_uri')),
         )

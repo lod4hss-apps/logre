@@ -8,7 +8,7 @@ from .ontology import Ontology
 
 class SHACL(Ontology):
     
-    def __init__(self, graph: Graph) -> None:
+    def __init__(self, graph: Graph, type_property: str = None, label_property: str = None) -> None:
         super().__init__(graph)
         self.name = "SHACL"
 

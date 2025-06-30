@@ -64,6 +64,10 @@ LIMIT 10
 
         # Run (ie query or execute) the query
         result = endpoint.sparql.run(sparql_query['text'])
+
+        # Clear cache, because user might have inserted/deleted/updated data that needs to be refetched
+        st.cache_data.clear()
+        st.cache_resource.clear()
     
         # If there is a result, display result and options:
         #       Option1: Save the query that gave this result

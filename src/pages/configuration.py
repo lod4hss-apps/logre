@@ -9,7 +9,7 @@ from dialogs import dialog_confirmation, dialog_create_prefix, dialog_create_dat
 
 
 all_technologies = ['Fuseki', 'Allegrograph', 'GraphDB']
-all_onto_frameworks = ['SHACL']
+all_onto_frameworks = ['SHACL', 'No Framework']
 
 def __save() -> None:
     save_config()

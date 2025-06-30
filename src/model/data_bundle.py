@@ -7,6 +7,7 @@ from .onto_entity import OntoEntity
 from .onto_property import OntoProperty
 from .ontology import Ontology
 from .ontology_shacl import SHACL
+from .ontology_no_framework import NoFramework
 from .sparql import SPARQL
 from .statement import Statement
 
@@ -34,12 +35,13 @@ class DataBundle:
         if comment_property: self.comment_property = comment_property
 
         OntologyClass = DataBundle.get_ontology_framework(ontology_framework)
-        self.ontology = OntologyClass(self.graph_ontology)
+        self.ontology = OntologyClass(self.graph_ontology, self.type_property, self.label_property)
 
 
     @staticmethod
     def get_ontology_framework(framework_name: str) -> Ontology:
         if framework_name == 'SHACL': return SHACL
+        if framework_name == 'No Framework': return NoFramework
         else: raise OntologyFrameworkNotSupported(framework_name)
 
 
@@ -302,6 +304,59 @@ class DataBundle:
         wanted_properties = [prop for prop in ontology_properties if prop.card_of_class_uri == cls.uri]
         wanted_properties.sort(key=lambda x: x.order)
 
+
+        # Prepare sorting
+        if sort_col is not None:
+            sort_prop = list(filter(lambda prop: prop.label == sort_col, wanted_properties))[0]
+            if sort_prop.domain_class_uri == cls.uri:
+                # ie: is outgoing
+                if sort_prop.range_is_value():
+                    # ie: no need to get the label
+                    sort_prop_str1 = f"?uri_ {sort_prop.uri} ?sort_on ."
+                else:
+                    # ie: need extra path to the label
+                    sort_prop_str1 = f"?uri_ {sort_prop.uri} ?sort_entity . ?sort_entity {self.label_property} ?sort_on ."
+            else:
+                # ie: is incoming
+                if sort_prop.range_is_value():
+                    # ie: no need to get the label
+                    sort_prop_str1 = f"?sort_on {sort_prop.uri} ?uri_ ."
+                else:
+                    # ie: need extra path to the label
+                    sort_prop_str1 = f"?sort_entity {sort_prop.uri} ?uri_ . ?sort_entity {self.label_property} ?sort_on ."
+
+            if sort_way == 'ASC': order_by = "ORDER BY ASC(?sort_on)"
+            else: order_by = "ORDER BY DESC(?sort_on)"
+        else:
+            sort_prop_str1 = ""
+            order_by = ""
+
+        # Prepare filtering
+        if filter_col is not None:
+            filter_prop = list(filter(lambda prop: prop.label == filter_col, wanted_properties))[0]
+            if filter_prop.domain_class_uri == cls.uri:
+                # ie: is outgoing
+                if filter_prop.range_is_value():
+                    # ie: no need to get the label
+                    filter_prop_str1 = f"?uri_ {filter_prop.uri} ?filter_on ."
+                else:
+                    # ie: need extra path to the label
+                    filter_prop_str1 = f"?uri_ {filter_prop.uri} ?filter_entity . ?filter_entity {self.label_property} ?filter_on ."
+            else:
+                # ie: is incoming
+                if filter_prop.range_is_value():
+                    # ie: no need to get the label
+                    filter_prop_str1 = f"?filter_on {filter_prop.uri} ?uri_ ."
+                else:
+                    # ie: need extra path to the label
+                    filter_prop_str1 = f"?filter_entity {filter_prop.uri} ?uri_ . ?filter_entity {self.label_property} ?filter_on ."
+
+            filter_prop_str2 = f'FILTER(CONTAINS(LCASE(STR(?filter_on)), LCASE("{normalize_text(filter_value)}")))'
+        else:
+            # ie: no filter
+            filter_prop_str1 = ""
+            filter_prop_str2 = ""
+
         # Small inner function to build the select statement for a given property
         def get_select_property(property: OntoProperty) -> str:
             property_label = to_snake_case(property.label).replace('-', '_')
@@ -314,13 +369,13 @@ class DataBundle:
             property_uri = self.sparql.prepare_uri(property.uri)
             property_label = to_snake_case(property.label).replace('-', '_')
             if cls.uri == property.domain_class_uri:
-                if property_uri == self.label_property or property_uri == self.comment_property:
+                if property_uri == self.label_property or property_uri == self.comment_property or property.range_is_value():
                     return "optional { " + f"?uri_ {property_uri} ?{property_label}_" + " . }"
                 else:
                     return "optional { " + f"?uri_ {property_uri} ?{property_label}_uri" + " . " + \
                         "optional { " + f"?{property_label}_uri {self.label_property} ?{property_label}_" + " . } }"
             else:
-                if property_uri == self.label_property or property_uri == self.comment_property:
+                if property_uri == self.label_property or property_uri == self.comment_property or property.range_is_value():
                     return "optional { " + f"?{property_label}_ {property_uri} ?uri_" + " . }"
                 else:
                     return "optional { " + f"?{property_label}_uri {property_uri} ?uri_" + " . " + \
@@ -332,10 +387,6 @@ class DataBundle:
         graph_end = "}" if self.graph_data.uri else ""
         select_properties = "\n                ".join([get_select_property(prop) for prop in wanted_properties])
         where_properties = "\n                    ".join([get_where_property(prop) for prop in wanted_properties])
-        if sort_col: sort = f"ASC(?{to_snake_case(sort_col).replace('-', '_')})" if sort_way == 'ASC' else f"DESC(?{to_snake_case(sort_col).replace('-', '_')})"
-        else: sort = "DESC(?uri)"
-        sort = 'ORDER BY ' + sort
-        filter = f"FILTER(CONTAINS(LCASE(STR(?{to_snake_case(filter_col).replace('-', '_')}_)), LCASE(\"{normalize_text(filter_value)}\")))" if filter_value else ""
         limit = f"LIMIT {limit}" if limit else ""
         offset = f"OFFSET {offset}" if offset else ""
         query = """
@@ -349,16 +400,18 @@ class DataBundle:
                         SELECT ?uri_ 
                         WHERE { 
                             ?uri_ """ + self.type_property + """ """ + class_uri + """ . 
+                            """ + filter_prop_str1 + """
+                            """  + sort_prop_str1 + """
+                            """ + filter_prop_str2 + """
                         } 
-                        """ + limit + """
+                        """ + order_by + """
                         """ + offset + """
+                        """ + limit + """
                     }
                     """ + where_properties + """
-                    """ + filter + """
                 """ + graph_end + """
             }
             GROUP BY ?uri_
-            """ + sort + """
         """
 
         # Execute the query (fetch instances)
@@ -389,13 +442,15 @@ class DataBundle:
 
         # Create the Dataframe
         df = pd.DataFrame(data=instances)
-        df = df.merge(outgoings, how='left').merge(incomings, how='left')
-        df['outgoing_count'].fillna(0, inplace=True)
-        df['incoming_count'].fillna(0, inplace=True)
+        if len(outgoings): 
+            df = df.merge(outgoings, how='left')
+            df['outgoing_count'].fillna(0, inplace=True)
+        if len(incomings): 
+            df = df.merge(incomings, how='left')
+            df['incoming_count'].fillna(0, inplace=True)
         df.columns = [from_snake_case(col).replace(' Inc', ' (inc)') for col in df.columns]
         df.rename(columns={'Uri': 'URI'}, inplace=True)
 
-        # return df.groupby('URI').agg(lambda x: '; '.join(map(str, sorted(set(x))))).reset_index()
         return df
     
 

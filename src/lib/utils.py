@@ -59,7 +59,6 @@ def build_zip_file(file_names: List[str], file_contents: List[str]) -> io.BytesI
     return zip_buffer
 
 
-# GERER les wait(1ms)
 def generate_id() -> str:
     "Generate a uuid base on the current time"
 
