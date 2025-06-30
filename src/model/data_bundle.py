@@ -106,7 +106,7 @@ class DataBundle:
                 (?uri_ as ?uri)
                 (COALESCE(?label_, '') as ?label)
                 (COALESCE(?comment_, '') as ?comment)
-                (COALESCE(?class_uri_, '""" + (class_uri[1:-1] if class_uri else "No Class URI")  + """') as ?class_uri)
+                (COALESCE(?class_uri_, '""" + (class_uri if class_uri else "No Class URI")  + """') as ?class_uri)
             WHERE {
                 """ + graph_begin + """
                     ?uri_ """ + self.type_property + """ """ + (class_uri if class_uri else "?class_uri_")  + """ .
