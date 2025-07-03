@@ -33,17 +33,14 @@ In order to install Logre locally, there are also some technical requirements:
 0. Open a terminal and navigate to the place where you want to install Logre
 1. Download sources: `git clone https://github.com/lod4hss-apps/logre.git`
 2. Navigate into sources: `cd logre`
-3. Create a file named ".env" with the following content:
-```text
-ENV=local
-LOGRE_MODE=normal
-PYTHON=python3      # If you are on Linux or macOS
-PYTHON=py           # If you are on Windows
-PYTHON=python3.10   # e.g. If you want to use another python version
-```
-4. For Windows users: you can open the folder with the folder explorer, and simply double click on the file `logre.bat`, this will handle virtual environments, dependencies, updates, start Logre, and open it in a new tab in your favorite browser.
 
-4. For Linux/macOS users: run `make start` inside Logre folder, and it will handle virtual environments, dependencies, updates, start Logre, and open it in a new tab in your favorite browser. 
+3. 1. For Windows users: you can open the folder with the folder explorer, and simply double click on the file `logre.bat`, this will handle virtual environments, dependencies, updates, start Logre, and open it in a new tab in your favorite browser.
+
+    2. For Linux/macOS users: run `make start` inside Logre folder, and it will handle virtual environments, dependencies, updates, start Logre, and open it in a new tab in your favorite browser. *This will use the command `python3`. If you need to specify another command for python (e.g. `python3.10`) you need to create an file called ".env" in logre folder with the following content:*
+
+    ```text
+    PYTHON=python3.10
+    ```
 
 
 ### Installation troubleshooting
@@ -60,6 +57,12 @@ If for any reason, the 4th step does not work for you, here is a manual instruct
 If you use the bat file (Windows) or the `make start` recipe (Linux, macOS), updates are automatically done when you start Logre, otherwise, you need to `git pull` the repo, and do the manual installation again (see *Installation troubleshooting* above).
 
 
+## Get Started: Start Logre
+
+- For Windows users: double click on "logre.bat" file
+- For Linux and macOS users: run "make start"
+- Manual start (after installation): `python3 -m streamlit run src/server.py`
+
 ---
 
-> Further documentations on how to use Logre efficiently are available when you start Logre.
+> Further documentation on how to use Logre efficiently is available when you start Logre.
