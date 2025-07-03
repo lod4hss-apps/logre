@@ -4,7 +4,7 @@ export
 default: help
 
 SHELL := /bin/bash
-PYTHON := $(PYTHON_VERSION)
+PYTHON ?= python3
 PIPENV_NAME := pipenv_logre
 REQUIREMENTS_FILE := requirements.txt
 

@@ -1,36 +1,71 @@
 # LOGRE (LOcal GRaph Editor)
 
-Logre is an open source tool to work with graphs.
+Logre is an open-source tool designed to interact with SPARQL endpoints. It offers a simple graphical interface for visualizing, editing, and exploring graph-based data.
 
-The idea behind the tool is to provide a simple GUI to visualize, edit, understand data in various SPARQL endpoints.
+> ⚠️ Logre is not a standalone application with built-in storage. It’s a client tool for working with existing graph technologies.
 
-It has been created initially for Geovistory projects, but thanks to its modularity, it can be used by any project.
+Supported SPARQL Endpoint Technologies:
+- Apache Jena Fuseki
+- AllegroGraph
+- Ontotext GraphDB
 
-There is two ways of using Logre:
-- Locally (install it yourself on you computer, see *How to use/install* section)
-- On the deployed application (see []())
+## Prerequisites before using Logre efficiently
 
-Both of those are exactly the same application, the difference is that the online version allows you to directly use it, without having to install anything.
+1.	**Have a SPARQL endpoint.** 
 
+Logre connects to external graph stores, you’ll need an instance of a supported SPARQL endpoint running.
 
-## How to use/install
+2.	**Have data to work with**
 
-**Prerequisite**
+Logre needs data to be useful. Even if not yet loaded, make sure you have a dataset or corpus you intend to use.
 
-To run Logre, you will need to have:
-- `make` (native on MacOS and Linux, for Windows users, install it with `winget install ezwinports.make`).
-- Python3.10 or newer; **May** also work with older version.
+3.	**Install Logre locally.**
 
-**Install**
-
-- Open a Terminal, and change directory to the place where you want to have your tool
-- Run `git clone https://github.com/geovistory/logre.git`
-- Run `cd logre`
-- Run `make install` (optional: when starting the tool, the install process runs anyway)
-
-**Start**
-
-- In your folder, simply run `make start`, this will update the dependencies, and start the GUI
+Install Logre on your machine and start the application (see installation instructions below).
 
 
-Happy Graph editing!
+## Get Started: Installation
+
+### Technical requirements
+
+In order to install Logre locally, there are also some technical requirements:
+- Have basic knowledge of terminal usage ([here is a basic tutorial](https://www.freecodecamp.org/news/command-line-for-beginners/))
+- Have a recent Python installation (above 3.8) ([here is a Python installation tutorial](https://realpython.com/installing-python/))
+- Have Git installed ([here is a Git installation tutorial](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
+- Linux & macOS users: Have "make" installed
+
+### Install Logre locally
+
+0. Open a terminal and navigate to the place where you want to install Logre
+1. Download sources: `git clone https://github.com/geovistory/logre.git`
+2. Navigate into sources: `cd logre`
+3. Create a file named ".env" with the following content:
+```text
+ENV=local
+LOGRE_MODE=normal
+PYTHON=python3      # If you are on Linux or macOS
+PYTHON=py           # If you are on Windows
+PYTHON=python3.10   # e.g. If you want to use another python version
+```
+4. For Windows users: you can open the folder with the folder explorer, and simply double click on the file `logre.bat`, this will handle virtual environments, dependencies, updates, start Logre, and open it in a new tab in your favorite browser.
+
+4. For Linux/macOS users: run `make start` inside Logre folder, and it will handle virtual environments, dependencies, updates, start Logre, and open it in a new tab in your favorite browser. 
+
+
+### Installation troubleshooting
+
+If for any reason, the 4th step does not work for you, here is a manual instruction of what to do to install it "manually". If you are on Windows, in the following commands, replace `python3` by `py`
+
+4. Create the virtual environment `python3 -m venv pipenv_logre`
+5. Activate the virtual environment `source ./pipenv_logre/bin/activate`
+6. Install dependencies `python3 -m pip install -r requirements.txt`
+
+
+## Get Started: Updates
+
+If you use the bat file (Windows) or the `make start` recipe (Linux, macOS), updates are automatically done when you start Logre, otherwise, you need to `git pull` the repo, and do the manual installation again (see *Installation troubleshooting* above).
+
+
+---
+
+> Further documentations on how to use Logre efficiently are available when you start Logre.
