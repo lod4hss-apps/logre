@@ -45,7 +45,7 @@ In order to install Logre locally, there are also some technical requirements:
 
 ### Installation troubleshooting
 
-If for any reason, the 4th step does not work for you, here is a manual instruction of what to do to install it "manually". If you are on Windows, in the following commands, replace `python3` by `py`
+If for any reason, the 3rd step does not work for you, here is a manual instruction of what to do to install it "manually". If you are on Windows, in the following commands, replace `python3` by `py`
 
 4. Create the virtual environment `python3 -m venv pipenv_logre`
 5. Activate the virtual environment `source ./pipenv_logre/bin/activate`
