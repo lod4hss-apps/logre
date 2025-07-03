@@ -11,17 +11,9 @@ Supported SPARQL Endpoint Technologies:
 
 ## Prerequisites before using Logre efficiently
 
-1.	**Have a SPARQL endpoint.** 
-
-Logre connects to external graph stores, you’ll need an instance of a supported SPARQL endpoint running.
-
-2.	**Have data to work with**
-
-Logre needs data to be useful. Even if not yet loaded, make sure you have a dataset or corpus you intend to use.
-
-3.	**Install Logre locally.**
-
-Install Logre on your machine and start the application (see installation instructions below).
+1.	**Have a SPARQL endpoint:** Logre connects to external graph stores, you’ll need an instance of a supported SPARQL endpoint running.
+2.	**Have data to work with:** Logre needs data to be useful. Even if not yet loaded, make sure you have a dataset or corpus you intend to use.
+3.	**Install Logre locally:** Install Logre on your machine and start the application (see installation instructions below).
 
 
 ## Get Started: Installation
@@ -32,7 +24,9 @@ In order to install Logre locally, there are also some technical requirements:
 - Have basic knowledge of terminal usage ([here is a basic tutorial](https://www.freecodecamp.org/news/command-line-for-beginners/))
 - Have a recent Python installation (above 3.8) ([here is a Python installation tutorial](https://realpython.com/installing-python/))
 - Have Git installed ([here is a Git installation tutorial](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
-- Linux & macOS users: Have "make" installed
+- Linux & macOS users: Have "make" installed:
+    - For Linux: `sudo apt install make`
+    - For macOS: `xcode-select --install`
 
 ### Install Logre locally
 
