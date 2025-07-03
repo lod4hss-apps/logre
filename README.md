@@ -11,9 +11,9 @@ Supported SPARQL Endpoint Technologies:
 
 ## Prerequisites before using Logre efficiently
 
-1.	**Have a SPARQL endpoint:** Logre connects to external graph stores, you’ll need an instance of a supported SPARQL endpoint running.
-2.	**Have data to work with:** Logre needs data to be useful. Even if not yet loaded, make sure you have a dataset or corpus you intend to use.
-3.	**Install Logre locally:** Install Logre on your machine and start the application (see installation instructions below).
+1. **Have a SPARQL endpoint:** Logre connects to external graph stores, you’ll need an instance of a supported SPARQL endpoint running.
+2. **Have an ontology:** Even if possible without, Logre is designed to rely on a defined ontology that is specified with SHACL files 
+3. **Install Logre locally:** Install Logre on your machine and start the application (see installation instructions below).
 
 
 ## Get Started: Installation
