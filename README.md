@@ -31,7 +31,7 @@ In order to install Logre locally, there are also some technical requirements:
 ### Install Logre locally
 
 0. Open a terminal and navigate to the place where you want to install Logre
-1. Download sources: `git clone https://github.com/geovistory/logre.git`
+1. Download sources: `git clone https://github.com/lod4hss-apps/logre.git`
 2. Navigate into sources: `cd logre`
 3. Create a file named ".env" with the following content:
 ```text
