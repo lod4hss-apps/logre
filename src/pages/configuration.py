@@ -5,7 +5,7 @@ from model import Endpoint, DataBundle, Prefix
 from lib.configuration import save_config, unload_config, CONFIG_PATH
 from components.init import init
 from components.menu import menu
-from dialogs import dialog_confirmation, dialog_create_prefix, dialog_create_data_bundle, dialog_create_endpoint
+from dialogs import dialog_confirmation, dialog_create_prefix, dialog_create_data_bundle, dialog_add_endpoint
 
 
 all_technologies = ['Fuseki', 'Allegrograph', 'GraphDB']
@@ -59,7 +59,7 @@ if os.getenv('ENV') != "local":
 
 st.text('')
 if st.button('Add a new Endpoint', icon=':material/add:', key="configuration-endpoint-add"):
-    dialog_create_endpoint(all_technologies)
+    dialog_add_endpoint(all_technologies)
 
 
 # Display all endpoints from configuration

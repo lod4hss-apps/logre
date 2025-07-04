@@ -3,7 +3,7 @@ from .query_save import dialog_queries_save
 from .confirmation import dialog_confirmation
 from .create_prefix import dialog_create_prefix
 from .create_data_bundle import dialog_create_data_bundle
-from .create_endpoint import dialog_create_endpoint
+from .add_endpoint import dialog_add_endpoint
 from .find_entity import dialog_find_entity
 from .entity_info import dialog_entity_info
 from .triple_info import dialog_triple_info

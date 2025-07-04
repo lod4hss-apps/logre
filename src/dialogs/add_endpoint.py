@@ -3,8 +3,8 @@ from model import Endpoint
 from lib import state
 from lib.configuration import save_config
 
-@st.dialog('Create Endpoint')
-def dialog_create_endpoint(server_technologies: list[str]) -> None:
+@st.dialog('Add Endpoint')
+def dialog_add_endpoint(server_technologies: list[str]) -> None:
     
     name = st.text_input('Name ❗️')
     technology = st.selectbox('Server technology ❗️', options=server_technologies, index=None)
