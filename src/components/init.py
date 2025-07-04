@@ -1,5 +1,5 @@
 from typing import Literal
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import streamlit as st
 import lib.state as state
 from lib.configuration import read_config
@@ -10,7 +10,9 @@ from model import NotExistingEndpoint, NotExistingDataBundle
 def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
     """Initialization function that runs on each page. Has to be the first thing to be called."""
 
-    load_dotenv()
+    # Load .env file only if it exists
+    dotenv_path = find_dotenv()
+    if dotenv_path: load_dotenv(dotenv_path)
 
     try:
 
