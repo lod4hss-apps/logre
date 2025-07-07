@@ -78,7 +78,7 @@ def menu() -> None:
                 st.rerun()
                 
 
-            ##### SEGMENT SELECTION #####
+            ##### DATA BUNDLE SELECTION #####
 
             data_bundle = state.get_data_bundle()
 
@@ -102,7 +102,7 @@ def menu() -> None:
                 )
                 state.set_data_bundle([d for d in endpoint.data_bundles if d.name == data_bundles_label][0])
             else:
-                st.sidebar.markdown("*No Data Bundle configured*")
+                st.sidebar.markdown("*⚠️ No Data Bundle. Add one in your endpoint configuration.*")
 
             st.sidebar.divider()
 

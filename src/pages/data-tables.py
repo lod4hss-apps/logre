@@ -51,16 +51,16 @@ else:
         sort_col, sort_way = None, None
         sort_options = list(map(lambda col: (f"{col}: ASC", f"{col}: DESC"), list(data_bundle.get_data_table_columns(selected_class))))
         sort_options = [x for tpl in sort_options for x in tpl]
-        sort_option = col3.selectbox('Column to sort on', sort_options, index=None)
+        sort_option = col3.selectbox('Column to sort on', sort_options, index=None, on_change=lambda: state.set_data_table_page(1))
         if sort_option: 
             sort_col = sort_option[0:sort_option.rindex(':')].strip()
             sort_way = sort_option[sort_option.rindex(':') + 1:].strip()
 
         # Filter by
         filter_col, filter_value = None, None
-        filter_col = col4.selectbox('Column to filter by', list(data_bundle.get_data_table_columns(selected_class)), index=None)
+        filter_col = col4.selectbox('Column to filter by', list(data_bundle.get_data_table_columns(selected_class)), index=None, on_change=lambda: state.set_data_table_page(1))
         if filter_col:
-            filter_value = col5.text_input('Value to filter by')
+            filter_value = col5.text_input('Value to filter by', on_change=lambda: state.set_data_table_page(1))
         
         # Fetch and display data
         st.text('')
@@ -78,15 +78,15 @@ else:
                 'Incoming Count': st.column_config.NumberColumn(width='small'),
                 'Link':st.column_config.LinkColumn(display_text="Open", width='small'),
             })
-
-            # Pagination
-            st.text('')
-            col1, col2 = st.columns([8, 1], vertical_alignment='top')
-            col1.markdown(f'Total number of instances: {data_bundle.get_class_count(selected_class, filter_col, filter_value)} - Current page: {current_page}')
-            page_choice = col2.number_input('Go to page', value=current_page, min_value=1)
-            if page_choice != current_page:
-                state.set_data_table_page(page_choice)
-                st.rerun()
         else:
             st.markdown('*No records found*')
             
+
+        # Pagination
+        st.text('')
+        col1, col2 = st.columns([8, 1], vertical_alignment='top')
+        col1.markdown(f'Total number of instances: {data_bundle.get_class_count(selected_class, filter_col, filter_value)} - Current page: {current_page}')
+        page_choice = col2.number_input('Go to page', value=current_page, min_value=1)
+        if page_choice != current_page:
+            state.set_data_table_page(page_choice)
+            st.rerun()

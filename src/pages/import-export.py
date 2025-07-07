@@ -11,6 +11,11 @@ def __upload_turtle(turtle_content: str, named_graph_uri: str) -> None:
     state.set_toast('Turtle file uploaded', icon=':material/done:')
 
 
+def __upload_nquads(nquad_content) -> None:
+    endpoint.sparql.upload_nquads(nquad_content)
+    state.set_toast('n-Quad file uploaded', icon=':material/done:')
+
+
 init()
 menu()
 
@@ -46,7 +51,7 @@ else:
                 if st.button('Upload n-Quads', icon=':material/upload:'):
                     dialog_confirmation(
                         f'You are about to upload the file {file.name}.', 
-                        callback=endpoint.sparql.upload_nquads, 
+                        callback=__upload_nquads, 
                         nquad_content=file_content
                     )
 
