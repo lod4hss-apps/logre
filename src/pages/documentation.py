@@ -19,7 +19,7 @@ menu()
 
 # Read me
 with st.expander('README'):
-    readme_file = open('./README.md', 'r')
+    readme_file = open('./README.md', 'r', encoding='utf-8')
     content = readme_file.read()
     readme_file.close()
     st.markdown(content)
