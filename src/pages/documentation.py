@@ -12,7 +12,7 @@ def format_filename(filename: str) -> str:
 
 # Fetch all files in the folder ./documentation
 folder = Path('./documentation')
-contents = {format_filename(f.name) : f.read_text() for f in folder.iterdir()}
+contents = {format_filename(f.name) : f.read_text(encoding='utf-8') for f in folder.iterdir()}
 
 init()
 menu()
