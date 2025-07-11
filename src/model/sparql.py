@@ -224,7 +224,7 @@ class SPARQL:
             self.upload_nquads_chunk(chunk)
 
 
-    def upload_turtle(self, turtle_content: str) -> None:
+    def upload_turtle(self, turtle_content: str, named_graph_uri: str) -> None:
 
         line_number = 10000
         lines = turtle_content.splitlines()
@@ -243,7 +243,7 @@ class SPARQL:
 
         for i, chunk in enumerate(chunks):
             print(f"> Uploading ({line_number * i} / {len(triples)})")
-            self.upload_turtle_chunk(prefixes + chunk)
+            self.upload_turtle_chunk(prefixes + chunk, named_graph_uri)
 
 
 
