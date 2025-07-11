@@ -50,7 +50,9 @@ def __add_string_field(container: DeltaGenerator, range_class_label: str, values
         if new_value != value and new_value.strip() != "":
             add_values.append(f"'{new_value}'")
             rem_values.append(f"'{value}'")
-    
+
+
+    # Partie à revoir
     if len(values) < max_count:
         new_value = container.text_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}")
         if new_value and new_value.strip() != "":
@@ -70,6 +72,8 @@ def __add_html_field(container: DeltaGenerator, range_class_label: str, values: 
             add_values.append(f"'{new_value}'")
             rem_values.append(f"'{value}'")
     
+
+    # Partie à revoir
     if len(values) < max_count:
         new_value = container.text_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}")
         if new_value and new_value.strip() != "":
@@ -92,13 +96,20 @@ def __add_class_field(container: DeltaGenerator, range_class_label: str, range_c
 
         for uri in uri_values:
             entity = data_bundle.get_entity_infos(uri)
-        
-            index = possible_objects_label.index(entity.display_label_comment)
+            
+            # We do this because for some classes, a property can have multiple range classes (eg is membership of group OR/AND person)
+            # So when the entity has one, the formular tries to fit the class in the other (find the person among the groups)
+            # Which raises an error (of course)
+            # Also true for the "index is not None" in the Following "if"
+            if entity.display_label_comment in possible_objects_label: index = possible_objects_label.index(entity.display_label_comment)
+            else: index = None
             new_value = container.selectbox(range_class_label, options=possible_objects_label, key=f"dialog-entity-form-prop-{prop_index}-{len(uri_values) + 1}", index=index)
-            if new_value != entity.display_label_comment:
+            if index is not None and new_value != entity.display_label_comment:
                 add_values.append(possible_objects[possible_objects_label.index(new_value)].uri)
                 rem_values.append(entity.uri)
 
+
+    # Partie à revoir
         if len(uri_values) < max_count:
             new_value = container.selectbox(range_class_label, options=possible_objects_label, key=f"dialog-entity-form-prop-{prop_index}-{len(uri_values) + 1}", index=None)
             if new_value and new_value.strip() != "":
@@ -195,6 +206,7 @@ def dialog_entity_form(entity: OntoEntity = None, triples: List[tuple[str, str, 
                 triples_to_rem.append((entity_uri, prop.uri, value))
             
             st.text('')
+            # st.divider()
 
 
         # Check if all mandatory fields are present

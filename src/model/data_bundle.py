@@ -230,7 +230,7 @@ class DataBundle:
             # DataBundle.get_incoming_statements()
             SELECT DISTINCT
                 ?subject_uri
-                (COALESCE(?subject_label_, 'No label') as ?subject_label)
+                (COALESCE(?subject_label_, '') as ?subject_label)
                 (COALESCE(?subject_class_uri_, '') as ?subject_class_uri)
                 (COALESCE(?subject_comment_, '') as ?subject_comment)
                 (isBlank(?subject_uri) as ?subject_is_blank)
@@ -244,7 +244,7 @@ class DataBundle:
             WHERE {
                 """ + graph_begin + """
                     ?subject_uri ?predicate_uri """ + entity_uri + """ . 
-                    ?subject_uri """ + self.label_property + """ ?subject_label_ .
+                    OPTIONAL { ?subject_uri """ + self.label_property + """ ?subject_label_ . }
                     OPTIONAL { ?subject_uri """ + self.type_property + """ ?subject_class_uri_ . }
                     OPTIONAL { ?subject_uri """+ self.comment_property + """ ?subject_comment_ . }
                     """ + wanted_properties + """
@@ -286,9 +286,22 @@ class DataBundle:
         ontology_properties = self.ontology.get_properties()
         wanted_properties = [prop for prop in ontology_properties if prop.card_of_class_uri == cls.uri]
         wanted_properties.sort(key=lambda x: x.order)
-        props = [(prop.label if prop.domain_class_uri == cls.uri else prop.label + ' (inc)') for prop in wanted_properties]
+        props = [(f"{prop.label}" if prop.domain_class_uri == cls.uri else prop.label + ' (inc)') for prop in wanted_properties]
 
-        return ['URI'] + props + ['Outgoing Count', 'Incoming Count']
+        def make_unique(lst):
+            counts = {}
+            result = []
+            for item in lst:
+                if item not in counts:
+                    counts[item] = 0
+                    result.append(item)
+                else:
+                    counts[item] += 1
+                    result.append(f"{item} ({counts[item] + 1})")
+            return result
+
+
+        return make_unique(['URI'] + props + ['Outgoing Count', 'Incoming Count'])
 
 
 
@@ -358,16 +371,16 @@ class DataBundle:
             filter_prop_str2 = ""
 
         # Small inner function to build the select statement for a given property
-        def get_select_property(property: OntoProperty) -> str:
-            property_label = to_snake_case(property.label).replace('-', '_')
+        def get_select_property(property: OntoProperty, index: int) -> str:
+            property_label = f"{to_snake_case(property.label).replace('-', '_')}_{index}"
             if cls.uri == property.domain_class_uri:
                 return f"(GROUP_CONCAT(DISTINCT COALESCE(?{property_label}_, ''); separator=\" - \") as ?{property_label})"
             else:
                 return f"(GROUP_CONCAT(DISTINCT COALESCE(?{property_label}_, ''); separator=\" - \") as ?{property_label}_inc)"
         # Small inner function to build the where statement for a given property
-        def get_where_property(property: OntoProperty) -> str:
+        def get_where_property(property: OntoProperty, index: int) -> str:
             property_uri = self.sparql.prepare_uri(property.uri)
-            property_label = to_snake_case(property.label).replace('-', '_')
+            property_label = f"{to_snake_case(property.label).replace('-', '_')}_{index}"
             if cls.uri == property.domain_class_uri:
                 if property_uri == self.label_property or property_uri == self.comment_property or property.range_is_value():
                     return "optional { " + f"?uri_ {property_uri} ?{property_label}_" + " . }"
@@ -385,8 +398,8 @@ class DataBundle:
         class_uri = self.sparql.prepare_uri(cls.uri)
         graph_begin = "GRAPH " + self.graph_data.uri_ + " {" if self.graph_data.uri else ""
         graph_end = "}" if self.graph_data.uri else ""
-        select_properties = "\n                ".join([get_select_property(prop) for prop in wanted_properties])
-        where_properties = "\n                    ".join([get_where_property(prop) for prop in wanted_properties])
+        select_properties = "\n                ".join([get_select_property(prop, i) for i, prop in enumerate(wanted_properties)])
+        where_properties = "\n                    ".join([get_where_property(prop, i) for i, prop in enumerate(wanted_properties)])
         limit = f"LIMIT {limit}" if limit else ""
         offset = f"OFFSET {offset}" if offset else ""
         query = """
@@ -420,7 +433,7 @@ class DataBundle:
         # Count outgoings and incomings
         uris = list(map(lambda record: record['uri'], instances))
         outgoings = self.graph_data.sparql.run(f"""
-            SELECT ?uri (COUNT(?outgoing) as ?outgoing_count) 
+            SELECT ?uri (COALESCE(COUNT(?outgoing), '0') as ?outgoing_count) 
             WHERE {{
                 {graph_begin}
                     VALUES ?uri {{ {' '.join(uris)} }}
@@ -430,7 +443,7 @@ class DataBundle:
         """)
         outgoings = pd.DataFrame(outgoings)
         incomings = self.graph_data.sparql.run(f"""
-            SELECT ?uri (COUNT(?incoming) as ?incoming_count) 
+            SELECT ?uri (COALESCE(COUNT(?incoming), '0') as ?incoming_count) 
             WHERE {{
                 {graph_begin}
                     VALUES ?uri {{ {' '.join(uris)} }}
@@ -445,9 +458,11 @@ class DataBundle:
         if len(outgoings): 
             df = df.merge(outgoings, how='left')
             df['outgoing_count'].fillna(0, inplace=True)
+        else: df['outgoing_count'] = "0"
         if len(incomings): 
             df = df.merge(incomings, how='left')
             df['incoming_count'].fillna(0, inplace=True)
+        else: df['incoming_count'] = "0"
         df.columns = [from_snake_case(col).replace(' Inc', ' (inc)') for col in df.columns]
         df.rename(columns={'Uri': 'URI'}, inplace=True)
 
