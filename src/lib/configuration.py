@@ -81,7 +81,7 @@ def save_config() -> None:
         return
 
     # Unload and write on disk
-    file = open(CONFIG_PATH, 'w')
+    file = open(CONFIG_PATH, 'w', encoding='utf-8')
     file.write(unload_config())
     file.close()
 
@@ -98,7 +98,7 @@ def read_config() -> None:
     """
 
     # Load defaults
-    default_file = open(DEFAULT_PATH, 'r')
+    default_file = open(DEFAULT_PATH, 'r', encoding='utf-8')
     parse_defaults(default_file.read())
     default_file.close()
 
@@ -108,7 +108,7 @@ def read_config() -> None:
     
     # Read and load from disk
     if os.path.exists(CONFIG_PATH):
-        file = open(CONFIG_PATH, 'r')
+        file = open(CONFIG_PATH, 'r', encoding='utf-8')
         content = file.read()
         file.close()
 
