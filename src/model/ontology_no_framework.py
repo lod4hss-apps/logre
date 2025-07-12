@@ -47,7 +47,7 @@ class NoFramework(Ontology):
         
     @st.cache_data(show_spinner=False, ttl=3600, hash_funcs={"model.ontology_no_framework.NoFramework": lambda x: hash(x.name), "model.onto_entity.OntoProperty": lambda x: hash(x.uri)})
     def get_properties(self) -> List[OntoProperty]:
-        """Get the list of properties listed with the SHACL framework."""
+        """Get the list of properties listed within the ontology graph."""
 
         # Prepare the query
         graph_begin = "GRAPH " + self.graph.uri_ + " {" if self.graph.uri else ""
