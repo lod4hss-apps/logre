@@ -99,7 +99,7 @@ class DataBundle:
         graph_begin = "GRAPH " + self.graph_data.uri_ + " {" if self.graph_data.uri else ""
         graph_end = "}" if self.graph_data.uri else ""
         filter_clause = f"FILTER(CONTAINS(LCASE(?label_), LCASE('{filter_text}'))) ." if label else ""
-        class_uri = self.sparql.prepare_uri(class_uri)
+        prepared_class_uri = self.sparql.prepare_uri(class_uri)
         query = """
             # DataBundle.find_entities()
             SELECT
@@ -109,7 +109,7 @@ class DataBundle:
                 (COALESCE(?class_uri_, '""" + (class_uri if class_uri else "No Class URI")  + """') as ?class_uri)
             WHERE {
                 """ + graph_begin + """
-                    ?uri_ """ + self.type_property + """ """ + (class_uri if class_uri else "?class_uri_")  + """ .
+                    ?uri_ """ + self.type_property + """ """ + (prepared_class_uri if prepared_class_uri else "?class_uri_")  + """ .
                     OPTIONAL { ?uri_ """ + self.label_property + """ ?label_ . }
                     OPTIONAL { ?uri_ """ + self.comment_property + """ ?comment_ . }
                 """ + graph_end + """
