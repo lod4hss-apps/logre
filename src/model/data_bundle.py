@@ -325,18 +325,18 @@ class DataBundle:
                 # ie: is outgoing
                 if sort_prop.range_is_value():
                     # ie: no need to get the label
-                    sort_prop_str1 = f"?uri_ {sort_prop.uri} ?sort_on ."
+                    sort_prop_str1 = f"?uri_ {self.sparql.prepare_uri(sort_prop.uri)} ?sort_on ."
                 else:
                     # ie: need extra path to the label
-                    sort_prop_str1 = f"?uri_ {sort_prop.uri} ?sort_entity . ?sort_entity {self.label_property} ?sort_on ."
+                    sort_prop_str1 = f"?uri_ {self.sparql.prepare_uri(sort_prop.uri)} ?sort_entity . ?sort_entity {self.label_property} ?sort_on ."
             else:
                 # ie: is incoming
                 if sort_prop.range_is_value():
                     # ie: no need to get the label
-                    sort_prop_str1 = f"?sort_on {sort_prop.uri} ?uri_ ."
+                    sort_prop_str1 = f"?sort_on {self.sparql.prepare_uri(sort_prop.uri)} ?uri_ ."
                 else:
                     # ie: need extra path to the label
-                    sort_prop_str1 = f"?sort_entity {sort_prop.uri} ?uri_ . ?sort_entity {self.label_property} ?sort_on ."
+                    sort_prop_str1 = f"?sort_entity {self.sparql.prepare_uri(sort_prop.uri)} ?uri_ . ?sort_entity {self.label_property} ?sort_on ."
 
             if sort_way == 'ASC': order_by = "ORDER BY ASC(?sort_on)"
             else: order_by = "ORDER BY DESC(?sort_on)"
@@ -351,18 +351,18 @@ class DataBundle:
                 # ie: is outgoing
                 if filter_prop.range_is_value():
                     # ie: no need to get the label
-                    filter_prop_str1 = f"?uri_ {filter_prop.uri} ?filter_on ."
+                    filter_prop_str1 = f"?uri_ {self.sparql.prepare_uri(filter_prop.uri)} ?filter_on ."
                 else:
                     # ie: need extra path to the label
-                    filter_prop_str1 = f"?uri_ {filter_prop.uri} ?filter_entity . ?filter_entity {self.label_property} ?filter_on ."
+                    filter_prop_str1 = f"?uri_ {self.sparql.prepare_uri(filter_prop.uri)} ?filter_entity . ?filter_entity {self.label_property} ?filter_on ."
             else:
                 # ie: is incoming
                 if filter_prop.range_is_value():
                     # ie: no need to get the label
-                    filter_prop_str1 = f"?filter_on {filter_prop.uri} ?uri_ ."
+                    filter_prop_str1 = f"?filter_on {self.sparql.prepare_uri(filter_prop.uri)} ?uri_ ."
                 else:
                     # ie: need extra path to the label
-                    filter_prop_str1 = f"?filter_entity {filter_prop.uri} ?uri_ . ?filter_entity {self.label_property} ?filter_on ."
+                    filter_prop_str1 = f"?filter_entity {self.sparql.prepare_uri(filter_prop.uri)} ?uri_ . ?filter_entity {self.label_property} ?filter_on ."
 
             filter_prop_str2 = f'FILTER(CONTAINS(LCASE(STR(?filter_on)), LCASE("{normalize_text(filter_value)}")))'
         else:
