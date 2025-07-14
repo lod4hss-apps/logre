@@ -21,7 +21,7 @@ class SHACL(Ontology):
         graph_end = "}" if self.graph.uri else ""
         query = """
             # SHACL.get_classes()
-            SELECT 
+            SELECT DISTINCT
                 ?uri 
                 (COALESCE(?label_, '') as ?label)
             WHERE {
