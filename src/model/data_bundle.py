@@ -180,7 +180,7 @@ class DataBundle:
         query = """
             # DataBundle.get_outgoing_statements()
             SELECT DISTINCT
-                ('""" + entity_uri + """' as ?subject_uri)
+                ('""" + entity.uri + """' as ?subject_uri)
                 ('""" + entity.label.replace("'", "\\'") + """' as ?subject_label)
                 ('""" + entity.class_uri + """' as ?subject_class_uri)
                 ('""" + (entity.comment.replace("'", "\\'") or '') + """' as ?subject_comment)
@@ -235,7 +235,7 @@ class DataBundle:
                 (COALESCE(?subject_comment_, '') as ?subject_comment)
                 (isBlank(?subject_uri) as ?subject_is_blank)
                 ?predicate_uri
-                ('""" + entity_uri + """' as ?object_uri)
+                ('""" + entity.uri + """' as ?object_uri)
                 ('""" + entity.label.replace("'", "\\'") + """' as ?object_label)
                 ('""" + entity.class_uri + """' as ?object_class_uri)
                 ('""" + (entity.comment.replace("'", "\\'") or '') + """' as ?object_comment)
