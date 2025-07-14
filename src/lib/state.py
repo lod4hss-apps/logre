@@ -1,5 +1,5 @@
 from typing import List, Any, Dict
-from streamlit import session_state as state
+from streamlit import session_state as state, cache_data, cache_resource
 from model import Query, Endpoint, DataBundle, OntoEntity, Prefix
 
 ###
@@ -79,6 +79,10 @@ def clear_endpoint() -> None:
 
 def set_data_bundle(data_bundle: DataBundle) -> None:
     state['data_bundle'] = data_bundle
+    
+    # Also, when a Data Bundle is selected, Cache need to be cleared
+    cache_resource.clear()
+    cache_data.clear()
 
 def get_data_bundle() -> DataBundle:
     if 'data_bundle' not in state: return None
