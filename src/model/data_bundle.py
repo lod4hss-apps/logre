@@ -431,7 +431,7 @@ class DataBundle:
         instances = self.graph_data.sparql.run(query)
 
         # Count outgoings and incomings
-        uris = list(map(lambda record: record['uri'], instances))
+        uris = list(map(lambda record: self.sparql.prepare_uri(record['uri']), instances))
         outgoings = self.graph_data.sparql.run(f"""
             SELECT ?uri (COALESCE(COUNT(?outgoing), '0') as ?outgoing_count) 
             WHERE {{
