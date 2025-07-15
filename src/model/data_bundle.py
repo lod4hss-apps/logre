@@ -25,7 +25,7 @@ class DataBundle:
 
     def __init__(self, sparql: SPARQL, name: str, graph_data_uri: str, graph_ontology_uri: str, graph_metadata_uri: str, ontology_framework: str, type_property: str = None, label_property: str = None, comment_property: str = None) -> None:
 
-        self.name = name.title()
+        self.name = name
         self.sparql = sparql
         self.graph_data = Graph(sparql, f"{self.name} - data", graph_data_uri)
         self.graph_ontology = Graph(sparql, f"{self.name} - ontology", graph_ontology_uri)
