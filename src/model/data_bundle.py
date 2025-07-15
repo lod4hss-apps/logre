@@ -479,9 +479,9 @@ class DataBundle:
             wanted_properties = [prop for prop in properties if prop.card_of_class_uri == cls.uri]
             target_property = [prop for prop in wanted_properties if prop.label == filter_col_name.replace('(inc)', '').strip()][0]
             if '(inc)' in filter_col_name:
-                filter_ = f'?value {target_property.uri} ?uri . ?value {self.label_property} ?label . FILTER(CONTAINS(LCASE(STR(?label)), LCASE("{filter_content}")))'
+                filter_ = f'?value {self.sparql.prepare_uri(target_property.uri)} ?uri . ?value {self.label_property} ?label . FILTER(CONTAINS(LCASE(STR(?label)), LCASE("{filter_content}")))'
             else: 
-                filter_ = f'?uri {target_property.uri} ?value . ?value {self.label_property} ?label . FILTER(CONTAINS(LCASE(STR(?label)), LCASE("{filter_content}")))'
+                filter_ = f'?uri {self.sparql.prepare_uri(target_property.uri)} ?value . ?value {self.label_property} ?label . FILTER(CONTAINS(LCASE(STR(?label)), LCASE("{filter_content}")))'
 
         # Prepare the query (count instances)
         class_uri = self.sparql.prepare_uri(cls.uri)
