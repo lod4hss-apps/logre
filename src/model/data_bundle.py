@@ -530,7 +530,12 @@ class DataBundle:
         """
 
         # Execute the query
-        infos = self.graph_data.sparql.run(query)[0]
+        # The error catching is done to prevent to have a "normal error"
+        # If the given URI is actually a string, the request will fail, but because of ontological reason, 
+        # we do not want an error, so we returns None.
+        # Up to the caller to handle this casew
+        try: infos = self.graph_data.sparql.run(query)[0]
+        except: return None
 
         # Add the class information:
         classes = self.ontology.get_classes()

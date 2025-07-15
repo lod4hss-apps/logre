@@ -117,8 +117,14 @@ def __add_class_field(container: DeltaGenerator, range_class_label: str, range_c
 
         
     else:
-
         defaults = [data_bundle.get_entity_infos(uri) for uri in uri_values]
+
+        # Because get_entity_infos returns None if given URI is a string 
+        # (might happen when there is a property that has 2 class ranges: one String and one Class)
+        # In case the property already has a value (so for edit form), the form tries to find an entity with the string as a URI, 
+        # which leads to an errors and the function returns None
+        defaults = list(filter(lambda d: d is not None, defaults))
+
         defaults_label = [ent.display_label_comment for ent in defaults]
         new_values = container.multiselect(range_class_label, options=possible_objects_label, default=defaults_label, max_selections=max_count)
 
