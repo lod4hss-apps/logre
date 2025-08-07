@@ -25,6 +25,8 @@ class OntoEntity:
         self.class_label = class_label
         self.display_label = f"{self.label} ({self.class_label or self.class_uri})" if self.class_uri else f"{self.label}"
         self.display_label_comment = f"{self.display_label}: {self.comment}" if self.comment else self.display_label
+        if len(self.display_label_comment) > 50:
+            self.display_label_comment = self.display_label_comment[:50] + '...'
         self.display_label_uri = f"{self.label} - {self.uri}"
 
 
