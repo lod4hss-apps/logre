@@ -9,6 +9,8 @@ PIPENV_NAME := pipenv_logre
 REQUIREMENTS_FILE := requirements.txt
 
 
+
+# Display all available commands. Is also the default ("make")
 help:
 	@echo "[make help]: Outputs this help"
 	@echo "[make update]: Update the code base"
@@ -17,8 +19,13 @@ help:
 	@echo "[make install-verbose]: Prepare everything so that the tool can be used (with full logs)"
 	@echo "[make start]: Update, install and start Logre"
 	@echo "[make start-verbose]: Update, install and start Logre (with full logs)"
+	@echo "[make python-version]: Display what Python command version is set"
 
+# Display python version
+python-version:
+	@echo "[LOGRE] Python command used: ${PYTHON}"
 
+# Update code base from GitHub
 update: 
 	@echo "[LOGRE] Current version:" $$(cat VERSION)
 	@echo "[LOGRE] Updating code base..."
@@ -27,6 +34,7 @@ update:
 	@echo "[LOGRE] Now having version:" $$(cat ./VERSION)
 
 
+#  Same as previous, but with git logs
 update-verbose: 
 	@echo "[LOGRE] Current version:" $$(cat VERSION)
 	@echo "[LOGRE] Updating code base..."
@@ -34,6 +42,7 @@ update-verbose:
 	@echo "[LOGRE] Now having version:" $$(cat ./VERSION)
 
 
+# Set the right virtual environment (or create it), and install dependencies from requirements.txt
 install:
 	@echo "[LOGRE] Checking if environment $(PIPENV_NAME) exists..."
 	@if [ ! -d "$(PIPENV_NAME)" ]; then \
@@ -46,6 +55,7 @@ install:
 	${PYTHON} -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
 
 
+# Same as previous, but with venv logs, and install logs
 install-verbose:
 	@echo "[LOGRE] Checking if environment $(PIPENV_NAME) exists..."
 	@if [ ! -d "$(PIPENV_NAME)" ]; then \
@@ -58,10 +68,11 @@ install-verbose:
 	${PYTHON} -m pip install -r $(REQUIREMENTS_FILE)
 
 
+# Update code base, install dependencies and launch the webserver (also open browser)
 start: update install
 	@echo "[LOGRE] Starting server..."
 	@$(PYTHON) -m streamlit run src/server.py
 
-
-start-verbose: update-verbose install-verbose
+# Same as previous, but with update logs and install logs
+start-verbose: python-version update-verbose install-verbose
 	$(PYTHON) -m streamlit run src/server.py
