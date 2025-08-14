@@ -1,15 +1,22 @@
 import streamlit as st
+import pyperclip
+
+# Local imports
 from model import OntoEntity
 from lib import state
-import pyperclip
+
 
 @st.dialog('Entity information')
 def dialog_entity_info(entity: OntoEntity) -> None:
-    """Simple dialog to display basic information about an entity."""
+    """
+    Dialog function to display basic information about an entity.
+
+    Args:
+        entity (OntoEntity): The entity to display information from.
+    """
 
     # From state
     endpoint = state.get_endpoint()
-
 
     # URI
     col1, col2, col3 = st.columns([1, 3, 1], vertical_alignment='center')

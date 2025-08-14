@@ -1,10 +1,13 @@
 import streamlit as st
+
+# Local imports
 import lib.state as state
 from lib.configuration import load_config
 from dialogs import dialog_find_entity, dialog_entity_form
 
+
 def menu() -> None:
-    """Component function: the sidebar."""
+    """Logre sidebar."""
 
     # Fetch variables from State
     version = state.get_version()
@@ -22,14 +25,13 @@ def menu() -> None:
     st.sidebar.page_link("pages/import-export.py", label="Import and Export", disabled=not endpoint)
     st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not endpoint)
     st.sidebar.page_link("pages/data-tables.py", label="Data tables", disabled=not endpoint)
-    # st.sidebar.page_link("pages/entity.py", label="Entity", disabled=not all_endpoints)
 
     st.sidebar.divider()
 
 
     ##### SET CONFIGURATION #####
 
-    # If there is not configuration, allow user to upload a toml file
+    # If there is not configuration, allow user to upload a yaml file
     if not state.get_has_config():
         
         # TOML file uploader
@@ -55,17 +57,12 @@ def menu() -> None:
         else: selected_index = None
 
         # Endpoint selection
-        endpoint_label = st.sidebar.selectbox(
-            label='Endpoint', 
-            options=endpoint_labels, 
-            index=selected_index, 
-            placeholder="No Endpoint selected"
-        )
+        endpoint_label = st.sidebar.selectbox(label='Endpoint', options=endpoint_labels, index=selected_index, placeholder="No Endpoint selected")
 
-        # If there is a selected endpoint, 
+        # If an endpoint is selected...
         if endpoint_label:
 
-            # That is different that the one in session
+            # ...that is different that the one in session
             if not endpoint or endpoint_label != endpoint.name:
                 
                 # Get the right endpoint instance from session, and update selected one
@@ -80,22 +77,23 @@ def menu() -> None:
 
             ##### DATA BUNDLE SELECTION #####
 
+            # Fetch the one in session (if any)
             data_bundle = state.get_data_bundle()
 
-            # By default, select the first DataBundle
+            # If none is selected, by default, select the first
             if not data_bundle and len(endpoint.data_bundles): 
                 data_bundle = endpoint.data_bundles[0]
                 state.set_data_bundle(data_bundle)
 
             st.sidebar.text('')
 
-            # Allow user to choose the graph to activate
+            # Get all data bundles names
             data_bundles_labels = [s.name for s in endpoint.data_bundles]
 
-            # Manage the graph selection
+            # Manage the data bundle selection
             if len(endpoint.data_bundles):
                 data_bundles_label = st.sidebar.radio(
-                    label='Working DataBundle', 
+                    label='Working Data Bundle', 
                     options=data_bundles_labels, 
                     index=endpoint.data_bundles.index(data_bundle), 
                     key='radio-btn-data_bundle-selection', 
@@ -106,8 +104,8 @@ def menu() -> None:
 
             st.sidebar.divider()
 
-            ##### GRAPH COMMANDS #####
+
+            ##### DATA BUNDLE COMMANDS #####
             if data_bundle:
                 st.sidebar.button('Find entity', icon=':material/search:', on_click=dialog_find_entity)
                 st.sidebar.button('Create an entity', icon=':material/line_start_circle:', on_click=dialog_entity_form)
-                # st.sidebar.button('Create a triple', icon=':material/share:', on_click=dialog_create_triple)

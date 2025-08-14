@@ -4,11 +4,18 @@ from lib import state
 
 @st.dialog('Triple information')
 def dialog_triple_info(triple: Statement) -> None:
+    """
+    Dialog function to display basic information about a triple.
+
+    Args:
+        triple (Statement): The statement to display information from.
+    """
 
     # From state
     endpoint = state.get_endpoint()
     
-    # Subject
+    ### Subject ###
+
     st.markdown('### Subject')
     col1, col2 = st.columns([1, 3])
 
@@ -30,7 +37,8 @@ def dialog_triple_info(triple: Statement) -> None:
 
     st.divider()
 
-    # Predicate
+    ### Predicate ###
+
     st.markdown('### Predicate')
     col1, col2 = st.columns([1, 3])
 
@@ -59,18 +67,19 @@ def dialog_triple_info(triple: Statement) -> None:
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Range class**")
     col2.markdown(triple.predicate.range_class_uri or '')
-    
 
     st.divider()
 
-    # Object
+    ### Object ###
 
+    # If the object is a value
     if triple.object.is_literal:
         st.markdown('### Object (Literal)')
         col1, col2 = st.columns([1, 3])
         col1.markdown(f"**Value**")
         col2.markdown(triple.object.label)
 
+    # If the object is a class instance
     else:
         st.markdown('### Object')
 

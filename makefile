@@ -1,13 +1,13 @@
--include .env
-export
+-include .env # Read variable environment, needed if Python CLI command to use is different than "python3"
+export # Make all variables available in the recipes (and sub-makes)
 
+# By default, display all available commands
 default: help
 
 SHELL := /bin/bash
 PYTHON ?= python3
 PIPENV_NAME := pipenv_logre
 REQUIREMENTS_FILE := requirements.txt
-
 
 
 # Display all available commands. Is also the default ("make")
@@ -33,7 +33,6 @@ update:
 	git pull origin $$branch > /dev/null 2<&1
 	@echo "[LOGRE] Now having version:" $$(cat ./VERSION)
 
-
 #  Same as previous, but with git logs
 update-verbose: 
 	@echo "[LOGRE] Current version:" $$(cat VERSION)
@@ -53,7 +52,6 @@ install:
 	@source ./$(PIPENV_NAME)/bin/activate && \
 	echo "[LOGRE] Installing requirements..." && \
 	${PYTHON} -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
-
 
 # Same as previous, but with venv logs, and install logs
 install-verbose:

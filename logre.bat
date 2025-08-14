@@ -25,7 +25,6 @@ if %ERRORLEVEL% neq 0 (
 REM [LOGRE] Updating code base...
 @git pull
 
-
 REM [LOGRE] Create virtual environment...
 if not exist "pipenv_logre\Scripts\activate.bat" (
     @python -m venv %PIPENV_NAME%

@@ -1,5 +1,7 @@
 from typing import List
 import streamlit as st
+
+# Local imports
 from lib import state
 from model import OntoEntity
 
@@ -12,12 +14,11 @@ def dialog_find_entity() -> None:
     data_bundle = state.get_data_bundle()
     classes = data_bundle.ontology.get_classes()
 
-
-    # All entity filters:
+    # Formular (entity filters)
     col1, col2, col3 = st.columns([2, 2, 1])
     # Class filter
     classes_labels = list(map(lambda cls: cls.display_label , classes))
-    class_label = col1.selectbox('Entity is instance of class:', options=classes_labels, index=None)
+    class_label = col1.selectbox('Find instance of class:', options=classes_labels, index=None)
     # Label filter
     entity_label = col2.text_input('Entity label contains:', help='Write the entity label (or a part of it) and hit "Enter"')
     # Retrieved entities

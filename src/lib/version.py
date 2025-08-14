@@ -1,14 +1,12 @@
+# Local imports
 from lib import state
 
-
+# Path on disk of the file where version number is saved
 VERSION_PATH = './VERSION'
 
-def read_version() -> str:
+
+def read_version() -> None:
     """Load version number from disk."""
 
-    file = open(VERSION_PATH, 'r', encoding='utf-8')
-    version = file.read()
-    file.close()
-
-    state.set_version(version)
-    
+    with open(VERSION_PATH, 'r', encoding='utf-8') as file:
+        state.set_version(file.read())

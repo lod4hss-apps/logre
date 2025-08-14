@@ -6,7 +6,12 @@ import lib.state as state
 
 @st.dialog('Save query')
 def dialog_queries_save(text: str) -> None:
-    """Dialog function to provide a formular to save the SPARQL endpoint (with a name)."""
+    """
+    Dialog function to save a query in the configuration.
+
+    Args:
+        text (string): the query to save
+    """
 
     # User inputs
     new_name = st.text_input('Query name ❗️', help="Give it a name so you will recognize this query among all your saved queries")

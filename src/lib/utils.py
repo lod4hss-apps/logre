@@ -1,53 +1,91 @@
 from typing import List
-import time
-import unicodedata, re, io, zipfile
+import time, unicodedata, re, io, zipfile
 import urllib.parse
 
 
-def normalize_text(text: str):
-    """Normalize the given text (remove accents, caps, ...)."""
+def normalize_text(text: str, to_lower_case: bool = True) -> str:
+    """
+    Normalize the given text: binary chars, accents, spaces, lower case.
     
-    if not text: 
-        return text
+    Args:
+        text (string): The "dirty text" (eg "  héLlo  worlD ").
 
-    # Remove diacritics (accents) by filtering out non-ASCII characters
+    Returns:
+        string: The cleaned text (eg "hello world").
+
+    """    
+
+    # To avoid errors if no text is sent
+    if not text: return text
+
+    # Remove binary chars
+    allowed_categories = ('L', 'N', 'P', 'S', 'Z') # Letters, Numbers, Punctuation, Symbols, Spaces
+    to_return = ''.join(c for c in text if unicodedata.category(c)[0] in allowed_categories)
+    
+    # Normalize text to decompose accented characters (e.g., é -> e + <accent>)
+    to_return = unicodedata.normalize("NFKD", to_return)
+
+    # Remove combining marks (accents)
     to_return = "".join([c for c in text if not unicodedata.combining(c)])
 
+    # Handle extra spaces
+    to_return = re.sub(r'\s+', ' ', to_return).strip()
+
     # Lower case
-    to_return = to_return.lower()
+    if to_lower_case: to_return = to_return.lower()
 
     return to_return
 
 
 def to_snake_case(text: str) -> str:
-    """Format the given string into snake-case"""
+    """
+    Format the given string into snake-case.
+    
+    Args:
+        text (string): The normal text (eg "Hello world").
 
-    # Normalize text to decompose accented characters (e.g., é -> e)
-    normalized_text = unicodedata.normalize("NFKD", text)
+    Returns:
+        string: the snake case version of given text (eg "hello-world").
+    """
+
+    # Clean the incoming text
+    clean_text = normalize_text(text)
 
     # Replace underscores by dashes
-    no_underscores = normalized_text.replace('_', '-')
+    clean_text = clean_text.replace('_', '-')
 
-    # Remove diacritics (accents) by filtering out non-ASCII characters
-    no_accents_text = "".join([c for c in no_underscores if not unicodedata.combining(c)])
-
-    # Remove punctuation
-    cleaned_text = re.sub(r"[^\w\s-]", "", no_accents_text)
-
-    # Replace spaces with dashs and convert to lowercase
-    snake_case_text = re.sub(r"\s+", "-", cleaned_text.strip()).lower()
+    # Replace spaces with dashs
+    snake_case_text = re.sub(r"\s+", "-", clean_text)
 
     return snake_case_text
 
 
 def from_snake_case(text: str) -> str:
-    """From a snake cased string, get a normal string."""
+    """
+    From a snake cased string, get a normal string.
+    Put a cap letter for each word
+
+    Args:
+        text (string): Snake text (eg "hello-world").
+
+    Returns:
+        string: Normal text (eg "Hello World").
+    
+    """
     return text.replace('_', ' ').title()
 
 
 def build_zip_file(file_names: List[str], file_contents: List[str]) -> io.BytesIO:
-    """Transform the result of the endpoint extract into one single zip file."""
+    """
+    Build a zip file (file content) using given file names and file contents.
 
+    Args:
+        file_names (list of strings): Names files should have, in the correct order;
+        file_content (list of strings): Content of files, in the correct order.
+
+    Returns:
+        bytes: the file content that need to be written on disk.
+    """
     zip_buffer = io.BytesIO()
 
     # Create a zip archive in the buffer
@@ -60,33 +98,68 @@ def build_zip_file(file_names: List[str], file_contents: List[str]) -> io.BytesI
 
 
 def generate_id() -> str:
-    "Generate a uuid base on the current time"
+    """
+    Generate an id base on the current time (conversion of current millisecond timestamp into b62 char).
+    Uses base 62 chars (b64 without "/" and "+").
+    Always prepend an "i" in front, to match recommendation
 
-    # The seed (now's timestamp in ms)
-    timestamp_ms = int(time.time() * 1000)
+    Returns:
+        string: the generated id eg "i3shkRl2e"
+    """
 
     # The used alphabet
-    BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    BASE62_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+    # The seed (current timestamp in ms)
+    timestamp_ms = int(time.time() * 1000)
 
     # Generate the id
     result = ""
     while timestamp_ms:
         timestamp_ms, remainder = divmod(timestamp_ms, 62)
-        result = BASE64_ALPHABET[remainder] + result
+        result = BASE62_ALPHABET[remainder] + result
 
     # Make sure that the id generation took at least 1 ms, 
     # Doing so, we ensure that each generated ids are different
+    # Having in mind that this is true only computer wide.
     if int(time.time() * 1000) - timestamp_ms < 1:
         time.sleep(0.001)
 
     return 'i' + result[::-1]
 
 
-def get_logre_url(endpoint_name: str, data_bundle_name: str, entity_uri: str):
+def generate_uri(id: str = None) -> str:
+    """
+    Build a local URI. In case an id is given, build the URI with the given ID.
+
+    Args: 
+        id (string): Optional, the id to have in the URI.
+
+    Returns:
+        string: Generated URI.
+    """
+
+    if id: return f"base:i{id}"
+    else: return f"base:i{generate_id()}"
+
+
+
+def get_logre_url(endpoint_name: str, data_bundle_name: str, entity_uri: str) -> str:
+    """
+    Generate a URL from the given parameters. 
+    Allows to access the given information with a link.
+
+    Args:
+        endpoint_name: The name of the endpoint (needs to be the same that the one in the configuration).
+        data_bunble_name: The name of the data bunble (needs to be the same that the one in the configuration).
+        entity_uri: The URI of the entity to open.
+
+    Returns:
+        string: the URL of the given informations
+    """
 
     endpoint_name = urllib.parse.quote(endpoint_name)
     data_bundle_name = urllib.parse.quote(data_bundle_name)
     entity_uri = urllib.parse.quote(entity_uri)
 
     return f"/entity?endpoint={endpoint_name}&databundle={data_bundle_name}&entity={entity_uri}"
-
