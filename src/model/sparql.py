@@ -24,10 +24,13 @@ class SPARQL:
     def get_prefixes(self) -> List[Prefix]:
         return [prefix for prefix in self.prefixes if prefix.short != 'base']
 
-    def prepare_uri(self, supposed_uri: str) -> str:
+    def prepare_uri(self, supposed_uri: str | int | float) -> str:
         # If None is given, make the call transparent
         if not supposed_uri: return None
         
+        if isinstance(supposed_uri, (int, float, complex)):
+            return supposed_uri
+
         # Make it a string 
         supposed_uri = str(supposed_uri)
 
