@@ -123,6 +123,38 @@ def __add_html_field(container: DeltaGenerator, range_class_label: str, values: 
     # Returns triples to add and triples to remove
     return add_values, rem_values
 
+def __add_integer_field(container: DeltaGenerator, range_class_label: str, values: List[str], max_count: int, prop_index: int) -> Tuple[List[str], List[str]]:
+    """
+    Display all current integer values inside number inputs and add another empty one if limit is not reached.
+    
+    Returns:
+        tuple: A tuple with 2 elements:
+            - list: triples to create
+            - list: triples to remove
+    """
+
+    # This variable keeps track of all the values to add to the graph
+    add_values = []
+
+    # This variable keeps track of all the values to remove from the graph
+    rem_values = []
+
+    # For each existing values, display it in a text input
+    for i, value in enumerate(values):
+        new_value = container.number_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}", value=value, min_value=0, step=1)
+        if new_value != value and new_value != 0:
+            add_values.append(new_value)
+            rem_values.append(value)
+
+    # If max value is not reached, add a additional empty field
+    if len(values) < max_count:
+        new_value = container.number_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}", min_value=0, step=1)
+        if new_value and new_value != 0:
+            add_values.append(new_value)
+
+    # Returns triples to add and triples to remove
+    return add_values, rem_values
+
 
 # TODO: Rework this function: does not work as expected
 # GUI does not update accordingly: when a value is set and limit not reach, a new empty one does not appear interactively.
@@ -290,6 +322,8 @@ def dialog_entity_form(entity: OntoEntity = None, triples: List[tuple[str, str, 
                 add, rem = __add_string_field(col_range, range_class_name, existing_values, prop.max_count, i)
             elif prop.range_class_uri == "xsd:html":
                 add, rem = __add_html_field(col_range, range_class_name, existing_values, prop.max_count, i)
+            elif prop.range_class_uri == "xsd:integer":
+                add, rem = __add_integer_field(col_range, range_class_name, existing_values, prop.max_count, i)
             else:
                 add, rem = __add_class_field(col_range, range_class_name, prop.range_class_uri, existing_values, prop.max_count, i)
             
