@@ -35,10 +35,10 @@ update:
 
 #  Same as previous, but with git logs
 update-verbose: 
-	@echo "[LOGRE] Current version:" $$(cat VERSION)
-	@echo "[LOGRE] Updating code base..."
-	@git pull origin main 
-	@echo "[LOGRE] Now having version:" $$(cat ./VERSION)
+	echo "[LOGRE] Current version:" $$(cat VERSION)
+	echo "[LOGRE] Updating code base..."
+	git pull origin main 
+	echo "[LOGRE] Now having version:" $$(cat ./VERSION)
 
 
 # Set the right virtual environment (or create it), and install dependencies from requirements.txt
@@ -48,29 +48,25 @@ install:
 		echo "[LOGRE] Environment $(PIPENV_NAME) not found. Creating..."; \
 		$(PYTHON) -m venv $(PIPENV_NAME) > /dev/null 2>&1; \
 	fi
-	@echo "[LOGRE] Activating environment $(PIPENV_NAME)..."
-	@source ./$(PIPENV_NAME)/bin/activate && \
-	echo "[LOGRE] Installing requirements..." && \
-	${PYTHON} -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
+	@echo "[LOGRE] Installing requirements..." && \
+	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
 
 # Same as previous, but with venv logs, and install logs
 install-verbose:
-	@echo "[LOGRE] Checking if environment $(PIPENV_NAME) exists..."
-	@if [ ! -d "$(PIPENV_NAME)" ]; then \
+	echo "[LOGRE] Checking if environment $(PIPENV_NAME) exists..."
+	if [ ! -d "$(PIPENV_NAME)" ]; then \
 		echo "[LOGRE] Environment $(PIPENV_NAME) not found. Creating..."; \
 		$(PYTHON) -m venv $(PIPENV_NAME); \
 	fi
-	@echo "[LOGRE] Activating environment $(PIPENV_NAME)..."
-	@source ./$(PIPENV_NAME)/bin/activate && \
 	echo "[LOGRE] Installing requirements..." && \
-	${PYTHON} -m pip install -r $(REQUIREMENTS_FILE)
+	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE)
 
 
 # Update code base, install dependencies and launch the webserver (also open browser)
 start: update install
 	@echo "[LOGRE] Starting server..."
-	@$(PYTHON) -m streamlit run src/server.py
+	@./${PIPENV_NAME}/bin/python -m streamlit run src/server.py
 
 # Same as previous, but with update logs and install logs
 start-verbose: python-version update-verbose install-verbose
-	$(PYTHON) -m streamlit run src/server.py
+	./${PIPENV_NAME}/bin/python -m streamlit run src/server.py
