@@ -18,11 +18,13 @@ class Graph:
 
 
     def insert(self, triples: List[tuple[str, str, str]] | tuple[str, str, str]) -> None:
-        self.sparql.insert(triples, self.uri_)
+        if len(triples) != 0:
+            self.sparql.insert(triples, self.uri_)
 
 
     def delete(self, triples: List[tuple[str, str, str]] | tuple[str, str, str]) -> None:
-        self.sparql.delete(triples, self.uri_)
+        if len(triples) != 0:
+            self.sparql.delete(triples, self.uri_)
 
 
     def dump(self) -> list[dict]:
