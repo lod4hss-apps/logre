@@ -32,7 +32,7 @@ class Fuseki(SPARQL):
     def upload_turtle_chunk(self, turtle_content: str, named_graph_uri: str = None) -> None:
 
         # Prepare query
-        if named_graph_uri: url = self.url + '?graph=' + named_graph_uri
+        if named_graph_uri: url = self.url + '?graph=' + self.unroll_uri(named_graph_uri)
         else: url = self.url
         headers = {"Content-Type": "application/turtle"}
         auth = (self.username, self.password)
