@@ -96,10 +96,12 @@ class SPARQL:
             print('==============')
             print(query)
         else:
+            # Is different because in the debug mode, we keep indentation for visual reading, here not
             # Add prefixes
             query = '\n'.join(list(map(lambda prefix: prefix.to_sparql(), self.prefixes))) + '\n' + query
             # Strip all lines
             query = '\n'.join(list(map(lambda line: line.strip(), query.split('\n'))))
+
 
         # Prepare the request
         data = {'query': query}
@@ -107,7 +109,15 @@ class SPARQL:
         auth = HTTPBasicAuth(self.username, self.password) if self.username else None
 
         # Execute the request
-        response = requests.post(self.url, data=data, headers=headers, auth=auth)
+        response = self.execute_http_request(self.url, data, headers, auth)
+
+        # If there is a response, parse and transform into a list of dict
+        return self.parse_sparql_json_response(response.json())
+
+    
+    def execute_http_request(self, url, data, headers, auth):
+        # Execute the request
+        response = requests.post(url, data=data, headers=headers, auth=auth)
         try:
             response.raise_for_status()  # Raise error for bad responses
         except requests.exceptions.HTTPError as error:
@@ -115,9 +125,10 @@ class SPARQL:
             msg += error.response.text
             raise HTTPError(msg)
 
+        return response
 
-        # If there is a response, parse and transform into a list of dict
-        response_json = response.json()
+        
+    def parse_sparql_json_response(self, response_json: object) -> List[object]:
         if 'results' in response_json and 'bindings' in response_json['results']:
             rows = []
             for row in response_json['results']['bindings']:
@@ -155,7 +166,7 @@ class SPARQL:
         graph_sparql_close = "}" if graph_uri else ""
         
         for small_triples in chunked_triples:
-            # Transform the triples into strings
+            # Transform the triples into strings, and make the query "pretty"
             triples_str = '\n                        '.join(map(lambda triple: self.prepare_triple(triple), small_triples))
 
             # Prepare the query
