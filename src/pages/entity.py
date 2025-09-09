@@ -106,7 +106,7 @@ else:
 
     # Header: entity name, additional info and description
     col1, col2, col_delete, col_edit = st.columns([20, 1, 1, 4], vertical_alignment='bottom')
-    col1.markdown(f'# {entity.display_label} <small style="font-size: 16px; color: gray; text-decoration: none;">{entity.uri}</small>', unsafe_allow_html=True)
+    col1.markdown(f'# {entity.display_label_class} <small style="font-size: 16px; color: gray; text-decoration: none;">{entity.uri}</small>', unsafe_allow_html=True)
     col2.button('', icon=':material/info:', type='tertiary', on_click=dialog_entity_info, kwargs={'entity': entity})
     if col_delete.button('', icon=':material/delete:', type='primary'):
         dialog_confirmation("You are about to delete this entity, and all its triples.", __delete_entity, entity=entity)

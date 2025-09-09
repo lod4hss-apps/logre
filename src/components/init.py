@@ -1,4 +1,5 @@
 from typing import Literal
+import os
 from dotenv import load_dotenv, find_dotenv
 import streamlit as st
 
@@ -19,6 +20,11 @@ def init(layout: Literal['centered', 'wide'] = 'centered') -> None:
     # Load .env file only if it exists
     dotenv_path = find_dotenv()
     if dotenv_path: load_dotenv(dotenv_path)
+
+    if 'ENV' not in os.environ:
+        os.environ["ENV"] = "local"
+    if 'LOGRE_MODE' not in os.environ:
+        os.environ["LOGRE_MODE"] = "normal"
 
     # Error catching to make a global error message
     try:

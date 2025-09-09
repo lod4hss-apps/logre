@@ -173,14 +173,14 @@ def __add_float_field(container: DeltaGenerator, range_class_label: str, values:
 
     # For each existing values, display it in a text input
     for i, value in enumerate(values):
-        new_value = container.number_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}", value=float(value), min_value=0., step=0.1)
+        new_value = container.number_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}", value=float(value), min_value=0., format="%.5f")
         if new_value != value and new_value != 0:
             add_values.append(new_value)
             rem_values.append(value)
 
     # If max value is not reached, add a additional empty field
     if len(values) < max_count:
-        new_value = container.number_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}", min_value=0., step=0.1)
+        new_value = container.number_input(range_class_label, key=f"dialog-entity-form-prop-{prop_index}-{len(values) + 1}", min_value=0., format="%.5f")
         if new_value and new_value != 0:
             add_values.append(new_value)
 
@@ -220,19 +220,24 @@ def __add_class_field(container: DeltaGenerator, range_class_label: str, range_c
         # This for only exists to cover errors: since max_count = 1, if the data are correct, 
         # there could be only 1 uri_values, so the for should be irrelevant. But if the data are wrong
         # (eg coming from import, generations, ...) display and removal of "wrong" data is still allowed
-        for uri in uri_values:
-            entity = data_bundle.get_entity_infos(uri)
-            
-            # Because for some classes, a property can have multiple range classes (eg <is membership of> <group> OR/AND <person>)
-            # When the entity has one, the formular tries to fit the class in the other (find the person among the groups)
-            # Which raises an error (of course)
-            # Also true for the "index is not None" in the 2nd next "if"
-            if entity.display_label_comment in possible_objects_label: index = possible_objects_label.index(entity.display_label_comment)
-            else: index = None
-            new_value = container.selectbox(range_class_label, options=possible_objects_label, key=f"dialog-entity-form-prop-{prop_index}-{len(uri_values) + 1}", index=index)
-            if index is not None and new_value != entity.display_label_comment:
+        if len(uri_values) != 0:
+            for uri in uri_values:
+                entity = data_bundle.get_entity_infos(uri)
+                
+                # Because for some classes, a property can have multiple range classes (eg <is membership of> <group> OR/AND <person>)
+                # When the entity has one, the formular tries to fit the class in the other (find the person among the groups)
+                # Which raises an error (of course)
+                # Also true for the "index is not None" in the 2nd next "if"
+                if entity.display_label_comment in possible_objects_label: index = possible_objects_label.index(entity.display_label_comment)
+                else: index = None
+                new_value = container.selectbox(range_class_label, options=possible_objects_label, key=f"dialog-entity-form-prop-{prop_index}-{len(uri_values) + 1}", index=index)
+                if index is not None and new_value != entity.display_label_comment:
+                    add_values.append(possible_objects[possible_objects_label.index(new_value)].uri)
+                    rem_values.append(entity.uri)
+        else:
+            new_value = container.selectbox(range_class_label, options=possible_objects_label, key=f"dialog-entity-form-prop-{prop_index}-{len(uri_values) + 1}", index=None)
+            if new_value and new_value != 0:
                 add_values.append(possible_objects[possible_objects_label.index(new_value)].uri)
-                rem_values.append(entity.uri)
         
     else:
 
