@@ -1,0 +1,227 @@
+endpoints:
+- name: Solidamin
+  url: http://graphdb.geovistory.org/repositories/solidamin
+  technology: GraphDB
+  username: admin
+  password: OqZcv*zTw9urJ&XtcNdx
+  base_uri: http://geovistory.org/resource/
+  data_bundles:
+  - name: Refuge Huguenot Transfers
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: base:rf_distribution_data
+    graph_ontology_uri: base:rf_distribution_shacl
+    graph_metadata_uri: ''
+  - name: Antoine Court
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: base:antoine_court_data
+    graph_ontology_uri: base:antoine_court_shacl
+    graph_metadata_uri: ''
+  prefixes:
+  - short: rdf
+    long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  - short: rdfs
+    long: http://www.w3.org/2000/01/rdf-schema#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
+  - short: owl
+    long: http://www.w3.org/2002/07/owl#
+  - short: sh
+    long: http://www.w3.org/ns/shacl#
+  - short: crm
+    long: http://www.cidoc-crm.org/cidoc-crm/
+  - short: ontome
+    long: https://ontome.net/ontology/
+  - short: frbroo
+    long: https://www.iflastandards.info/fr/frbr/frbroo#
+  - short: crm-sup
+    long: https://sdhss.org/ontology/crm-supplement/
+  - short: sdh
+    long: https://sdhss.org/ontology/core/
+  - short: sdh-shortcut
+    long: https://sdhss.org/ontology/shortcuts/
+  - short: sdh-slc
+    long: https://sdhss.org/ontology/social-life-core/
+  - short: sdh-shacl
+    long: https://sdhss.org/shacl/profiles/
+  - short: sdh-info
+    long: https://sdhss.org/ontology/sources-information/
+  - short: lrmoo
+    long: http://iflastandards.info/ns/lrm/lrmoo/
+- name: DH25-Lisbon
+  url: https://ag15yl6uwsmzwvsd.allegrograph.cloud/repositories/science-history
+  technology: Allegrograph
+  username: editor
+  password: Jd!XW3!wtCv*Xcj1ehHvh#E#
+  base_uri: https://github.com/lod4hss-projects/workshops/blob/main/DH25-Lisbon/resource/
+  data_bundles:
+  - name: Wikidata
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: https://github.com/lod4hss-projects/workshops/blob/main/DH25-Lisbon/graphs/wikidata-imported-data.md
+    graph_ontology_uri: https://github.com/lod4hss-projects/workshops/blob/main/DH25-Lisbon/graphs/wikidata-shacl.md
+    graph_metadata_uri: ''
+  - name: Sdhss
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: https://github.com/lod4hss-projects/workshops/blob/main/DH25-Lisbon/graphs/sdhss-data.md
+    graph_ontology_uri: https://github.com/lod4hss-projects/workshops/blob/main/DH25-Lisbon/graphs/sdhss-shacl.md
+    graph_metadata_uri: ''
+  prefixes:
+  - short: rdf
+    long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  - short: rdfs
+    long: http://www.w3.org/2000/01/rdf-schema#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
+  - short: owl
+    long: http://www.w3.org/2002/07/owl#
+  - short: sh
+    long: http://www.w3.org/ns/shacl#
+  - short: crm
+    long: http://www.cidoc-crm.org/cidoc-crm/
+  - short: ontome
+    long: https://ontome.net/ontology/
+  - short: crm-sup
+    long: https://sdhss.org/ontology/crm-supplement/
+  - short: sdh
+    long: https://sdhss.org/ontology/core/
+  - short: sdh-shortcut
+    long: https://sdhss.org/ontology/shortcuts/
+  - short: sdh-slc
+    long: https://sdhss.org/ontology/social-life-core/
+  - short: sdh-shacl
+    long: https://sdhss.org/shacl/profiles/
+- name: OBJECTive
+  url: https://graphdb.geovistory.org/repositories/OBJECTive
+  technology: GraphDB
+  username: admin
+  password: OqZcv*zTw9urJ&XtcNdx
+  base_uri: http://geovistory.org/resource/
+  data_bundles:
+  - name: Access ERC
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: ''
+    graph_ontology_uri: http://geovistory.org/resource/shacl
+    graph_metadata_uri: ''
+  prefixes:
+  - short: rdf
+    long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  - short: rdfs
+    long: http://www.w3.org/2000/01/rdf-schema#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
+  - short: owl
+    long: http://www.w3.org/2002/07/owl#
+  - short: sh
+    long: http://www.w3.org/ns/shacl#
+  - short: crm
+    long: http://www.cidoc-crm.org/cidoc-crm/
+  - short: sdh
+    long: https://sdhss.org/ontology/core/
+  - short: sdh-shortcut
+    long: https://sdhss.org/ontology/shortcuts/
+  - short: sdh-shacl
+    long: https://sdhss.org/shacl/profiles/
+  - short: ontome
+    long: https://ontome.net/ontology/
+  - short: crm-sup
+    long: https://sdhss.org/ontology/crm-supplement/
+  - short: sdh-slc
+    long: https://sdhss.org/ontology/social-life-core/
+  - short: sdh-act
+    long: https://sdhss.org/ontology/human-activity/
+- name: Plan-Menu
+  url: http://localhost:3030/plan-menu
+  technology: Fuseki
+  username: admin
+  password: QRTJS9Vcvim51rV
+  base_uri: http://localhost/plan-menu/entity/
+  data_bundles:
+  - name: Menus Test
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: base:data
+    graph_ontology_uri: base:shacl
+    graph_metadata_uri: ''
+  prefixes:
+  - short: rdf
+    long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  - short: rdfs
+    long: http://www.w3.org/2000/01/rdf-schema#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
+  - short: owl
+    long: http://www.w3.org/2002/07/owl#
+  - short: sh
+    long: http://www.w3.org/ns/shacl#
+  - short: crm
+    long: http://www.cidoc-crm.org/cidoc-crm/
+  - short: sdh
+    long: https://sdhss.org/ontology/core/
+  - short: sdh-shortcut
+    long: https://sdhss.org/ontology/shortcuts/
+  - short: sdh-shacl
+    long: https://sdhss.org/shacl/profiles/
+  - short: ontome
+    long: https://ontome.net/ontology/
+  - short: menu
+    long: http://localhost/plan-menu/model/
+- name: Borders
+  url: https://sparql-gdb.geovistory.org/borders
+  technology: GraphDB
+  username: gmuck
+  password: xFtxdcBo8Gbm$7K!
+  base_uri: https://lod4hss.org/projects/borders/resource/
+  data_bundles:
+  - name: Project's information
+    ontology_framework: SHACL
+    type_property: rdf:type
+    label_property: rdfs:label
+    comment_property: rdfs:comment
+    graph_data_uri: https://lod4hss.org/projects/borders/information
+    graph_ontology_uri: https://lod4hss.org/projects/borders/shacl
+    graph_metadata_uri: ''
+  prefixes:
+  - short: rdf
+    long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  - short: rdfs
+    long: http://www.w3.org/2000/01/rdf-schema#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
+  - short: owl
+    long: http://www.w3.org/2002/07/owl#
+  - short: sh
+    long: http://www.w3.org/ns/shacl#
+  - short: crm
+    long: http://www.cidoc-crm.org/cidoc-crm/
+  - short: sdh
+    long: https://sdhss.org/ontology/core/
+  - short: sdh-shortcut
+    long: https://sdhss.org/ontology/shortcuts/
+  - short: sdh-shacl
+    long: https://sdhss.org/shacl/profiles/
+  - short: ontome
+    long: https://ontome.net/ontology/
+  - short: menu
+    long: http://localhost/plan-menu/model/
+queries:
+- name: List all graphs
+  text: "SELECT DISTINCT ?graph\nWHERE {\n  GRAPH ?graph { \n    ?s ?p ?o .\n  }\n\
+    }\n"
+- name: Delete all data
+  text: CLEAR ALL

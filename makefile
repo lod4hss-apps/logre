@@ -25,20 +25,27 @@ help:
 python-version:
 	@echo "[LOGRE] Python command used: ${PYTHON}"
 
-# Update code base from GitHub
+
+# Update code base from GitHub (main branch)
 update: 
-	@echo "[LOGRE] Current version:" $$(cat VERSION)
+	@echo "[LOGRE] Current version:" $$(cat ./VERSION)
 	@echo "[LOGRE] Updating code base..."
 	@branch=$$(git rev-parse --abbrev-ref HEAD); \
 	git pull origin $$branch > /dev/null 2<&1
 	@echo "[LOGRE] Now having version:" $$(cat ./VERSION)
+	@echo "[LOGRE] Running update scripts..."
+	@cd scripts; ${PYTHON} update.py
 
 #  Same as previous, but with git logs
 update-verbose: 
-	echo "[LOGRE] Current version:" $$(cat VERSION)
+	echo "[LOGRE] Current version:" $$(cat ./VERSION)
 	echo "[LOGRE] Updating code base..."
-	git pull origin main 
+	branch=$$(git rev-parse --abbrev-ref HEAD); \
+	git pull origin $$branch
 	echo "[LOGRE] Now having version:" $$(cat ./VERSION)
+	echo "[LOGRE] Running update scripts..."
+	cd scripts; ${PYTHON} update.py
+
 
 
 # Set the right virtual environment (or create it), and install dependencies from requirements.txt
@@ -48,8 +55,18 @@ install:
 		echo "[LOGRE] Environment $(PIPENV_NAME) not found. Creating..."; \
 		$(PYTHON) -m venv $(PIPENV_NAME) > /dev/null 2>&1; \
 	fi
-	@echo "[LOGRE] Installing requirements..." && \
+	@echo "[LOGRE] Installing pip requirements..." && \
 	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
+	@echo "[LOGRE] Installing GitHub dependencies..."
+	@if [ -d "graphly" ]; then \
+		cd graphly; \
+		../${PIPENV_NAME}/bin/python -m pip uninstall graphly > /dev/null 2<&1; \
+		git pull > /dev/null 2<&1; \
+		../${PIPENV_NAME}/bin/python -m pip install . > /dev/null 2<&1; \
+	else \
+		git clone https://github.com/lod4hss-apps/graphly.git > /dev/null 2<&1; \
+		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . > /dev/null 2<&1; \
+	fi
 
 # Same as previous, but with venv logs, and install logs
 install-verbose:
@@ -60,6 +77,16 @@ install-verbose:
 	fi
 	echo "[LOGRE] Installing requirements..." && \
 	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE)
+	echo "[LOGRE] Installing GitHub dependencies..."
+	if [ -d "graphly" ]; then \
+		cd graphly; \
+		../${PIPENV_NAME}/bin/python -m pip uninstall graphly; \
+		git pull; \
+		../${PIPENV_NAME}/bin/python -m pip install .; \
+	else \
+		git clone https://github.com/lod4hss-apps/graphly.git \
+		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . \
+	fi
 
 
 # Update code base, install dependencies and launch the webserver (also open browser)
