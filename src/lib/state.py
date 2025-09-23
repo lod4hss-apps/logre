@@ -85,7 +85,7 @@ def set_query_params(query_param_keys: List[str]) -> None:
 
     Args:
         query_param_keys (List[str]): A list of query parameter keys to update.
-                                    Supported keys are "db", "uri", and "query".
+                                    Supported keys are "db", "uri".
     """
     # Data bundle: from state to query param
     if 'db' in query_param_keys and 'db' not in query_params:
@@ -102,12 +102,11 @@ def parse_query_params() -> None:
     """
     Parse query parameters and update the session state accordingly.
 
-    For each recognized query parameter ("db", "uri", "query"), the corresponding
+    For each recognized query parameter ("db", "uri"), the corresponding
     value is retrieved from `query_params` and stored in the session state.
 
     - "db": Matches the provided key with available data bundles and sets the selected bundle.
     - "uri": Sets the current entity URI.
-    - "query": Sets the active SPARQL query name.
     """
     # Data bundle: from query param to state
     if 'db' in query_params:
@@ -185,7 +184,7 @@ def save_config() -> None:
     """
     # Gather config
     config = {
-        'prefixes': [p.to_dict() for p in get_prefixes()],
+        'prefixes': [p.to_dict() for p in get_prefixes() if p.short != 'base'],
         'data_bundles': [db.to_dict() for db in get_data_bundles()],
         'default_data_bundle': get_default_data_bundle().key,
         'sparql_queries': get_sparql_queries()
@@ -470,6 +469,32 @@ def delete_sparql_query(sq_name: str) -> None:
     # Write on disk
     save_config()
 
+
+def set_last_executed_sparql_id(id: str) -> None:
+    """
+    Set the ID of the last executed SPARQL query.
+
+    Args:
+        id (str): The identifier of the executed SPARQL query.
+
+    Returns:
+        None
+    """
+    state['last_sparql_executed_id'] = id
+
+
+def get_last_executed_sparql_id() -> str:
+    """
+    Retrieve the ID of the last executed SPARQL query.
+
+    Returns:
+        str | None: The identifier of the last executed SPARQL query,
+        or None if no query has been executed yet.
+    """
+    if 'last_sparql_executed_id' in state: 
+        return state['last_sparql_executed_id']
+    else:
+        return None
 
 
 ##### SELECTED ENTITY #####

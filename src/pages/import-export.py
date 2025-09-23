@@ -3,6 +3,7 @@ from requests.exceptions import HTTPError
 from components.init import init
 from components.menu import menu
 from lib import state
+from lib.errors import get_HTTP_ERROR_message
 from dialogs.confirmation import dialog_confirmation
 
 try:
@@ -128,6 +129,6 @@ try:
                             st.rerun()
 
 except HTTPError as err:
-    message = f"""[HTTP ERROR]\n\n{err.args[0]}"""
+    message = get_HTTP_ERROR_message(err)
     st.error(message)
-    print(message.replace('\n\n', ' - '))
+    print(message.replace('\n\n', '\n'))

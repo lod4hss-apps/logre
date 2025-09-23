@@ -5,6 +5,7 @@ from code_editor import code_editor
 from components.init import init
 from components.menu import menu
 from lib import state
+from lib.errors import get_HTTP_ERROR_message
 from dialogs.confirmation import dialog_confirmation
 from dialogs.query_name import dialog_query_name
 from dialogs.confirmation import dialog_confirmation
@@ -57,10 +58,11 @@ try:
     st.write('')
 
     # When submit button is clicked
-    if editor['type'] == 'submit':
+    if editor['type'] == 'submit' and editor['id'] != state.get_last_executed_sparql_id():
 
         # Run the query
         result = data_bundle.endpoint.run(editor['text'], data_bundle.prefixes)
+        state.set_last_executed_sparql_id(editor['id'])
 
         # If there is a result
         if result != None:
@@ -68,23 +70,27 @@ try:
 
             option_line = st.container(horizontal=True, horizontal_alignment='distribute', vertical_alignment='bottom')
 
+            # Option line: title, shape, and buttons
             with option_line.container(horizontal=True, horizontal_alignment='left', vertical_alignment='bottom'):
                 st.markdown("### Response", width='content')
                 st.markdown(f"Shape: {df.shape[0]}x{df.shape[1]}", width='content')
 
+            # Options buttons: download and save query
             with option_line.container(horizontal=True, horizontal_alignment='right', vertical_alignment='bottom'):
                 st.download_button('Download CSV', data=df.to_csv(index=False), file_name="logre-download.csv", mime="text/csv", icon=':material/download:')
                 if st.button('Save query', kwargs={'text': editor['text']}, icon=':material/reorder:'): 
                     dialog_query_name(editor['text'])
 
+            # Display query result
             st.dataframe(df, hide_index=True)
 
         # When there is no result: a insert/delete query
         else:
             # Inform user that the request went through
             state.set_toast('Query executed', icon=':material/done:')
+            st.rerun()
 
 except HTTPError as err:
-    message = f"""[HTTP ERROR]\n\n{err.args[0]}"""
+    message = get_HTTP_ERROR_message(err)
     st.error(message)
-    print(message.replace('\n\n', ' - '))
+    print(message.replace('\n\n', '\n'))

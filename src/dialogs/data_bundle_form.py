@@ -1,8 +1,12 @@
 import streamlit as st
+from requests.exceptions import HTTPError
+from graphly.schema import Prefixes, Prefix
 from lib import state
+from lib.errors import get_HTTP_ERROR_message
 from schema.data_bundle import DataBundle
 from schema.model_framework import ModelFramework
-from schema.sparql_technologies import SPARQLTechnology
+from schema.sparql_technologies import SPARQLTechnology, get_sparql_technology
+
 
 ENDPOINT_TECHNOLOGIES_STR = [e.value for e in list(SPARQLTechnology)]
 MODEL_FRAMEWORKS_STR = [e.value for e in list(ModelFramework)]
@@ -58,6 +62,27 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
     new_graph_model_uri = col_model.text_input('Model graph URI', value=db.graph_model.uri if db else 'base:model')
     new_graph_metadata_uri = col_metadata.text_input('Metadata graph URI', value=db.graph_metadata.uri if db else 'base:metadata')
     
+    # List current named graph
+    popover = st.popover('List of existing named graph',)
+    try: 
+        # First there is the need to set the endpoint, prefixes etc locally, based on things above
+        endpoint = get_sparql_technology(new_technology)(new_url, new_username, new_password)
+        # Retrieve prefixes but skip the configured 'base' one
+        prefixes = Prefixes([prefix for prefix in state.get_prefixes().prefix_list if prefix.short != 'base'])
+        prefixes.add(Prefix('base', new_base_uri))
+        # Make the query
+        with st.spinner('Fetching existing named graph'):
+            graphs = endpoint.run("select distinct ?g where { graph ?g { ?s ?p ?o .}}", prefixes=prefixes)
+        # Display results
+        graphs = [g['g'] for g in graphs]
+        popover.markdown('*(Default graph)*')
+        for graph in graphs:
+            popover.markdown(f"{graph}")
+    except HTTPError as err:
+        message = get_HTTP_ERROR_message(err)
+        popover.error(message)
+        print(message.replace('\n\n', '\n'))
+
     st.write('')
     st.write('')
 

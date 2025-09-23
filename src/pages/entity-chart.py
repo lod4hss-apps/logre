@@ -5,6 +5,7 @@ from pyvis.network import Network
 from requests.exceptions import HTTPError
 from graphly.schema.statement import Statement
 from lib import state
+from lib.errors import get_HTTP_ERROR_message
 from components.init import init
 from components.menu import menu
 
@@ -205,6 +206,6 @@ try:
             st.write('')
 
 except HTTPError as err:
-    message = f"""[HTTP ERROR]\n\n{err.args[0]}"""
+    message = get_HTTP_ERROR_message(err)
     st.error(message)
-    print(message.replace('\n\n', ' - '))
+    print(message.replace('\n\n', '\n'))

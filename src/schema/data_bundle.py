@@ -113,7 +113,21 @@ class DataBundle:
         if graph == 'data': self.graph_data.insert(triples, self.prefixes)
         if graph == 'model': self.graph_model.insert(triples, self.prefixes)
         if graph == 'metadata': self.graph_metadata.insert(triples, self.prefixes)
-        
+    
+
+    def run(self, text: str) -> List[Dict] | None:
+        """
+        Execute a SPARQL query against the configured endpoint.
+
+        Args:
+            text (str): The SPARQL query string to execute.
+
+        Returns:
+            List[Dict] | None: A list of result bindings if the query succeeds,
+            or None if the execution fails.
+        """
+        return self.endpoint.run(text, self.prefixes)
+
 
     def find_entities(self, label: str = None, class_uri: str = None, limit: int | None = 10, offset: int | None = 0) -> List[Resource]:
         """

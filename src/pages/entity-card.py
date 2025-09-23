@@ -4,6 +4,7 @@ from components.init import init
 from components.menu import menu
 from lib import state
 from lib.utils import get_max_length_text
+from lib.errors import get_HTTP_ERROR_message
 from dialogs.triple_info import dialog_triple_info
 from dialogs.entity_edition import dialog_entity_edition
 from dialogs.confirmation import dialog_confirmation
@@ -203,6 +204,6 @@ try:
                             st.markdown(f"*Total count: {total_count}*", width="content")
    
 except HTTPError as err:
-    message = f"""[HTTP ERROR]\n\n{err.args[0]}"""
+    message = get_HTTP_ERROR_message(err)
     st.error(message)
-    print(message.replace('\n\n', ' - '))
+    print(message.replace('\n\n', '\n'))
