@@ -47,9 +47,9 @@ try:
 
         # Header options
         with col_actions.container(horizontal=True, horizontal_alignment="right"):
-            if st.button('Entity Card'):    
+            if st.button('Entity Card', help="[What is an entity card?](/documentation#what-is-an-entity-card)"):    
                 st.switch_page('pages/entity-card.py')
-            if st.button('Raw triples'):
+            if st.button('Raw triples', help="[What are raw triples?](/documentation#what-is-the-page-raw-triples-for)"):
                 st.switch_page('pages/entity-triples.py')
 
         st.write('')

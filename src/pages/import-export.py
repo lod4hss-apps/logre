@@ -78,6 +78,9 @@ try:
 
                 st.write('')
 
+        with st.container(horizontal=True, horizontal_alignment='right'):
+            st.markdown("More on data import in the [Documentation FAQ](/documentation#how-to-import-data-into-the-sparql-endpoint)", width='content')
+
 
         ##### EXPORT #####
 
@@ -127,6 +130,9 @@ try:
                         if st.download_button(label="Download file", data=file_content, file_name=file_name, mime="application/n-quads", type='primary'):
                             state.set_toast('File downloaded')
                             st.rerun()
+
+        with st.container(horizontal=True, horizontal_alignment='right'):
+            st.markdown("More on data export in the [Documentation FAQ](/documentation#how-to-export-my-data)", width='content')
 
 except HTTPError as err:
     message = get_HTTP_ERROR_message(err)

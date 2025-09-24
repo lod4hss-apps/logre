@@ -60,6 +60,9 @@ with st.expander("Prefixes"):
         state.set_toast('Prefix created', icon=':material/add:')
         st.rerun()
 
+with st.container(horizontal=True, horizontal_alignment='right'):
+    st.markdown("More on prefixes in the [Documentation FAQ](/documentation#what-are-prefixes)", width='content')
+
 
 ### Data bundles ###
 
@@ -97,3 +100,6 @@ with st.expander(f"Data bundles"):
     # Add button
     if st.button('Add a Data Bundle'):
         dialog_data_bundle_form()
+    
+with st.container(horizontal=True, horizontal_alignment='right'):
+    st.markdown("More on data bundles in the [Documentation FAQ](/documentation#what-are-data-bundles)", width='content')

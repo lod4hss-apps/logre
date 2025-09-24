@@ -29,6 +29,7 @@ def menu() -> None:
         st.markdown(f"<small>v{version}</small>", unsafe_allow_html=True, width='content')
 
     # Page links
+    st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")
     st.sidebar.page_link("pages/configuration.py", label="Configuration")
     st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL Editor")
     st.sidebar.page_link("pages/import-export.py", label="Import, Export")
@@ -40,7 +41,7 @@ def menu() -> None:
     # Data bundle selection
     db_names = [db.name for db in data_bundles]
     db_index = db_names.index(data_bundle.name) if data_bundle else None
-    db_selected_name = st.sidebar.selectbox(label="Data Bundle", options=db_names, index=db_index, placeholder="None selected")
+    db_selected_name = st.sidebar.selectbox(label="Data Bundle", options=db_names, index=db_index, placeholder="None selected", help="[What are data bundles?](/documentation#what-are-data-bundles)")
 
     # Put Data Bundle in state only if not yet the case
     if db_selected_name and ((data_bundle and db_selected_name != data_bundle.name) or not data_bundle):
@@ -54,7 +55,7 @@ def menu() -> None:
     # Data bundle commands
     if data_bundle:
         with st.sidebar.container(horizontal=False, horizontal_alignment= 'center', vertical_alignment='bottom', height='stretch'):
-            if st.button('Find entity', icon=':material/search:', type='primary', width='stretch'):
+            if st.button('Find entity', icon=':material/search:', type='primary', width='stretch', help="[How to see my data?](/documentation#how-to-see-my-data)"):
                 dialog_find_entity()
-            if st.button('Create entity', icon=':material/line_start_circle:', type='primary', width='stretch'):
+            if st.button('Create entity', icon=':material/line_start_circle:', type='primary', width='stretch', help="[How to create my data?](/documentation#how-to-create-new-data)"):
                 dialog_entity_creation()

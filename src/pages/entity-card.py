@@ -43,10 +43,10 @@ try:
         # Header options
         with col_actions.container(horizontal=True, horizontal_alignment="right"):
             # Button to switch to raw triples
-            if st.button('Raw triples'):
+            if st.button('Raw triples', help="[What are raw triples?](/documentation#what-is-the-page-raw-triples-for)"):
                 st.switch_page('pages/entity-triples.py')
             # Button to switch to visualization
-            if st.button('Visualize'):
+            if st.button('Visualize', help="[What is the visualization?](/documentation#what-is-shown-on-page-visualization)"):
                 st.switch_page('pages/entity-chart.py')
             # Button to edit the entity (open edit dialog)
             if st.button('', icon=":material/edit:", type='primary'):

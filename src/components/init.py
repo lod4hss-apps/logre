@@ -3,7 +3,7 @@ import streamlit as st
 from lib import state
 from dotenv import load_dotenv
 
-def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: List[str] = []) -> None:
+def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: List[str] = [], avoid_anchor_titles: bool = True) -> None:
     """
     Initializes the page with configuration, query parameters, and UI settings.
 
@@ -36,7 +36,8 @@ def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: Lis
     st.set_page_config(page_title='Logre', page_icon='👹', layout=layout)
 
     # Hide anchor link for titles
-    st.html("<style>[data-testid='stHeaderActionElements'] {display: none;}</style>")
+    if avoid_anchor_titles:
+        st.html("<style>[data-testid='stHeaderActionElements'] {display: none;}</style>")
 
     # Handle toasts: if a toast is asked, display it, and clear the state, so that it does not appear anymore
     text, icon = state.get_toast()
