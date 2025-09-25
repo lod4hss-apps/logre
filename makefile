@@ -76,7 +76,7 @@ start-verbose:
 
 # Update code base, install dependencies and launch the webserver (also open browser)
 start-dev: 
-	@git switch main > /dev/null 2>&1
+	@git switch dev > /dev/null 2>&1
 	@make update
 	@make install
 	@echo "[LOGRE] Starting server..."
