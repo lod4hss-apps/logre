@@ -163,7 +163,7 @@ def load_config() -> None:
                 set_data_bundles(dbs)
 
                 # Extract default Data Bundle
-                if "default_data_bundle" in obj.keys():
+                if "default_data_bundle" in obj.keys() and obj['default_data_bundle']:
                     default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == obj['default_data_bundle'])
                     if default_db: set_default_data_bundle(default_db)
             
@@ -291,8 +291,9 @@ def get_data_bundle() -> DataBundle | None:
     if 'data_bundle' not in state: 
         # Return the default one, only if it exists
         db = get_default_data_bundle()
-        db.load_model()
-        return db
+        if db:
+            db.load_model()
+            return db
     else:
         return state['data_bundle']
     

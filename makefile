@@ -102,8 +102,8 @@ start-verbose:
 
 # Update code base, install dependencies and launch the webserver (also open browser)
 start-dev: 
-	@git switch main > /dev/null 2>&1
+	@git switch dev > /dev/null 2>&1
 	@make update
 	@make install
-	@echo "[LOGRE] Starting server..."
+	@echo "[LOGRE] Starting server (dev branch)..."
 	@./${PIPENV_NAME}/bin/python -m streamlit run src/server.py
