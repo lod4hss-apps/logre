@@ -1,6 +1,5 @@
 from typing import List
 import time, unicodedata, re, io, zipfile
-import urllib.parse
 
 
 def normalize_text(text: str, to_lower_case: bool = True) -> str:
@@ -14,7 +13,6 @@ def normalize_text(text: str, to_lower_case: bool = True) -> str:
         string: The cleaned text (eg "hello world").
 
     """    
-
     # To avoid errors if no text is sent
     if not text: return text
 
@@ -47,7 +45,6 @@ def to_snake_case(text: str) -> str:
     Returns:
         string: the snake case version of given text (eg "hello-world").
     """
-
     # Clean the incoming text
     clean_text = normalize_text(text)
 
@@ -106,7 +103,6 @@ def generate_id() -> str:
     Returns:
         string: the generated id eg "i3shkRl2e"
     """
-
     # The used alphabet
     BASE62_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
@@ -141,25 +137,19 @@ def generate_uri(id: str = None) -> str:
 
     if id: return f"base:i{id}"
     else: return f"base:i{generate_id()}"
+    
 
-
-
-def get_logre_url(endpoint_name: str, data_bundle_name: str, entity_uri: str) -> str:
+def get_max_length_text(text: str, max_length: 50) -> str:
     """
-    Generate a URL from the given parameters. 
-    Allows to access the given information with a link.
+    Truncates a text string to a maximum length, appending "..." if it exceeds that length.
 
     Args:
-        endpoint_name: The name of the endpoint (needs to be the same that the one in the configuration).
-        data_bunble_name: The name of the data bunble (needs to be the same that the one in the configuration).
-        entity_uri: The URI of the entity to open.
+        text (str): The input text to process.
+        max_length (int, optional): Maximum allowed length for the text. Defaults to 50.
 
     Returns:
-        string: the URL of the given informations
+        str: The original text if its length is within the limit, otherwise a truncated
+            version ending with "...".
     """
-
-    endpoint_name = urllib.parse.quote(endpoint_name)
-    data_bundle_name = urllib.parse.quote(data_bundle_name)
-    entity_uri = urllib.parse.quote(entity_uri)
-
-    return f"/entity?endpoint={endpoint_name}&databundle={data_bundle_name}&entity={entity_uri}"
+    if len(text) < max_length: return text
+    else: return text[0:max_length] + '...'

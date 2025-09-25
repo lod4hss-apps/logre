@@ -60,9 +60,9 @@ If you use the bat file (Windows) or the `make start` recipe (Linux, macOS), upd
 ## Get Started: Start Logre
 
 - For Windows users: double click on "logre.bat" file
-- For Linux and macOS users: run "make start"
+- For Linux and macOS users: run `make start`
 - Manual start (after installation): `python3 -m streamlit run src/server.py`
 
 ---
 
-> Further documentation on how to use Logre efficiently is available when you start Logre.
+> A user FAQ is available once Logre has started on your computer

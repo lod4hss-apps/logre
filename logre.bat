@@ -36,6 +36,10 @@ call pipenv_logre\Scripts\activate.bat
 REM [LOGRE] Installing dependencies...
 @pip install -r %REQUIREMENTS_FILE%
 
+REM [LOGRE Install GitHub Dependencies]
+@git clone https://github.com/lod4hss-apps/graphly.git
+@cd graphly; pip install .
+
 REM [LOGRE] Starting Logre...
 @python -m streamlit run src\server.py
 @start http://localhost:8501
