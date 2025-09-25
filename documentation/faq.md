@@ -1,3 +1,8 @@
+
+# Logre Documentation (FAQ)
+
+---
+
 ### What is Logre?
 
 Logre stands for LOcal GRaph Editor, an open source tool to seemlessly interact with [RDF graphs](/documentation#what-are-rdf-graphs).

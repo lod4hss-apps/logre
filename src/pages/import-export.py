@@ -81,6 +81,8 @@ try:
         with st.container(horizontal=True, horizontal_alignment='right'):
             st.markdown("More on data import in the [Documentation FAQ](/documentation#how-to-import-data-into-the-sparql-endpoint)", width='content')
 
+        st.write('')
+        st.write('')
 
         ##### EXPORT #####
 
