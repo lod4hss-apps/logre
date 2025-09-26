@@ -12,7 +12,7 @@ from schema.data_bundle import DataBundle
 
 VERSION_FILE_PATH = './version'
 CONFIG_FILE_PATH = './logre-config.yaml'
-DEFAULT_CONFIG_FILE_PATH = './logre-config-default.yaml'
+DEFAULT_CONFIG_FILE_PATH = './logre-config-default.text'
 
 # Change config path if Logre runs from DEV branch
 branch_name = check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
@@ -438,7 +438,7 @@ def update_sparql_query(sq: List[str]) -> None:
         sq (List[str]): The SPARQL query to add or update, where the first element is the query name.
     """
     # List all existing SPARQL queries
-    all_queries_names = set([sq[0] for sq in state['sparql_queries']])
+    all_queries_names = [sq[0] for sq in state['sparql_queries']]
 
     # If it is a creation
     if sq[0] not in all_queries_names:
@@ -447,7 +447,7 @@ def update_sparql_query(sq: List[str]) -> None:
     # If it is an update
     else:
         sparql_query_index = all_queries_names.index(sq[0])
-        state['spraql_queries'][sparql_query_index] = sq
+        state['sparql_queries'][sparql_query_index] = sq
     
     # Write to disk
     save_config()
