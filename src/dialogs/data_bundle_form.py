@@ -56,35 +56,26 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
     # Data Bundle base URI
     new_base_uri = st.text_input('Base URI ❗️', value=db.base_uri if db else 'http://www.example.org/resource/', help="[what does 'Base URI' refers to?](/documentation#in-the-data-bundle-creation-what-does-base-uri-refers-to)")
 
+    st.write('')
+    st.write('')
+
+    # List current named graph
+    popover = st.popover('List of existing named graph', help="[Why am I given the list of existing graphs?](/documentation#in-the-data-bundle-creation-why-am-i-given-the-list-of-existing-graphs)")
+    try: 
+        graphs = __get_graph_list(new_technology, new_url, new_username, new_password, new_base_uri)
+        popover.markdown('*(Default graph)*')
+        for graph in graphs:
+            popover.markdown(f"{graph}")
+    except HTTPError as err:
+        message = get_HTTP_ERROR_message(err)
+        popover.error(message)
+        print(message.replace('\n\n', '\n'))
+
     # Data Bundle graphs
     col_data, col_model, col_metadata = st.columns([1, 1, 1])
     new_graph_data_uri = col_data.text_input('Data graph URI', value=db.graph_data.uri if db else 'base:data', help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
     new_graph_model_uri = col_model.text_input('Model graph URI', value=db.graph_model.uri if db else 'base:model', help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
     new_graph_metadata_uri = col_metadata.text_input('Metadata graph URI', value=db.graph_metadata.uri if db else 'base:metadata', help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
-    
-    # List current named graph
-    popover = st.popover('List of existing named graph', help="[Why am I given the list of existing graphs?](/documentation#in-the-data-bundle-creation-why-am-i-given-the-list-of-existing-graphs)")
-    try: 
-        if new_technology and new_url and new_username and new_password and new_base_uri:
-            # First there is the need to set the endpoint, prefixes etc locally, based on things above
-            endpoint = get_sparql_technology(new_technology)(new_url, new_username, new_password)
-            # Retrieve prefixes but skip the configured 'base' one
-            prefixes = Prefixes([prefix for prefix in state.get_prefixes().prefix_list if prefix.short != 'base'])
-            prefixes.add(Prefix('base', new_base_uri))
-            # Make the query
-            with st.spinner('Fetching existing named graph'):
-                graphs = endpoint.run("select distinct ?g where { graph ?g { ?s ?p ?o .}}", prefixes=prefixes)
-            # Display results
-            graphs = [g['g'] for g in graphs]
-            popover.markdown('*(Default graph)*')
-            for graph in graphs:
-                popover.markdown(f"{graph}")
-        else:
-            popover.markdown(f"Fill above fields in order to fetch existing named graphs")
-    except HTTPError as err:
-        message = get_HTTP_ERROR_message(err)
-        popover.error(message)
-        print(message.replace('\n\n', '\n'))
 
     st.write('')
     st.write('')
@@ -128,3 +119,22 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
             state.update_data_bundle(db, new_db)
 
             st.rerun()
+
+
+@st.cache_data(ttl=120, show_spinner=False)
+def __get_graph_list(technology: str | None, url: str | None, username: str | None, password: str | None, base_uri: str | None) -> None:
+
+    if technology and url and username and password and base_uri:
+
+        # First there is the need to set the endpoint, prefixes etc locally, based on things above
+        endpoint = get_sparql_technology(technology)(url, username, password)
+
+        # Retrieve prefixes but skip the configured 'base' one
+        prefixes = Prefixes([prefix for prefix in state.get_prefixes().prefix_list if prefix.short != 'base'])
+        prefixes.add(Prefix('base', base_uri))
+
+        # Make the query
+        with st.spinner('Fetching existing named graph'):
+            graphs = endpoint.run("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o . } }", prefixes=prefixes)
+        
+        return [g['g'] for g in graphs]
