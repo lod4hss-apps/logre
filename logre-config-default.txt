@@ -1,0 +1,51 @@
+data_bundles: []
+default_data_bundle: null
+prefixes:
+- long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  short: rdf
+- long: http://www.w3.org/2000/01/rdf-schema#
+  short: rdfs
+- long: http://www.w3.org/2001/XMLSchema#
+  short: xsd
+- long: http://www.w3.org/2002/07/owl#
+  short: owl
+- long: http://www.w3.org/ns/shacl#
+  short: sh
+- long: http://www.cidoc-crm.org/cidoc-crm/
+  short: crm
+- long: https://ontome.net/ontology/
+  short: ontome
+- long: https://www.iflastandards.info/fr/frbr/frbroo#
+  short: frbroo
+- long: https://sdhss.org/ontology/crm-supplement/
+  short: crm-sup
+- long: https://sdhss.org/ontology/core/
+  short: sdh
+- long: https://sdhss.org/ontology/shortcuts/
+  short: sdh-shortcut
+- long: https://sdhss.org/ontology/social-life-core/
+  short: sdh-slc
+- long: https://sdhss.org/shacl/profiles/
+  short: sdh-shacl
+- long: https://sdhss.org/ontology/sources-information/
+  short: sdh-si
+- long: https://sdhss.org/ontology/sources-information-metadata/
+  short: sdh-sim
+- long: https://sdhss.org/ontology/human-activity/
+  short: sdh-ha
+- long: http://iflastandards.info/ns/lrm/lrmoo/
+  short: lrmoo
+- long: http://www.wikidata.org/entity/
+  short: wd
+- long: http://www.wikidata.org/prop/direct/
+  short: wdt
+- long: http://localhost/plan-menu/model/
+  short: menu
+sparql_queries:
+- - Default
+  - "SELECT *\nWHERE {\n    ?s ?p ?o .\n}\nLIMIT 10"
+- - List graphs
+  - "SELECT ?graph_uri (COUNT(*) AS ?triples_count)\nWHERE {\n  GRAPH ?graph_uri {\n\
+    \    ?s ?p ?o\n  }\n}\nGROUP BY ?graph_uri\nORDER BY DESC(?triples_count)"
+- - Delete all data
+  - CLEAR ALL
