@@ -1,11 +1,17 @@
-import yaml, os
+import yaml, os, subprocess
 
 
 # This scripts needs to be called when code base is updated
 
 def update_config_2_1() -> None:
+    config_path = '../logre-config.yaml'
+
+    # Do not do anything if there is no config
+    if not os.path.exists(config_path):
+        return
+
     # Load the old config
-    old_config = yaml.safe_load(open('../logre-config.yaml', 'r'), )
+    old_config = yaml.safe_load(open(config_path, 'r'))
 
     if 'version' not in old_config: 
         # Prepare the new config object
@@ -50,8 +56,14 @@ def update_config_2_1() -> None:
         # Create the content of the new config file
         new_content = yaml.dump(new_config)
 
+        # Set the updated config path
+        branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
+        if branch_name == 'dev':
+            new_config_path = '../logre-config-dev.yaml'
+        else: new_config_path = '../logre-config.yaml'
+
         # And write it to disk
-        with open('../logre-config.yaml', 'w') as file:
+        with open(new_config_path, 'w') as file:
             file.write(new_content)
 
 

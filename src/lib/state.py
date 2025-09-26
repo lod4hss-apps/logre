@@ -1,6 +1,6 @@
 from typing import List
 from os.path import exists as path_exists
-from os import getenv
+from subprocess import check_output
 from yaml import safe_load, dump
 from graphly.schema import Prefixes, Prefix, Resource, Property
 from streamlit import session_state as state, query_params
@@ -14,7 +14,10 @@ VERSION_FILE_PATH = './version'
 CONFIG_FILE_PATH = './logre-config.yaml'
 DEFAULT_CONFIG_FILE_PATH = './logre-config-default.yaml'
 
-
+# Change config path if Logre runs from DEV branch
+branch_name = check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
+if branch_name == 'dev':
+    CONFIG_FILE_PATH = './logre-config-dev.yaml'
 
 ##### VERSION #####
 # Version is only on read mode, no setter needed
