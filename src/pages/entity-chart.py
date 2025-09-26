@@ -13,11 +13,11 @@ from components.menu import menu
 INCOMING_LIMIT = 50
 MAX_STRING_LENGTH = 80
 
-try:
+# Initialize
+init(layout='wide', query_param_keys=['db', 'uri'])
+menu()
 
-    # Initialize
-    init(layout='wide', query_param_keys=['db', 'uri'])
-    menu()
+try:
 
     # From state
     data_bundle = state.get_data_bundle()

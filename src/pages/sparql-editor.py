@@ -10,11 +10,11 @@ from dialogs.confirmation import dialog_confirmation
 from dialogs.query_name import dialog_query_name
 from dialogs.confirmation import dialog_confirmation
 
-try:
+# Initialize
+init(layout='wide')
+menu()
 
-    # Initialize
-    init(layout='wide')
-    menu()
+try:
 
     # Title
     st.markdown('# SPARQL Editor')

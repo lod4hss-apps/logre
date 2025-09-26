@@ -11,11 +11,11 @@ from dialogs.triple_info import dialog_triple_info
 # Page parameters
 INCOMING_TRIPLES_FETCHED = 5
 
-try:
+# Initialize
+init(layout='wide', query_param_keys=['db', 'uri'])
+menu()
 
-    # Initialize
-    init(layout='wide', query_param_keys=['db', 'uri'])
-    menu()
+try:
 
     # From state
     data_bundle = state.get_data_bundle()

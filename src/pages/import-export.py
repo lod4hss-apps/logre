@@ -6,11 +6,11 @@ from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from dialogs.confirmation import dialog_confirmation
 
-try:
+# Initialize    
+init()
+menu()
 
-    # Initialize    
-    init()
-    menu()
+try:
 
     # From state
     data_bundle = state.get_data_bundle()

@@ -13,10 +13,11 @@ from dialogs.confirmation import dialog_confirmation
 PAGINATION_LENGTH = 5
 MAX_STRING_LENGTH = 80
 
+# Initialize
+init(layout='wide', query_param_keys=['db', 'uri'])
+menu()
+
 try:
-    # Initialize
-    init(layout='wide', query_param_keys=['db', 'uri'])
-    menu()
 
     # From state
     data_bundle = state.get_data_bundle()

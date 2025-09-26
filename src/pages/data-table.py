@@ -9,10 +9,11 @@ from lib.errors import get_HTTP_ERROR_message
 PAGINATION_LENGTH = 5
 MAX_STRING_LENGTH = 80
 
+# Initialize
+init(layout='wide', query_param_keys=['db'])
+menu()
+
 try:
-    # Initialize
-    init(layout='wide', query_param_keys=['db'])
-    menu()
 
     # From state
     data_bundle = state.get_data_bundle()
