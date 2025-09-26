@@ -13,13 +13,13 @@ REQUIREMENTS_FILE := requirements.txt
 # Display all available commands. Is also the default ("make")
 help:
 	@echo "[make help]: Outputs this help"
-	@echo "[make update]: Update the code base"
-	@echo "[make update-verbose]: Update the code base (with full logs)"
+	@echo "[make update]: Update the code base and run the update script"
+	@echo "[make update-verbose]: Same as [make update], but with logs"
 	@echo "[make install]: Prepare everything so that the tool can be used"
-	@echo "[make install-verbose]: Prepare everything so that the tool can be used (with full logs)"
+	@echo "[make install-verbose]: Same as [make install], but with logs"
 	@echo "[make start]: Update, install and start Logre"
-	@echo "[make start-verbose]: Update, install and start Logre (with full logs)"
-
+	@echo "[make start-verbose]: Same as [make start], but with logs"
+	@echo "[make start-dev]: Launch Logre from the dev branch"
 
 
 # Update code base from GitHub (main branch)
