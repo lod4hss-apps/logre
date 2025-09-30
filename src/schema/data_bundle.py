@@ -62,7 +62,7 @@ class DataBundle:
         """
         # Attributes
         self.name = name
-        self.key = to_snake_case(self.name) # To have a URL compatible name
+        self.key = to_snake_case(self.name.replace(' - ', '-')) # To have a URL compatible name
         self.base_uri = base_uri
         self.prefixes = Prefixes(prefixes.prefix_list + [Prefix('base', base_uri)])
         
