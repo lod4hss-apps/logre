@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 from code_editor import code_editor
 from components.init import init
 from components.menu import menu
@@ -101,3 +101,7 @@ except HTTPError as err:
     message = get_HTTP_ERROR_message(err)
     st.error(message)
     print(message.replace('\n\n', '\n'))
+
+except ConnectionError as err:
+    st.error('Failed to connect to server: check your internet connection and/or server status.')
+    print('[CONNECTION ERROR]')

@@ -1,7 +1,7 @@
-from typing import List
 import streamlit as st
+from requests.exceptions import HTTPError, ConnectionError
 from lib import state
-from graphly.schema import Resource
+from lib.errors import get_HTTP_ERROR_message
 from lib.utils import get_max_length_text
 
 
@@ -19,36 +19,47 @@ def dialog_find_entity() -> None:
     Returns:
         None
     """
-    # From state
-    data_bundle = state.get_data_bundle()
+    try: 
 
-    with st.container(horizontal=True):
-        # Class filter
-        classes_labels = [c.get_text() for c in data_bundle.model.classes if c.class_uri != 'rdfs:Datatype']
-        class_label = st.selectbox('Find instance of class:', options=classes_labels, index=None, width=220)
+        # From state
+        data_bundle = state.get_data_bundle()
 
-        # Label filter
-        entity_label = st.text_input('Entity label contains:', help='Write the entity label (or a part of it) and hit "Enter"')
+        with st.container(horizontal=True):
+            # Class filter
+            classes_labels = [c.get_text() for c in data_bundle.model.classes if c.class_uri != 'rdfs:Datatype']
+            class_label = st.selectbox('Find instance of class:', options=classes_labels, index=None, width=220)
 
-        # Retrieved entities
-        limit = st.selectbox('Number to retrieve:', options=[10, 20, 50, 100], width=120)
+            # Label filter
+            entity_label = st.text_input('Entity label contains:', help='Write the entity label (or a part of it) and hit "Enter"')
 
-        # Find the selected entity from the selected label
-        if class_label:
-            class_index = classes_labels.index(class_label)
-            selected_class_uri = data_bundle.model.classes[class_index].uri
-        else:
-            selected_class_uri = None
+            # Retrieved entities
+            limit = st.selectbox('Number to retrieve:', options=[10, 20, 50, 100], width=120)
 
-    st.divider()    
+            # Find the selected entity from the selected label
+            if class_label:
+                class_index = classes_labels.index(class_label)
+                selected_class_uri = data_bundle.model.classes[class_index].uri
+            else:
+                selected_class_uri = None
 
-    # Fetch the entities
-    label = entity_label if entity_label else ''
-    entities = data_bundle.find_entities(label=label, class_uri=selected_class_uri, limit=limit)
+        st.divider()    
 
-    # Set the state selected entity as being the one chosen
-    for i, entity in enumerate(entities):
-        entity_text = get_max_length_text(entity.get_text(comment=True), 90)
-        if st.button(entity_text, type='tertiary', key=f'dlg-find-entity-{i}'):
-            state.set_entity_uri(entity.uri)
-            st.switch_page("pages/entity.py")
+        # Fetch the entities
+        label = entity_label if entity_label else ''
+        entities = data_bundle.find_entities(label=label, class_uri=selected_class_uri, limit=limit)
+
+        # Set the state selected entity as being the one chosen
+        for i, entity in enumerate(entities):
+            entity_text = get_max_length_text(entity.get_text(comment=True), 90)
+            if st.button(entity_text, type='tertiary', key=f'dlg-find-entity-{i}'):
+                state.set_entity_uri(entity.uri)
+                st.switch_page("pages/entity.py")
+    
+    except HTTPError as err:
+        message = get_HTTP_ERROR_message(err)
+        st.error(message)
+        print(message.replace('\n\n', '\n'))
+
+    except ConnectionError as err:
+        st.error('Failed to connect to server: check your internet connection and/or server status.')
+        print('[CONNECTION ERROR]')
