@@ -28,7 +28,7 @@ def dialog_entity_creation() -> None:
     data_bundle = state.get_data_bundle()
 
     # Class filter
-    classes_labels = [c.get_text() for c in data_bundle.model.classes]
+    classes_labels = [c.get_text() for c in data_bundle.model.classes if c.class_uri != 'rdfs:Datatype']
     class_label = st.selectbox('Class ❗️', options=classes_labels, index=None, width=220)
 
     # Initialize the triples list to create and the entity URI
