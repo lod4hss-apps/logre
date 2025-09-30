@@ -113,8 +113,9 @@ def parse_query_params() -> None:
     """
     # Data bundle: from query param to state
     if 'db' in query_params:
-        data_bundle = next(db for db in get_data_bundles() if db.key == query_params['db'])
-        set_data_bundle(data_bundle)
+        data_bundle = next((db for db in get_data_bundles() if db.key == query_params['db']), None)
+        if data_bundle:
+            set_data_bundle(data_bundle)
 
     # Entity URI: from query param to state
     if 'uri' in query_params:
@@ -185,11 +186,13 @@ def save_config() -> None:
     """
     Save the current session state configuration to the config file.
     """
+    default_db =  get_default_data_bundle()
+
     # Gather config
     config = {
         'prefixes': [p.to_dict() for p in get_prefixes() if p.short != 'base'],
         'data_bundles': [db.to_dict() for db in get_data_bundles()],
-        'default_data_bundle': get_default_data_bundle().key,
+        'default_data_bundle': default_db.key if default_db else None,
         'sparql_queries': get_sparql_queries()
     }
 
