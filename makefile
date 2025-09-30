@@ -17,6 +17,7 @@ help:
 	@echo "[make update-verbose]: Same as [make update], but with logs"
 	@echo "[make install]: Prepare everything so that the tool can be used"
 	@echo "[make install-verbose]: Same as [make install], but with logs"
+	@echo "[make reinstall]: Delete environment and install dependencies"
 	@echo "[make start]: Update, install and start Logre"
 	@echo "[make start-verbose]: Same as [make start], but with logs"
 	@echo "[make start-dev]: Launch Logre from the dev branch"
@@ -81,6 +82,13 @@ install-verbose:
 		git clone https://github.com/lod4hss-apps/graphly.git \
 		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . \
 	fi
+
+
+# Prune currect venv, and reinstall it
+reinstall:
+	@echo "[LOGRE] Removing environment ${PIPENV_NAME}..."
+	@rm -rf ./${PIPENV_NAME}
+	@make install
 
 
 # Update code base, install dependencies and launch the webserver (also open browser)
