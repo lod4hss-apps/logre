@@ -1,5 +1,6 @@
 import streamlit as st
 from requests.exceptions import HTTPError
+from graphly.tools import prepare
 from components.init import init
 from components.menu import menu
 from lib import state
@@ -135,6 +136,39 @@ try:
 
         with st.container(horizontal=True, horizontal_alignment='right'):
             st.markdown("More on data export in the [Documentation FAQ](/documentation#how-to-export-my-data)", width='content')
+
+        st.divider()
+
+
+        ##### ONTOLOGY #####
+
+        with st.expander('Update model'):
+            files = st.file_uploader(f"Load your SHACL file(s):", type=['ttl'], accept_multiple_files=True)
+            if len(files):
+                files_content = ''
+                for file in files:
+                    file_content = file.read().decode("utf-8")
+                    files_content += '\n' + file_content
+                
+                st.write('')
+                st.write('')
+
+                # Message for the user
+                with st.container(horizontal=True, horizontal_alignment='center'):
+                    st.markdown(f'Your SHACL files will be imported into the model graph.', width='content')
+                    st.warning(f'Warning! If you model is in the same Named Graph as your data and/or metadata, this will delete everything. Only go ahead if you are sure your model is in a dedicated graph (check on the databundle configuration).')
+
+                st.divider()
+
+                # Upload button: cleanse model and insert new one
+                with st.container(horizontal=True, horizontal_alignment='center'):
+                    if st.button(f'Replace current model', type='primary', icon=':material/upload:'):
+                        def replace_model(turtle_content: str) -> None:
+                            data_bundle.delete('model', [('?s', '?p', '?o')] )
+                            data_bundle.graph_model.upload_turtle(turtle_content)
+                            state.set_toast('Model replaced', icon=':material/done:')
+                        confirmation_text = f'You are about to replace the existing model by what you specified.'
+                        dialog_confirmation(confirmation_text, callback=replace_model, turtle_content=files_content)
 
 except HTTPError as err:
     message = get_HTTP_ERROR_message(err)
