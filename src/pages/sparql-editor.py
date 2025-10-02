@@ -73,23 +73,31 @@ try:
 
             # If there is a result
             if result != None:
-                df = pd.DataFrame(result)
 
                 option_line = st.container(horizontal=True, horizontal_alignment='distribute', vertical_alignment='bottom')
 
                 # Option line: title, shape, and buttons
                 with option_line.container(horizontal=True, horizontal_alignment='left', vertical_alignment='bottom'):
                     st.markdown("### Response", width='content')
-                    st.markdown(f"Shape: {df.shape[0]}x{df.shape[1]}", width='content')
+                    comment_place = st.empty()
 
                 # Options buttons: download and save query
                 with option_line.container(horizontal=True, horizontal_alignment='right', vertical_alignment='bottom'):
-                    st.download_button('Download CSV', data=df.to_csv(index=False), file_name="logre-download.csv", mime="text/csv", icon=':material/download:')
+                    download_btn_place = st.empty()
                     # if st.button('Save query', kwargs={'text': editor['text']}, icon=':material/reorder:'): 
                     st.button('Save query', icon=':material/reorder:', on_click=dialog_query_name, kwargs={'query_text': editor['text']})
 
-                # Display query result
-                st.dataframe(df, hide_index=True)
+                # When it is a table
+                try: 
+                    df = pd.DataFrame(result)
+                    comment_place.markdown(f"Shape: {df.shape[0]}x{df.shape[1]}", width='content')
+                    download_btn_place.download_button('Download CSV', data=df.to_csv(index=False), file_name="logre-download.csv", mime="text/csv", icon=':material/download:')
+                    # Display query result
+                    st.dataframe(df, hide_index=True)
+
+                # When its is not a table response
+                except:
+                    st.code(result, 'turtle')
 
             # When there is no result: a insert/delete query
             else:
