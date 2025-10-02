@@ -38,6 +38,7 @@ def menu() -> None:
         st.sidebar.page_link("pages/import-export.py", label="Import, Export")
         st.sidebar.page_link("pages/entity.py", label="Entity")
         st.sidebar.page_link("pages/data-table.py", label="Data Table")
+        st.sidebar.page_link("pages/statistics.py", label="Statistics")
 
         st.sidebar.divider()
         

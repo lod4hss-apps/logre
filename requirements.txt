@@ -5,3 +5,4 @@ pyperclip
 pyvis
 pyyaml
 python-dotenv
+plotly
