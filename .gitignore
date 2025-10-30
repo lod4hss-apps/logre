@@ -5,3 +5,5 @@ pipenv_logre
 graphly
 *.yaml
 *.nq
+.env
+.env.*

@@ -65,4 +65,46 @@ If you use the bat file (Windows) or the `make start` recipe (Linux, macOS), upd
 
 ---
 
+## Run Logre & Fuseki with Docker Compose
+
+The repository now ships a cross-platform Docker setup that bundles Logre with an Apache Jena Fuseki triple store. This is the quickest way to get both services running together on Linux, macOS, or Windows (Docker Desktop / Podman).
+
+### Prerequisites
+
+- Docker Engine with Compose plugin (Docker Desktop on macOS/Windows, Docker Engine + docker-compose-plugin on Linux).
+- About 2 GB of free disk space for images and data volumes.
+
+### Quick start
+
+1. *(Optional)* copy `.env.example` to `.env` if you want to override defaults such as exposed ports or the dataset name.
+2. Build and start both services (choose the command matching your runtime):
+   ```bash
+   docker compose --profile dev up --build
+   ```
+   ```bash
+   podman compose --profile dev up --build
+   ```
+3. Open the app at [http://localhost:8501](http://localhost:8501). Fuseki is exposed at [http://localhost:3030](http://localhost:3030).
+
+The `dev` profile defines two services:
+
+- `logre`: Streamlit application served on port 8501 (config persisted in a named volume).
+- `fuseki`: Apache Jena Fuseki (pulled from `docker.io/stain/jena-fuseki:latest`) with a persistent dataset stored in a named volume. The dataset defaults to `logre`, can be changed with `FUSEKI_DATASET`, and runs with update support so Logre can write data.
+
+During startup the app waits for Fuseki to become reachable and, if no configuration exists yet, seeds one that targets the bundled Fuseki dataset. All data (Logre config and Fuseki TDB) is stored in Docker-managed volumes for portability across operating systems; no host bind mounts are required.
+
+> Tip: Because the Fuseki image is referenced via its fully qualified Docker Hub path, Docker and Podman pull it automatically without authentication prompts or interactive registry selection.
+
+> Note: The container disables git-based branch detection (`LOGRE_SKIP_BRANCH_DETECTION=1`) so the app runs happily without a working `.git` directory. Local dev environments keep their usual behavior.
+Fuseki auto-creates the dataset at `/<FUSEKI_DATASET>` (exposing `/sparql`, `/update`, `/upload`, `/data`) and Logre regenerates its config to target `http://fuseki:3030/<FUSEKI_DATASET>/sparql`. Adjust `FUSEKI_DATASET`, `FUSEKI_ADMIN_PASSWORD`, `LOGRE_PORT`, and `FUSEKI_PORT` in `.env` when you need different defaults.
+### Common tasks
+- Stop the stack: `docker compose --profile dev down` *(or `podman compose --profile dev down`)*
+- Rebuild after code changes: `docker compose --profile dev up --build` *(or `podman compose --profile dev up --build`)*
+- Reset data: `docker compose --profile dev down -v` *(or `podman compose --profile dev down -v` to remove volumes)*
+- Tune dataset/ports: set `FUSEKI_DATASET`, `FUSEKI_ADMIN_PASSWORD`, `LOGRE_PORT`, and/or `FUSEKI_PORT` in `.env`; set `LOGRE_FORCE_CONFIG=0` to keep manual edits to `/data/logre-config.yaml`.
+
+> ℹ️ Compose targets multi-architecture base images (amd64 & arm64) and has been validated with Docker Desktop and Podman.
+
+---
+
 > A user FAQ is available once Logre has started on your computer

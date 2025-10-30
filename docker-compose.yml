@@ -1,0 +1,56 @@
+
+services:
+  logre:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: logre-app:latest
+    profiles: ["dev"]
+    depends_on:
+      fuseki:
+        condition: service_healthy
+    ports:
+      - "${LOGRE_PORT:-8501}:8501"
+    environment:
+      FUSEKI_DATASET: ${FUSEKI_DATASET:-logre}
+      FUSEKI_HEALTHCHECK_URL: ${FUSEKI_HEALTHCHECK_URL:-http://fuseki:3030/}
+      LOGRE_CONFIG_PATH: /data/logre-config.yaml
+      LOGRE_DEFAULT_CONFIG_PATH: /app/docker/logre-config.yml
+      LOGRE_SKIP_BRANCH_DETECTION: "1"
+      LOGRE_FORCE_CONFIG: ${LOGRE_FORCE_CONFIG:-1}
+    volumes:
+      - logre_data:/data
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        mkdir -p /data
+        DATASET_NAME="$${FUSEKI_DATASET:-logre}"
+        export LOGRE_TEMPLATE_FUSEKI_URL="http://fuseki:3030/$${DATASET_NAME}/sparql"
+        if [ "$${LOGRE_FORCE_CONFIG:-0}" = "1" ] || [ ! -f /data/logre-config.yaml ]; then
+          envsubst '$${LOGRE_TEMPLATE_FUSEKI_URL} $${FUSEKI_DATASET}' < docker/logre-config.yml > /data/logre-config.yaml
+        fi
+        exec /app/scripts/wait-for-http.sh "$${FUSEKI_HEALTHCHECK_URL:-http://fuseki:3030/}" -- streamlit run src/server.py
+
+  fuseki:
+    image: docker.io/stain/jena-fuseki:latest
+    profiles: ["dev"]
+    ports:
+      - "${FUSEKI_PORT:-3030}:3030"
+    environment:
+      ADMIN_PASSWORD: ${FUSEKI_ADMIN_PASSWORD:-logreadmin}
+      TDB: "2"
+      FUSEKI_DATASET_1: ${FUSEKI_DATASET:-logre}
+    volumes:
+      - fuseki_data:/fuseki
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3030/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  logre_data:
+  fuseki_data:

@@ -1,0 +1,16 @@
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.env
+.env.example
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+pipenv_logre
+graphly
+node_modules
+.venv
+dist
+build

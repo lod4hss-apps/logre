@@ -1,6 +1,8 @@
 from typing import List
+from os import getenv
 from os.path import exists as path_exists
-from subprocess import check_output
+from pathlib import Path
+from subprocess import check_output, CalledProcessError
 from yaml import safe_load, dump
 from graphly.schema import Prefixes, Prefix, Resource, Property
 from streamlit import session_state as state, query_params
@@ -10,12 +12,19 @@ from schema.data_bundle import DataBundle
 
 ##### PATHS #####
 
-VERSION_FILE_PATH = './version'
-CONFIG_FILE_PATH = './logre-config.yaml'
-DEFAULT_CONFIG_FILE_PATH = './logre-config-default.text'
+VERSION_FILE_PATH = getenv('LOGRE_VERSION_FILE', './VERSION')
+CONFIG_FILE_PATH = getenv('LOGRE_CONFIG_PATH', './logre-config.yaml')
+DEFAULT_CONFIG_FILE_PATH = getenv('LOGRE_DEFAULT_CONFIG_PATH', './logre-config-default.txt')
 
 # Change config path if Logre runs from DEV branch
-branch_name = check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
+branch_name = None
+skip_branch_detection = getenv('LOGRE_SKIP_BRANCH_DETECTION') == '1'
+if not skip_branch_detection and getenv('LOGRE_CONFIG_PATH') is None and Path('.git').exists():
+    try:
+        branch_name = check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
+    except (CalledProcessError, FileNotFoundError):
+        branch_name = None
+
 if branch_name == 'dev':
     CONFIG_FILE_PATH = './logre-config-dev.yaml'
 
