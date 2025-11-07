@@ -10,10 +10,10 @@ prefixes:
   - short: base
     long: http://example.org/resource/
 data_bundles:
-  - name: Local Fuseki Dataset
+  - name: Local RDF4J Repository
     base_uri: http://example.org/resource/
-    endpoint_technology: Fuseki
-    endpoint_url: ${LOGRE_TEMPLATE_FUSEKI_URL}
+    endpoint_technology: RDF4J
+    endpoint_url: ${LOGRE_TEMPLATE_RDF4J_URL}
     username: ""
     password: ""
     model_framework: SHACL
@@ -23,7 +23,7 @@ data_bundles:
     graph_data_uri: base:data
     graph_model_uri: base:model
     graph_metadata_uri: base:metadata
-default_data_bundle: local-fuseki-dataset
+default_data_bundle: local-rdf4j-repository
 sparql_queries:
   - - Default
     - |

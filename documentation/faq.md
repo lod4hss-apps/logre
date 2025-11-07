@@ -46,7 +46,7 @@ RDF stands for [Resource Data Framework](https://en.wikipedia.org/wiki/Resource_
 
 It is a web service that lets you query a dataset stored as RDF using the SPARQL query language. But do not worry, you do not need to know SPARQL. Logre handles it for you.
 
-See a SPARQL endpoint like a server (i.e. endpoint) having different databases (i.e. datasets) in which you can add your data. As for databases, there are many different SPARQL endpoint technologies. Just to name a few, there is [Fuseki](https://jena.apache.org/documentation/fuseki2/), [GraphDB](https://graphdb.ontotext.com/), [Allegrograph](https://allegrograph.cloud), [Neptune](https://docs.aws.amazon.com/neptune/), [qLever](https://github.com/ad-freiburg/qlever), ... 
+See a SPARQL endpoint like a server (i.e. endpoint) having different databases (i.e. datasets) in which you can add your data. As for databases, there are many different SPARQL endpoint technologies. Just to name a few, there is [RDF4J](https://rdf4j.org/), [Fuseki](https://jena.apache.org/documentation/fuseki2/), [GraphDB](https://graphdb.ontotext.com/), [Allegrograph](https://allegrograph.cloud), [Neptune](https://docs.aws.amazon.com/neptune/), [qLever](https://github.com/ad-freiburg/qlever), ... 
 
 ---
 
@@ -54,22 +54,24 @@ See a SPARQL endpoint like a server (i.e. endpoint) having different databases (
 
 You can do that in different ways, depending on your skills.
 
-Here is a recipe to install the Fuseki docker image.
+Here is a recipe to install the official RDF4J docker image.
 
 If you do not understand the next lines, we advise asking someone who does.
 
 ```bash
-docker pull stain/jena-fuseki # Pull Fuseki docker image
-docker run -d -p 3030:3030 stain/jena-fuseki # Run the Fuseki docker image
+docker pull eclipse/rdf4j-workbench # Pull RDF4J server + workbench image
+docker run -d -p 8080:8080 -p 8081:8081 eclipse/rdf4j-workbench # Run the RDF4J image
 docker ps # Note the container ID
-docker logs [CONTAINER_ID] # In order to fetch the default admin password that has been generated for you: keep it
+docker logs [CONTAINER_ID] # Inspect logs if you need to troubleshoot the server
 ```
+
+> Tip: the Docker Compose setup bundled with Logre already wires the UI to an RDF4J server and auto-creates a repository. Use it if you want a ready-to-go local stack.
 
 ---
 
 ### What are the supported SPARQL endpoint technologies?
 
-For now, Logre supports 3 endpoint technologies: Fuseki, Allegrograph and GraphDB.
+For now, Logre supports 4 endpoint technologies: RDF4J, Fuseki, Allegrograph and GraphDB.
 
 We have plan to add more. If you need one specific, feel free to contact us!
 

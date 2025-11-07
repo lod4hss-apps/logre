@@ -64,7 +64,9 @@ class DataBundle:
         self.name = name
         self.key = to_snake_case(self.name.replace(' - ', '-')) # To have a URL compatible name
         self.base_uri = base_uri
-        self.prefixes = Prefixes(prefixes.prefix_list + [Prefix('base', base_uri)])
+        existing = [p.short for p in prefixes.prefix_list]
+        extra = [] if 'base' in existing else [Prefix('base', base_uri)]
+        self.prefixes = Prefixes(prefixes.prefix_list + extra)
         
         # Get the right SPARQL technology class
         SparqlClass = get_sparql_technology(endpoint_technology)

@@ -2,6 +2,18 @@ from enum import Enum
 from graphly.schema import Sparql
 from graphly.sparql import Fuseki, Allegrograph, GraphDB
 
+try:
+    from graphly.sparql import RDF4J as _GraphlyRDF4J
+except ImportError:
+    class _GraphlyRDF4J(GraphDB):
+        """Fallback RDF4J wrapper built atop GraphDB client."""
+
+        def __init__(self, url: str, username: str, password: str) -> None:
+            super().__init__(url, username, password)
+            self.technology_name = 'RDF4J'
+
+RDF4J = _GraphlyRDF4J
+
 
 class SPARQLTechnology(str, Enum):
     """
@@ -11,10 +23,12 @@ class SPARQLTechnology(str, Enum):
         FUSEKI: Apache Jena Fuseki endpoint.
         ALLEGROGRAPH: AllegroGraph endpoint.
         GRAPHDB: GraphDB endpoint.
+        RDF4J: Eclipse RDF4J endpoint.
     """
     FUSEKI = "Fuseki"
     ALLEGROGRAPH = "Allegrograph"
     GRAPHDB = "GraphDB"
+    RDF4J = "RDF4J"
 
 
 def get_sparql_technology(sparql_technology_name: str) -> Sparql:
@@ -38,3 +52,5 @@ def get_sparql_technology(sparql_technology_name: str) -> Sparql:
         return Allegrograph
     elif technology == SPARQLTechnology.GRAPHDB:
         return GraphDB
+    elif technology == SPARQLTechnology.RDF4J:
+        return RDF4J

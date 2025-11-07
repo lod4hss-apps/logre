@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . .
 
-RUN chmod +x scripts/wait-for-http.sh
+RUN chmod +x scripts/*.sh
 
 EXPOSE 8501
 

@@ -6,6 +6,7 @@ Logre is an open-source tool designed to interact with SPARQL endpoints. It offe
 
 Supported SPARQL Endpoint Technologies:
 - Apache Jena Fuseki
+- Eclipse RDF4J
 - AllegroGraph
 - Ontotext GraphDB
 
@@ -65,9 +66,9 @@ If you use the bat file (Windows) or the `make start` recipe (Linux, macOS), upd
 
 ---
 
-## Run Logre & Fuseki with Docker Compose
+## Run Logre & RDF4J with Docker Compose
 
-The repository now ships a cross-platform Docker setup that bundles Logre with an Apache Jena Fuseki triple store. This is the quickest way to get both services running together on Linux, macOS, or Windows (Docker Desktop / Podman).
+The repository now ships a cross-platform Docker setup that bundles Logre with the official RDF4J Server + Workbench image. This is the quickest way to run both services together on Linux, macOS, or Windows (Docker Desktop / Podman).
 
 ### Prerequisites
 
@@ -76,7 +77,7 @@ The repository now ships a cross-platform Docker setup that bundles Logre with a
 
 ### Quick start
 
-1. *(Optional)* copy `.env.example` to `.env` if you want to override defaults such as exposed ports, dataset name, or the admin password.
+1. *(Optional)* copy `.env.example` to `.env` if you want to override defaults such as exposed ports, repository name, or point Logre to an external RDF4J server.
 2. Build the images (first run, or after changing the code):
    ```bash
    docker compose --profile dev build
@@ -91,20 +92,20 @@ The repository now ships a cross-platform Docker setup that bundles Logre with a
    ```bash
    podman compose --profile dev up
    ```
-4. Open the app at [http://localhost:8501](http://localhost:8501). Fuseki is exposed at [http://localhost:3030](http://localhost:3030) with credentials `admin` / value of `FUSEKI_ADMIN_PASSWORD` (defaults to `logreadmin`).
+4. Open the app at [http://localhost:8501](http://localhost:8501). The bundled RDF4J Workbench is exposed at [http://localhost:8080](http://localhost:8080) (server) and [http://localhost:8081](http://localhost:8081) (console) with no credentials by default.
 
 The `dev` profile defines two services:
 
 - `logre`: Streamlit application served on port 8501 (config persisted in a named volume).
-- `fuseki`: Apache Jena Fuseki (pulled from `docker.io/stain/jena-fuseki:latest`) with a persistent dataset stored in a named volume. The dataset defaults to `logre`, can be changed with `FUSEKI_DATASET`, and runs with update support so Logre can write data.
+- `rdf4j`: Official RDF4J Server + Workbench (`docker.io/eclipse/rdf4j-workbench:latest`) with persistent storage mounted at `/var/rdf4j`. A repository named after `RDF4J_REPOSITORY` (defaults to `logre`) is created automatically unless `RDF4J_BOOTSTRAP_REPOSITORY=0`.
 
-During startup the app waits for Fuseki to become reachable and, if no configuration exists yet, seeds one that targets the bundled Fuseki dataset. All data (Logre config and Fuseki TDB) is stored in Docker-managed volumes for portability across operating systems; no host bind mounts are required.
+During startup the app waits for RDF4J to become reachable, optionally creates the configured repository through the RDF4J REST API, and seeds a Logre configuration that targets it. All data (Logre config and RDF4J storage) is persisted in Docker-managed volumes for portability across operating systems; no host bind mounts are required.
 
-> Tip: Because the Fuseki image is referenced via its fully qualified Docker Hub path, Docker and Podman pull it automatically without authentication prompts or interactive registry selection.
+> Tip: Because the RDF4J image is referenced via its fully qualified Docker Hub path, Docker and Podman pull it automatically without authentication prompts or interactive registry selection.
 
 > Note: The container disables git-based branch detection (`LOGRE_SKIP_BRANCH_DETECTION=1`) so the app runs happily without a working `.git` directory. Local dev environments keep their usual behavior.
 
-Fuseki auto-creates the dataset at `/<FUSEKI_DATASET>` (exposing `/sparql`, `/update`, `/upload`, `/data`) and Logre regenerates its config to target `http://fuseki:3030/<FUSEKI_DATASET>/sparql`. Adjust `FUSEKI_DATASET`, `FUSEKI_ADMIN_PASSWORD`, `LOGRE_PORT`, and `FUSEKI_PORT` in `.env` when you need different defaults.
+By default Logre targets `http://rdf4j:8080/rdf4j-server/repositories/<RDF4J_REPOSITORY>` and exposes it at `http://localhost:${RDF4J_SERVER_PORT}`. Override `RDF4J_SERVER_URL` when you want the containerised UI to talk to the external RDF4J server your team manages, and set `RDF4J_BOOTSTRAP_REPOSITORY=0` to avoid touching that server’s configuration.
 
 ### Daily use
 - Start the stack: `docker compose --profile dev up` *(or `podman compose --profile dev up`)*
@@ -113,7 +114,7 @@ Fuseki auto-creates the dataset at `/<FUSEKI_DATASET>` (exposing `/sparql`, `/up
 
 ### Common tasks
 - Reset data: `docker compose --profile dev down -v` *(or `podman compose --profile dev down -v` to remove volumes)*
-- Tune dataset/ports: set `FUSEKI_DATASET`, `FUSEKI_ADMIN_PASSWORD`, `LOGRE_PORT`, and/or `FUSEKI_PORT` in `.env`; set `LOGRE_FORCE_CONFIG=0` to keep manual edits to `/data/logre-config.yaml`.
+- Tune repository/ports: set `RDF4J_REPOSITORY`, `RDF4J_SERVER_PORT`, `RDF4J_WORKBENCH_PORT`, and/or `LOGRE_PORT` in `.env`; set `LOGRE_FORCE_CONFIG=0` to keep manual edits to `/data/logre-config.yaml`.
 
 > ℹ️ Compose targets multi-architecture base images (amd64 & arm64) and has been validated with Docker Desktop and Podman.
 
