@@ -76,15 +76,22 @@ The repository now ships a cross-platform Docker setup that bundles Logre with a
 
 ### Quick start
 
-1. *(Optional)* copy `.env.example` to `.env` if you want to override defaults such as exposed ports or the dataset name.
-2. Build and start both services (choose the command matching your runtime):
+1. *(Optional)* copy `.env.example` to `.env` if you want to override defaults such as exposed ports, dataset name, or the admin password.
+2. Build the images (first run, or after changing the code):
    ```bash
-   docker compose --profile dev up --build
+   docker compose --profile dev build
    ```
    ```bash
-   podman compose --profile dev up --build
+   podman compose --profile dev build
    ```
-3. Open the app at [http://localhost:8501](http://localhost:8501). Fuseki is exposed at [http://localhost:3030](http://localhost:3030).
+3. Start the stack:
+   ```bash
+   docker compose --profile dev up
+   ```
+   ```bash
+   podman compose --profile dev up
+   ```
+4. Open the app at [http://localhost:8501](http://localhost:8501). Fuseki is exposed at [http://localhost:3030](http://localhost:3030) with credentials `admin` / value of `FUSEKI_ADMIN_PASSWORD` (defaults to `logreadmin`).
 
 The `dev` profile defines two services:
 
@@ -96,10 +103,15 @@ During startup the app waits for Fuseki to become reachable and, if no configura
 > Tip: Because the Fuseki image is referenced via its fully qualified Docker Hub path, Docker and Podman pull it automatically without authentication prompts or interactive registry selection.
 
 > Note: The container disables git-based branch detection (`LOGRE_SKIP_BRANCH_DETECTION=1`) so the app runs happily without a working `.git` directory. Local dev environments keep their usual behavior.
+
 Fuseki auto-creates the dataset at `/<FUSEKI_DATASET>` (exposing `/sparql`, `/update`, `/upload`, `/data`) and Logre regenerates its config to target `http://fuseki:3030/<FUSEKI_DATASET>/sparql`. Adjust `FUSEKI_DATASET`, `FUSEKI_ADMIN_PASSWORD`, `LOGRE_PORT`, and `FUSEKI_PORT` in `.env` when you need different defaults.
-### Common tasks
+
+### Daily use
+- Start the stack: `docker compose --profile dev up` *(or `podman compose --profile dev up`)*
 - Stop the stack: `docker compose --profile dev down` *(or `podman compose --profile dev down`)*
-- Rebuild after code changes: `docker compose --profile dev up --build` *(or `podman compose --profile dev up --build`)*
+- Rebuild only after code changes: `docker compose --profile dev build` *(or `podman compose --profile dev build`)*
+
+### Common tasks
 - Reset data: `docker compose --profile dev down -v` *(or `podman compose --profile dev down -v` to remove volumes)*
 - Tune dataset/ports: set `FUSEKI_DATASET`, `FUSEKI_ADMIN_PASSWORD`, `LOGRE_PORT`, and/or `FUSEKI_PORT` in `.env`; set `LOGRE_FORCE_CONFIG=0` to keep manual edits to `/data/logre-config.yaml`.
 
