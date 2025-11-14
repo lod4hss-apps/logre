@@ -2,7 +2,6 @@
 .env
 __pycache__
 pipenv_logre
-graphly
 *.yaml
 *.nq
 .env
