@@ -73,15 +73,16 @@ def dialog_entity_edition(entity: Resource = None) -> None:
                 input_number = 1 # Because by default the getter say 0. This is required elsewhere
 
             # And for each one of them, display it correctly
+            if not target or not target.uri:
+                with col_input.container():
+                    st.markdown("*Cette propriété ne définit pas de type dans le modèle SHACL. Elle ne peut pas être éditée automatiquement.*")
+                continue
+
             for i in range(input_number):
                 with col_input.container(horizontal=True, vertical_alignment='bottom'):
 
-                    # User input
-                    if not target.uri:
-                        st.markdown("*Model does not specify class.*")
-
                     # If the target is a STRING
-                    elif target.uri == 'xsd:string':
+                    if target.uri == 'xsd:string':
                         # If it has one, display current value
                         if i < len(existings): value = existings[i].subject.literal if way == 'incoming' else existings[i].object.literal
                         else: value = ''

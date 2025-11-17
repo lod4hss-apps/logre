@@ -37,6 +37,7 @@ services:
         if [ "$${RDF4J_BOOTSTRAP_REPOSITORY:-1}" = "1" ]; then
           /app/scripts/bootstrap-rdf4j.sh "$${RDF4J_SERVER_URL}" "$${RDF4J_REPOSITORY}"
         fi
+        python3 /app/scripts/autoconfigure_data_graph.py --config /data/logre-config.yaml || true
         exec streamlit run src/server.py
 
   rdf4j:

@@ -21,6 +21,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . .
 
+# Ensure the bundled Graphly sources override the PyPI/Git version
+RUN pip install --no-cache-dir ./graphly
+
 RUN chmod +x scripts/*.sh
 
 EXPOSE 8501

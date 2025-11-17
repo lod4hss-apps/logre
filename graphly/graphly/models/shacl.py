@@ -115,7 +115,8 @@ class SHACL(Model):
                 (COALESCE(?max_count_, '') as ?max_count)
                 (COALESCE(?domain_class_uri_, '') as ?domain_class_uri)
                 ?uri
-                (COALESCE(?range_class_uri_, ?datatype_, '') as ?range_class_uri)
+                (COALESCE(?range_class_uri_, '') as ?range_class_uri)
+                (COALESCE(?datatype_, '') as ?range_datatype)
             WHERE {{
                 {graph.sparql_begin}               
                     ?shape sh:property ?node .
@@ -144,10 +145,12 @@ class SHACL(Model):
         for resp in response:
             domain_uri = resp.get('domain_class_uri')
             range_uri = resp.get('range_class_uri')
+            range_datatype = resp.get('range_datatype')
             card_of_uri = resp.get('card_of_class_uri')
 
             domain = self.find_class(domain_uri) if domain_uri else None
-            range = self.find_class(range_uri) if range_uri else None
+            range_target = range_uri or range_datatype
+            range = self.find_class(range_target) if range_target else None
             card_of = self.find_class(card_of_uri) if card_of_uri else None
 
             properties.append(

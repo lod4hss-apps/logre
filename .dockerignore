@@ -9,7 +9,6 @@ __pycache__
 *.pyo
 *.pyd
 pipenv_logre
-graphly
 node_modules
 .venv
 dist

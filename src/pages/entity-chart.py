@@ -69,6 +69,10 @@ try:
 
         # Construct 2 lists of objects built for the Network X API
         have_uri = set()
+        have_literals = set()
+
+        def literal_node_id(value) -> str:
+            return f"literal::{repr(value)}"
         nodes_dict = []
         edges_dict = []
         for statement in statements:
@@ -99,6 +103,7 @@ try:
             # Add the subject to nodes if not yet done
             if statement.subject.uri not in have_uri:
                 nodes_dict.append({
+                    "id": statement.subject.uri,
                     "label": subject_label,
                     "title": f"<a href=\"/entity?db={data_bundle.key}&uri={statement.subject.uri}\">Open</a>",
                     "color": __get_hex_color(subject_class_text), 
@@ -107,26 +112,45 @@ try:
                 have_uri.add(statement.subject.uri)
 
             # Add the object to nodes if not yet done
-            if (statement.object.resource_type == 'iri' and statement.object.uri not in have_uri) or (statement.object.resource_type == 'literal' and statement.object.literal not in have_uri):
-                nodes_dict.append({
-                    "label": object_label,
-                    "title": f"<a href=\"/entity?db={data_bundle.key}&uri={statement.object.uri}\">Open</a>" if statement.object.resource_type == 'iri' else None,
-                    "color": __get_hex_color(object_class_text if statement.object.resource_type == 'iri' else None),
-                    "resource": statement.object
-                })
-                have_uri.add(statement.object.uri if statement.object.resource_type == 'iri' else statement.object.literal)
+            if statement.object.resource_type == 'iri':
+                if statement.object.uri not in have_uri:
+                    nodes_dict.append({
+                        "id": statement.object.uri,
+                        "label": object_label,
+                        "title": f"<a href=\"/entity?db={data_bundle.key}&uri={statement.object.uri}\">Open</a>",
+                        "color": __get_hex_color(object_class_text),
+                        "resource": statement.object
+                    })
+                    have_uri.add(statement.object.uri)
+            else:
+                literal_value = statement.object.literal
+                literal_id = literal_node_id(literal_value)
+                if literal_id not in have_literals:
+                    nodes_dict.append({
+                        "id": literal_id,
+                        "label": object_label[:MAX_STRING_LENGTH],
+                        "title": statement.object.get_text(),
+                        "color": "#666666",
+                        "resource": statement.object
+                    })
+                    have_literals.add(literal_id)
 
             # Add the edge (triple) to the list
             edges_dict.append({
                 "source": statement.subject.uri,
-                "to": statement.object.uri if statement.object.resource_type == 'iri' else statement.object.literal,
+                "to": statement.object.uri if statement.object.resource_type == 'iri' else literal_node_id(statement.object.literal),
                 "label": statement.predicate.get_text()
             })
 
 
         # Network object: the one that will be displayed
         network = Network(width="100%", neighborhood_highlight=True)
-        network.add_nodes([n['resource'].uri if n['resource'].resource_type == 'iri' else n['resource'].literal for n in nodes_dict], label=[n['label'] for n in nodes_dict], color=[n['color'] for n in nodes_dict], title=[n['title'] for n in nodes_dict])
+        network.add_nodes(
+            [n['id'] for n in nodes_dict],
+            label=[n['label'] for n in nodes_dict],
+            color=[n['color'] for n in nodes_dict],
+            title=[n.get('title') or '' for n in nodes_dict]
+        )
         for edge in edges_dict:
             network.add_edge(source=edge['source'], to=edge['to'], label=edge['label'])
 
