@@ -167,17 +167,21 @@ class Graph:
 
         # Build the output: add all triples
         for triple in triples:
-            # Need to save blank nodes correctly
-            if triple['s'].startswith('_:'): s = triple['s']
-            elif triple['s_is_blank'] == 'true': s = f"_:{triple['s']}"
-            else: s = prepare(triple['s'], prefixes.shorts())
-
-            p = prepare(triple['p'], prefixes.shorts())
+            subj = str(triple['s'])
+            obj = triple['o']
 
             # Need to save blank nodes correctly
-            if triple['o'].startswith('_:'): o = triple['o']
-            elif triple['o_is_blank'] == 'true': o = f"_:{triple['o']}"
-            else: o = prepare(triple['o'], prefixes.shorts())
+            if subj.startswith('_:'): s = subj
+            elif triple['s_is_blank'] == 'true': s = f"_:{subj}"
+            else: s = prepare(subj, prefixes.shorts())
+
+            p = prepare(str(triple['p']), prefixes.shorts())
+
+            # Need to save blank nodes correctly
+            obj_str = str(obj)
+            if obj_str.startswith('_:'): o = obj_str
+            elif triple['o_is_blank'] == 'true': o = f"_:{obj_str}"
+            else: o = prepare(obj, prefixes.shorts())
 
             content += f"{s} {p} {o} .\n"
 

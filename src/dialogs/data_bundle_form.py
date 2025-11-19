@@ -62,7 +62,7 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
     # List current named graph
     popover = st.popover('List of existing named graph', help="[Why am I given the list of existing graphs?](/documentation#in-the-data-bundle-creation-why-am-i-given-the-list-of-existing-graphs)")
     try: 
-        graphs = __get_graph_list(new_technology, new_url, new_username, new_password, new_base_uri)
+        graphs = __get_graph_list(new_technology, new_url, new_username, new_password, new_base_uri) or []
         popover.markdown('*(Default graph)*')
         for graph in graphs:
             popover.markdown(f"{graph}")
@@ -122,19 +122,23 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
 
 
 @st.cache_data(ttl=120, show_spinner=False)
-def __get_graph_list(technology: str | None, url: str | None, username: str | None, password: str | None, base_uri: str | None) -> None:
+def __get_graph_list(technology: str | None, url: str | None, username: str | None, password: str | None, base_uri: str | None) -> list[str]:
 
-    if technology and url and username and password and base_uri:
+    if not all([technology, url, base_uri]):
+        return []
 
-        # First there is the need to set the endpoint, prefixes etc locally, based on things above
-        endpoint = get_sparql_technology(technology)(url, username, password)
+    try:
+        endpoint = get_sparql_technology(technology)(url, username or '', password or '')
 
-        # Retrieve prefixes but skip the configured 'base' one
         prefixes = Prefixes([prefix for prefix in state.get_prefixes().prefix_list if prefix.short != 'base'])
         prefixes.add(Prefix('base', base_uri))
 
-        # Make the query
         with st.spinner('Fetching existing named graph'):
-            graphs = endpoint.run("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o . } }", prefixes=prefixes)
+            graphs = endpoint.run("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o . } }", prefixes=prefixes) or []
         
         return [g['g'] for g in graphs]
+
+    except HTTPError as err:
+        raise err
+    except Exception:
+        return []
