@@ -829,7 +829,7 @@ class DataBundle:
         # For each class instance, count outgoings triples number
         uris = list(map(lambda record: prepare(record['uri'], self.prefixes.shorts()), instances))
         outgoings = self.graph_data.sparql.run(f"""
-            DataBundle.get_data_table() request 2: outgoing count
+            # DataBundle.get_data_table() request 2: outgoing count
             SELECT ?uri (COALESCE(COUNT(?outgoing), '0') as ?outgoing_count) 
             WHERE {{
                 {self.graph_data.sparql_begin}
@@ -842,7 +842,7 @@ class DataBundle:
 
         # For each class instance, count incoming triples number
         incomings = self.graph_data.sparql.run(f"""
-            DataBundle.get_data_table() request 3: incoming count
+            # DataBundle.get_data_table() request 3: incoming count
             SELECT ?uri (COALESCE(COUNT(?incoming), '0') as ?incoming_count) 
             WHERE {{
                 {self.graph_data.sparql_begin}
