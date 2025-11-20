@@ -3,6 +3,7 @@ from requests.exceptions import HTTPError, ConnectionError
 from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from lib.utils import get_max_length_text
+from components.help import help_text
 
 
 @st.dialog('Find an entity', width='medium')
@@ -23,6 +24,9 @@ def dialog_find_entity() -> None:
 
         # From state
         data_bundle = state.get_data_bundle()
+        if not data_bundle or not data_bundle.has_model_definitions():
+            st.info("Import a SHACL model before searching entities.")
+            return
 
         with st.container(horizontal=True):
             # Class filter
@@ -30,7 +34,7 @@ def dialog_find_entity() -> None:
             class_label = st.selectbox('Find instance of class:', options=classes_labels, index=None, width=220)
 
             # Label filter
-            entity_label = st.text_input('Entity label contains:', help='Write the entity label (or a part of it) and hit "Enter"')
+            entity_label = st.text_input('Entity label contains:', help=help_text("find_entity.label", 'Write the entity label (or a part of it) and hit "Enter"'))
 
             # Retrieved entities
             limit = st.selectbox('Number to retrieve:', options=[10, 20, 50, 100], width=120)
@@ -53,7 +57,7 @@ def dialog_find_entity() -> None:
             entity_text = get_max_length_text(entity.get_text(comment=True), 90)
             if st.button(entity_text, type='tertiary', key=f'dlg-find-entity-{i}'):
                 state.set_entity_uri(entity.uri)
-                st.switch_page("pages/entity.py")
+                st.switch_page("pages/entity-card.py")
     
     except HTTPError as err:
         message = get_HTTP_ERROR_message(err)

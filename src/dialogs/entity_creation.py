@@ -26,6 +26,9 @@ def dialog_entity_creation() -> None:
     """
     # From state
     data_bundle = state.get_data_bundle()
+    if not data_bundle or not data_bundle.has_model_definitions():
+        st.info("Import a SHACL model before creating entities.")
+        return
 
     # Class filter
     classes_labels = [c.get_text() for c in data_bundle.model.classes if c.class_uri != 'rdfs:Datatype']
@@ -185,7 +188,7 @@ def dialog_entity_creation() -> None:
                 state.set_toast('Entity created', ':material/save:')
                 # And then, open it
                 state.set_entity_uri(entity_uri)
-                st.switch_page("pages/entity.py")
+                st.switch_page("pages/entity-card.py")
             else:
                 # Error message for the user that some mandatory fields are missing
                 st.error('All mandatories fields need to have at least one value')

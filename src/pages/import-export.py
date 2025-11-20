@@ -21,68 +21,7 @@ try:
         st.warning('No Data Bundle selected')
     else:
 
-        ##### IMPORT #####
-
-        with st.expander('Import'):
-            
-            # File format
-            with st.container(horizontal=True, horizontal_alignment='center'):
-                file_format_str = st.radio('Format', options=['n-Quads (.nq)', 'Turtle (.ttl)'], horizontal=True, label_visibility='collapsed', key='radio-import')
-                file_format = file_format_str[file_format_str.index('(.') + 2:file_format_str.index(')')]
-
-            st.divider()
-
-            # File upload
-            file = st.file_uploader(f"Load your {file_format_str} file:", type=[file_format], disabled=(file_format_str is None), accept_multiple_files=False)
-            if file:
-                file_content = file.read().decode("utf-8")
-                
-                st.write('')
-                st.write('')
-
-                # Message for the user
-                with st.container(horizontal=True, horizontal_alignment='center'):
-                    st.markdown(f'File will be imported in *{data_bundle.name}*.', width='content')
-
-                st.divider()
-
-                # Handle the n-Quad format
-                if file_format == 'nq':
-
-                    # Upload button: insert triples
-                    with st.container(horizontal=True, horizontal_alignment='center'):
-                        if st.button('Upload n-Quads', type='primary', icon=':material/upload:'):
-                            def upload_nquads(nquad_content) -> None:
-                                data_bundle.endpoint.upload_nquads(nquad_content)
-                                state.set_toast('n-Quad file uploaded', icon=':material/done:')
-                            dialog_confirmation(f'You are about to upload the file {file.name}.', callback=upload_nquads, nquad_content=file_content)
-
-                # Otherwise (i.e. Turtle), the destination should be decided (data, model, metadata)
-                else:  
-                    # Radio button for the user to choose
-                    with st.container(horizontal=True, horizontal_alignment='center'):
-                        data_type = st.radio('What is in the file?', options=['Data', 'Model', 'Metadata'], horizontal=True)
-                    
-                    st.divider()
-
-                    # Upload button: insert triples
-                    with st.container(horizontal=True, horizontal_alignment='center'):
-                        if st.button(f'Upload Turtle file into the {data_type.upper()} named graph', type='primary', icon=':material/upload:'):
-                            def upload_turtle(turtle_content: str) -> None:
-                                if data_type == "Data": graph = data_bundle.graph_data
-                                if data_type == "Model": graph = data_bundle.graph_model
-                                if data_type == "Metadata": graph = data_bundle.graph_metadata
-                                graph.upload_turtle(turtle_content)
-                                state.set_toast('Turtle file uploaded', icon=':material/done:')
-                            confirmation_text = f'You are about to upload the file *{file.name}* into the {data_type} named graph.'
-                            dialog_confirmation(confirmation_text, callback=upload_turtle, turtle_content=file_content)
-
-                st.write('')
-
-        with st.container(horizontal=True, horizontal_alignment='right'):
-            st.markdown("More on data import in the [Documentation FAQ](/documentation#how-to-import-data-into-the-sparql-endpoint)", width='content')
-
-        st.write('')
+        st.info("L’import des données se fait désormais dans la page Configuration (section “Importer des données”).")
         st.write('')
 
         ##### EXPORT #####

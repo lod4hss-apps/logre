@@ -8,6 +8,7 @@ from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from components.init import init
 from components.menu import menu
+from components.help import help_text
 
 # Page parameters
 INCOMING_LIMIT = 50
@@ -47,9 +48,9 @@ try:
 
         # Header options
         with col_actions.container(horizontal=True, horizontal_alignment="right"):
-            if st.button('Entity Card', help="[What is an entity card?](/documentation#what-is-an-entity-card)"):    
+            if st.button('Entity Card', help=help_text("entity_chart.entity_card")):
                 st.switch_page('pages/entity-card.py')
-            if st.button('Raw triples', help="[What are raw triples?](/documentation#what-is-the-page-raw-triples-for)"):
+            if st.button('Raw triples', help=help_text("entity_chart.raw_triples")):
                 st.switch_page('pages/entity-triples.py')
 
         st.write('')

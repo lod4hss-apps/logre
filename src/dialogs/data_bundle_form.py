@@ -6,6 +6,7 @@ from lib.errors import get_HTTP_ERROR_message
 from schema.data_bundle import DataBundle
 from schema.model_framework import ModelFramework
 from schema.sparql_technologies import SPARQLTechnology, get_sparql_technology
+from components.help import help_text
 
 
 ENDPOINT_TECHNOLOGIES_STR = [e.value for e in list(SPARQLTechnology)]
@@ -42,25 +43,25 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
 
     # SPARQL endpoint technology and URL
     col_techno, col_url = st.columns([1, 1])
-    new_technology = col_techno.selectbox('Endpoint technology ❗️', options=ENDPOINT_TECHNOLOGIES_STR, index=ENDPOINT_TECHNOLOGIES_STR.index(db.endpoint.technology_name) if db else None, help="[What are the supported SPARQL endpoint technologies?](/documentation#what-are-the-supported-sparql-endpoint-technologies)")
-    new_url = col_url.text_input('Endpoint URL ❗️', value=db.endpoint.url if db else '', help="[What is a SPARQL endpoint?](/documentation#what-is-a-sparql-endpoint)")
+    new_technology = col_techno.selectbox('Endpoint technology ❗️', options=ENDPOINT_TECHNOLOGIES_STR, index=ENDPOINT_TECHNOLOGIES_STR.index(db.endpoint.technology_name) if db else None, help=help_text("data_bundle_form.endpoint_technology"))
+    new_url = col_url.text_input('Endpoint URL ❗️', value=db.endpoint.url if db else '', help=help_text("data_bundle_form.endpoint_url"))
 
     # SPARQL endpoint credentials
     col_username, col_password = st.columns([1, 1])
-    new_username = col_username.text_input('Endpoint username', value=db.endpoint.username if db else '', help="[Where do I find my SPARQL endpoint username and password?](/documentation#in-the-data-bundle-creation-where-do-i-find-my-sparql-endpoint-username-and-password)")
-    new_password = col_password.text_input('Endpoint password', value=db.endpoint.password if db else '', type='password', help="[Where do I find my SPARQL endpoint username and password?](/documentation#in-the-data-bundle-creation-where-do-i-find-my-sparql-endpoint-username-and-password)")
+    new_username = col_username.text_input('Endpoint username', value=db.endpoint.username if db else '', help=help_text("data_bundle_form.endpoint_username"))
+    new_password = col_password.text_input('Endpoint password', value=db.endpoint.password if db else '', type='password', help=help_text("data_bundle_form.endpoint_password"))
 
     st.write('')
     st.write('')
 
     # Data Bundle base URI
-    new_base_uri = st.text_input('Base URI ❗️', value=db.base_uri if db else 'http://www.example.org/resource/', help="[what does 'Base URI' refers to?](/documentation#in-the-data-bundle-creation-what-does-base-uri-refers-to)")
+    new_base_uri = st.text_input('Base URI ❗️', value=db.base_uri if db else 'http://www.example.org/resource/', help=help_text("data_bundle_form.base_uri"))
 
     st.write('')
     st.write('')
 
     # List current named graph
-    popover = st.popover('List of existing named graph', help="[Why am I given the list of existing graphs?](/documentation#in-the-data-bundle-creation-why-am-i-given-the-list-of-existing-graphs)")
+    popover = st.popover('List of existing named graph', help=help_text("data_bundle_form.named_graphs"))
     try: 
         graphs = __get_graph_list(new_technology, new_url, new_username, new_password, new_base_uri) or []
         popover.markdown('*(Default graph)*')
@@ -73,22 +74,22 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
 
     # Data Bundle graphs
     col_data, col_model, col_metadata = st.columns([1, 1, 1])
-    new_graph_data_uri = col_data.text_input('Data graph URI', value=db.graph_data.uri if db else 'base:data', help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
-    new_graph_model_uri = col_model.text_input('Model graph URI', value=db.graph_model.uri if db else 'base:model', help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
-    new_graph_metadata_uri = col_metadata.text_input('Metadata graph URI', value=db.graph_metadata.uri if db else 'base:metadata', help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
+    new_graph_data_uri = col_data.text_input('Data graph URI', value=db.graph_data.uri if db else 'base:data', help=help_text("data_bundle_form.graph_data"))
+    new_graph_model_uri = col_model.text_input('Model graph URI', value=db.graph_model.uri if db else 'base:model', help=help_text("data_bundle_form.graph_model"))
+    new_graph_metadata_uri = col_metadata.text_input('Metadata graph URI', value=db.graph_metadata.uri if db else 'base:metadata', help=help_text("data_bundle_form.graph_metadata"))
 
     st.write('')
     st.write('')
 
     # Data Bundle framework used for model
     col_framework, _ = st.columns([1, 2])
-    new_framework = col_framework.selectbox('Model framework ❗️', options=MODEL_FRAMEWORKS_STR, index=MODEL_FRAMEWORKS_STR.index(db.model.framework_name) if db else None, help="[What are the supported model framework supported?](/documentation#what-are-the-supported-model-framework-supported)")
+    new_framework = col_framework.selectbox('Model framework ❗️', options=MODEL_FRAMEWORKS_STR, index=MODEL_FRAMEWORKS_STR.index(db.model.framework_name) if db else None, help=help_text("data_bundle_form.model_framework"))
 
     # Data Bundle basic properties (type, label, comment)
     col_type, col_label, col_comment = st.columns([1, 1, 1])
-    new_type_prop_uri = col_type.text_input('Type property ❗️', value=db.model.type_property if db else 'rdf:type', help="[Why should I provide type, label and comment properties URIs?](documentation#in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)")
-    new_label_prop_uri = col_label.text_input('Label property ❗️', value=db.model.label_property if db else 'rdfs:label', help="[Why should I provide type, label and comment properties URIs?](documentation#in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)")
-    new_comment_prop_uri = col_comment.text_input('Comment property ❗️', value=db.model.comment_property if db else 'rdfs:comment', help="[Why should I provide type, label and comment properties URIs?](documentation#in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)")
+    new_type_prop_uri = col_type.text_input('Type property ❗️', value=db.model.type_property if db else 'rdf:type', help=help_text("data_bundle_form.type_property"))
+    new_label_prop_uri = col_label.text_input('Label property ❗️', value=db.model.label_property if db else 'rdfs:label', help=help_text("data_bundle_form.label_property"))
+    new_comment_prop_uri = col_comment.text_input('Comment property ❗️', value=db.model.comment_property if db else 'rdfs:comment', help=help_text("data_bundle_form.comment_property"))
 
     st.write('')
     st.write('')

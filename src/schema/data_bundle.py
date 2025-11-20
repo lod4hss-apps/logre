@@ -90,6 +90,19 @@ class DataBundle:
         """
         self.model.update(self.graph_model, self.prefixes) # Fetch the Model
 
+    def has_model_definitions(self) -> bool:
+        """
+        Indicate whether the current bundle has any non-datatype classes or properties loaded.
+
+        Returns:
+            bool: True if the SHACL/model graph provided at least one class (excluding built-in datatypes)
+                  or one property definition, False otherwise.
+        """
+        if not self.model:
+            return False
+        has_classes = any(cls.class_uri != 'rdfs:Datatype' for cls in self.model.classes)
+        return has_classes or bool(self.model.properties)
+
 
     def delete(self, graph: Literal['data', 'model', 'metadata'], triples: List[Tuple[str, str, str]]) -> None:
         """
@@ -692,12 +705,12 @@ class DataBundle:
         """
         # Get the SPARQL label of the column (label to snake case)
         # Prepend an index, to make sure that it will work even with same labelled properties (eg "is participation of")
-        property_label = f"{to_snake_case(property.label)}_{index}"
-        property_label = property_label.replace('-', '_').replace("'", "_")
+        base_label = f"{to_snake_case(property.label)}_{index}".replace('-', '_').replace("'", "_")
+        column_alias = self.__data_table_get_column_var_name(property, index, class_uri)
         if property.domain and class_uri == property.domain.uri: # i.e. is outgoing
-            return f"(GROUP_CONCAT(DISTINCT COALESCE(?{property_label}_, ''); separator=\" - \") as ?{property_label})"
+            return f"(GROUP_CONCAT(DISTINCT COALESCE(?{base_label}_, ''); separator=\" - \") as ?{column_alias})"
         else: # i.e. is incoming
-            return f"(GROUP_CONCAT(DISTINCT COALESCE(?{property_label}_, ''); separator=\" - \") as ?{property_label}_inc)"
+            return f"(GROUP_CONCAT(DISTINCT COALESCE(?{base_label}_, ''); separator=\" - \") as ?{column_alias})"
 
 
     def __data_table_get_where_property(self, property: Property, index: int, class_uri: str) -> str:
@@ -735,6 +748,19 @@ class DataBundle:
             return "OPTIONAL { " + f"?{property_label}_uri {property_uri} ?uri_" + " . " + \
                     "OPTIONAL { " + f"?{property_label}_uri {self.model.label_property} ?{property_label}_" + " . } }"
 
+    def __data_table_get_column_var_name(self, property: Property, index: int, class_uri: str) -> str:
+        property_label = f"{to_snake_case(property.label)}_{index}"
+        property_label = property_label.replace('-', '_').replace("'", "_")
+        if property.domain and property.domain.uri == class_uri:
+            return property_label
+        return f"{property_label}_inc"
+
+    def __data_table_get_display_name(self, property: Property, class_uri: str) -> str:
+        range_label = property.range.label if property.range and property.range.label else property.range.uri if property.range and property.range.uri else ''
+        label = f"{property.label} ({range_label})" if range_label else property.label
+        if not (property.domain and property.domain.uri == class_uri):
+            label = f"{label} (incoming)"
+        return label
 
     def get_data_table_columns_names(self, cls: Resource) -> List[str]:
         """
@@ -751,7 +777,7 @@ class DataBundle:
         """
         needed_properties = [prop for prop in self.model.properties if prop.card_of and prop.card_of.uri == cls.uri]
         needed_properties.sort(key=lambda x: x.order or 10**18)
-        return [f"{p.label} ({p.range.label})" for p in needed_properties]
+        return [self.__data_table_get_display_name(prop, cls.uri) for prop in needed_properties]
 
 
     def get_data_table(self, cls: Resource, limit: int = None, offset: int = 0, sort_col: str = None, sort_way: str = None, filter_col: str = None, filter_value: str = None) -> pd.DataFrame:
@@ -779,14 +805,14 @@ class DataBundle:
         needed_properties = [prop for prop in self.model.properties if prop.card_of and prop.card_of.uri == cls.uri]
         needed_properties.sort(key=lambda x: x.order or 10**18)
 
+        class_uri = cls.uri
+        class_uri_prepared = prepare(class_uri, self.prefixes.shorts())
+
         # Prepare Sorting
-        sort_prop_str1, order_by = self.__data_table_prepare_sorting(sort_col, sort_way, needed_properties, cls.uri)
+        sort_prop_str1, order_by = self.__data_table_prepare_sorting(sort_col, sort_way, needed_properties, class_uri)
 
         # Prepare filtering
-        filter_prop_str1, filter_prop_str2 = self.__data_table_prepare_filtering(filter_col, filter_value, needed_properties, cls.uri)
-
-        # Make sure the class URI is correctly formated
-        class_uri = prepare(cls.uri, self.prefixes.shorts())
+        filter_prop_str1, filter_prop_str2 = self.__data_table_prepare_filtering(filter_col, filter_value, needed_properties, class_uri)
 
         # For each wanted properties, used the small private function to build SPARQL "select" text
         select_properties = "\n                ".join([self.__data_table_get_select_property(prop, i, class_uri) for i, prop in enumerate(needed_properties)])
@@ -808,7 +834,7 @@ class DataBundle:
                     {{
                         SELECT ?uri_ 
                         WHERE {{ 
-                            ?uri_ {self.model.type_property} {class_uri} . 
+                            ?uri_ {self.model.type_property} {class_uri_prepared} . 
                             {filter_prop_str1}
                             {sort_prop_str1}
                             {filter_prop_str2}
@@ -868,9 +894,11 @@ class DataBundle:
             df['incoming_count'] = df['incoming_count'].fillna(0)
         else: df['incoming_count'] = "0"
 
-        # Reformat column names
-        df.columns = [from_snake_case(col).replace(' Inc', ' (inc)') for col in df.columns]
-        df.rename(columns={'Uri': 'URI'})
+        prop_var_names = [self.__data_table_get_column_var_name(prop, i, class_uri) for i, prop in enumerate(needed_properties)]
+        display_names = [self.__data_table_get_display_name(prop, class_uri) for prop in needed_properties]
+        ordered_columns = ['uri'] + prop_var_names + ['outgoing_count', 'incoming_count']
+        df = df[ordered_columns]
+        df.columns = ['URI'] + display_names + ['Outgoing count', 'Incoming count']
 
         return df
     

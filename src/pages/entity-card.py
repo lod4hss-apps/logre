@@ -2,6 +2,7 @@ import streamlit as st
 from requests.exceptions import HTTPError
 from components.init import init
 from components.menu import menu
+from components.help import help_text
 from lib import state
 from lib.utils import get_max_length_text
 from lib.errors import get_HTTP_ERROR_message
@@ -34,6 +35,7 @@ try:
         # i.e. Fill Resource instance
         entity = data_bundle.get_entity_basics(entity_uri)
         entity_class = data_bundle.model.find_class(entity.class_uri)
+        model_ready = data_bundle.has_model_definitions()
 
         # Header: entity name, additional info and description
         col_title, col_actions = st.columns([20, 10], vertical_alignment='bottom')
@@ -44,13 +46,15 @@ try:
         # Header options
         with col_actions.container(horizontal=True, horizontal_alignment="right"):
             # Button to switch to raw triples
-            if st.button('Raw triples', help="[What are raw triples?](/documentation#what-is-the-page-raw-triples-for)"):
+            if st.button('Raw triples', help=help_text("entity_card.raw_triples")):
                 st.switch_page('pages/entity-triples.py')
             # Button to switch to visualization
-            if st.button('Visualize', help="[What is the visualization?](/documentation#what-is-shown-on-page-visualization)"):
+            if st.button('Visualize', help=help_text("entity_card.visualize")):
                 st.switch_page('pages/entity-chart.py')
             # Button to edit the entity (open edit dialog)
-            if st.button('', icon=":material/edit:", type='primary'):
+            edit_disabled = not model_ready
+            edit_help = "Import a SHACL model to edit entities." if edit_disabled else None
+            if st.button('', icon=":material/edit:", type='primary', disabled=edit_disabled, help=edit_help):
                 dialog_entity_edition(entity)
             # Button to delete the entity (open confirmation dialog)
             if st.button('', icon=":material/delete:", type='primary'):
@@ -65,6 +69,8 @@ try:
 
         # According to the model (thanks to the entity class), get all the properties that the entity can have in its card
         all_properties = data_bundle.get_card_properties_of(entity.class_uri)
+        if not model_ready:
+            st.info("Model is empty, so no editable properties can be displayed. Re-import the SHACL model to edit.")
 
         # Loop through all of them
         for p in all_properties:

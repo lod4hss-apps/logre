@@ -4,6 +4,7 @@ from requests.exceptions import HTTPError, ConnectionError
 from code_editor import code_editor
 from components.init import init
 from components.menu import menu
+from components.help import help_text
 from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from dialogs.confirmation import dialog_confirmation
@@ -38,7 +39,7 @@ try:
 
         # Allow user to change the selected queries
         with st.container(horizontal=True, vertical_alignment='bottom'):
-            sparql_query_name = st.selectbox('SPARQL query', options=sparql_queries_names, index=index,width=300, on_change=state.set_sparql_query, args=(sparql_query_name,), help="[Can I save a specific query?](/documentation#can-i-save-a-specific-query)")
+            sparql_query_name = st.selectbox('SPARQL query', options=sparql_queries_names, index=index,width=300, on_change=state.set_sparql_query, args=(sparql_query_name,), help=help_text("sparql_editor.saved_query"))
 
             # And have a delete button for this query
             if st.button('', icon=':material/delete:', type='tertiary'):
