@@ -334,6 +334,13 @@ def show_configuration_panel(current_bundle, data_bundles):
                 st.rerun()
             active = selected_bundle
         else:
+            st.selectbox(
+                "Active data bundle",
+                options=[],
+                placeholder="No Data Bundle configured for this endpoint",
+                key="dashboard-bundle-empty",
+                disabled=True
+            )
             st.warning("This endpoint has no configured Data Bundle yet.", icon=":material/info:")
             active = None
 

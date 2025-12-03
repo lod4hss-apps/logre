@@ -1,5 +1,6 @@
 from typing import List, Dict
 import hashlib
+import streamlit as st
 from os import getenv
 from os.path import exists as path_exists
 from pathlib import Path
@@ -19,6 +20,8 @@ def __build_endpoint_signature(data_bundle: DataBundle) -> str:
     technology = data_bundle.endpoint.technology_name or ''
     url = data_bundle.endpoint.url or ''
     username = data_bundle.endpoint.username or ''
+    # Password is intentionally ignored: two bundles hitting the same endpoint
+    # with identical credentials represent the same logical connector.
     return f"{technology}|{url}|{username}"
 
 
@@ -49,6 +52,7 @@ def __ensure_active_data_bundle() -> None:
     if 'data_bundles' not in state or not state['data_bundles']:
         state.pop('data_bundle', None)
         state.pop('endpoint_key', None)
+        __clear_caches()
         return
 
     current_db = state.get('data_bundle')
@@ -64,6 +68,15 @@ def __ensure_active_data_bundle() -> None:
         return
 
     set_data_bundle(all_dbs[0])
+
+
+def __clear_caches() -> None:
+    """Clear Streamlit caches when switching endpoints/bundles."""
+    try:
+        st.cache_data.clear()
+        st.cache_resource.clear()
+    except Exception:
+        pass
 
 
 
@@ -157,20 +170,28 @@ def set_query_params(query_param_keys: List[str]) -> None:
                                     Supported keys are "endpoint", "db", "uri".
     """
     # Endpoint key: from state to query param
-    if 'endpoint' in query_param_keys and 'endpoint' not in query_params:
+    if 'endpoint' in query_param_keys:
         endpoint_key = get_endpoint_key()
         if endpoint_key:
             query_params['endpoint'] = endpoint_key
+        elif 'endpoint' in query_params:
+            del query_params['endpoint']
 
     # Data bundle: from state to query param
-    if 'db' in query_param_keys and 'db' not in query_params:
+    if 'db' in query_param_keys:
         db = get_data_bundle()
-        if db: query_params['db'] = db.key
+        if db:
+            query_params['db'] = db.key
+        elif 'db' in query_params:
+            del query_params['db']
 
     # Entity URI: from state to query param
-    if 'uri' in query_param_keys and 'uri' not in query_params:
+    if 'uri' in query_param_keys:
         uri = get_entity_uri()
-        if uri: query_params['uri'] = uri
+        if uri:
+            query_params['uri'] = uri
+        elif 'uri' in query_params:
+            del query_params['uri']
 
 
 def parse_query_params() -> None:
@@ -394,6 +415,8 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
     state['data_bundle'] = data_bundle
     state['endpoint_key'] = __build_endpoint_key(data_bundle)
 
+    __clear_caches()
+
     # When a data bundle is chosen, load its model
     data_bundle.load_model()
 
@@ -446,6 +469,7 @@ def set_endpoint_key(endpoint_key: str) -> None:
         set_data_bundle(endpoint['data_bundles'][0])
     else:
         state.pop('data_bundle', None)
+        __clear_caches()
 
 
 def get_data_bundles_for_endpoint(endpoint_key: str) -> List[DataBundle]:
