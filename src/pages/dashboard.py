@@ -14,7 +14,7 @@ from lib.stats import summarize_classes, summarize_properties
 
 
 # Initialize application context
-init(layout='wide', query_param_keys=['db'])
+init(layout='wide', query_param_keys=['endpoint', 'db'])
 menu()
 
 
@@ -292,23 +292,51 @@ def show_configuration_panel(current_bundle, data_bundles):
         return
 
     with st.expander("Configuration & context (overview)", expanded=False):
-        db_names = [db.name for db in data_bundles]
-        index = db_names.index(current_bundle.name) if current_bundle else None
+        endpoint_groups = state.get_endpoint_groups()
+        if not endpoint_groups:
+            st.info("Configure an endpoint and a Data Bundle from the Configuration page.", icon=":material/info:")
+            return
+
+        endpoint_key = state.get_endpoint_key()
+        endpoint_labels = [group['label'] for group in endpoint_groups]
+        endpoint_index = 0
+        if endpoint_key:
+            endpoint_index = next((i for i, group in enumerate(endpoint_groups) if group['key'] == endpoint_key), 0)
+
         st.caption("Need to edit bundles, prefixes or import data? Head to the full [Configuration page](/configuration).")
-        selected = st.selectbox(
-            "Active data bundle",
-            options=db_names,
-            index=index,
-            placeholder="None selected",
-            key="dashboard-bundle-select",
-            help=help_text("dashboard.data_bundle_select")
+        selected_endpoint_label = st.selectbox(
+            "Active endpoint",
+            options=endpoint_labels,
+            index=endpoint_index,
+            key="dashboard-endpoint-select"
         )
-        if selected and (not current_bundle or selected != current_bundle.name):
-            new_bundle = data_bundles[db_names.index(selected)]
-            state.set_data_bundle(new_bundle)
+        selected_endpoint = endpoint_groups[endpoint_labels.index(selected_endpoint_label)]
+        if endpoint_key != selected_endpoint['key']:
+            state.set_endpoint_key(selected_endpoint['key'])
             st.rerun()
 
-        active = data_bundles[db_names.index(selected)] if selected else current_bundle
+        bundles = selected_endpoint['data_bundles']
+        active = current_bundle if current_bundle in bundles else None
+        bundle_names = [db.name for db in bundles]
+
+        if bundles:
+            bundle_index = bundle_names.index(active.name) if active else 0
+            selected_bundle_label = st.selectbox(
+                "Active data bundle",
+                options=bundle_names,
+                index=bundle_index,
+                key="dashboard-bundle-select",
+                help=help_text("dashboard.data_bundle_select")
+            )
+            selected_bundle = bundles[bundle_names.index(selected_bundle_label)]
+            if current_bundle != selected_bundle:
+                state.set_data_bundle(selected_bundle)
+                st.rerun()
+            active = selected_bundle
+        else:
+            st.warning("This endpoint has no configured Data Bundle yet.", icon=":material/info:")
+            active = None
+
         if active:
             st.caption(f"Endpoint: {active.endpoint.url}")
             st.caption(f"Base URI: {active.base_uri}")

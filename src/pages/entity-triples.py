@@ -13,7 +13,7 @@ from dialogs.triple_info import dialog_triple_info
 INCOMING_TRIPLES_FETCHED = 5
 
 # Initialize
-init(layout='wide', query_param_keys=['db', 'uri'])
+init(layout='wide', query_param_keys=['endpoint', 'db', 'uri'])
 menu()
 
 try:

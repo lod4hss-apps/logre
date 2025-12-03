@@ -8,7 +8,7 @@ from lib.errors import get_HTTP_ERROR_message
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize    
-init()
+init(query_param_keys=['endpoint', 'db'])
 menu()
 
 try:

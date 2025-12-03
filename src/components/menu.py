@@ -49,6 +49,52 @@ def menu() -> None:
             for target, label in links:
                 st.sidebar.page_link(target, label=label)
 
+        st.sidebar.divider()
+
+        endpoint_groups = state.get_endpoint_groups()
+        endpoint_key = state.get_endpoint_key()
+
+        if not endpoint_groups:
+            st.sidebar.info("Configure an endpoint and at least one Data Bundle to start.", icon=":material/info:")
+        else:
+            endpoint_labels = [group['label'] for group in endpoint_groups]
+            endpoint_index = 0
+            if endpoint_key:
+                endpoint_index = next((i for i, group in enumerate(endpoint_groups) if group['key'] == endpoint_key), 0)
+
+            selected_endpoint_label = st.sidebar.selectbox(
+                label='Endpoint',
+                options=endpoint_labels,
+                index=endpoint_index,
+                key='sidebar-endpoint-select'
+            )
+            selected_endpoint = endpoint_groups[endpoint_labels.index(selected_endpoint_label)]
+            if endpoint_key != selected_endpoint['key']:
+                state.set_endpoint_key(selected_endpoint['key'])
+                st.rerun()
+
+            bundles = selected_endpoint['data_bundles']
+            if bundles:
+                bundle_labels = [db.name for db in bundles]
+                current_bundle = state.get_data_bundle()
+                if current_bundle and current_bundle in bundles:
+                    bundle_index = bundles.index(current_bundle)
+                else:
+                    bundle_index = 0
+
+                selected_bundle_label = st.sidebar.radio(
+                    label='Working Data Bundle',
+                    options=bundle_labels,
+                    index=bundle_index,
+                    key='sidebar-data-bundle'
+                )
+                selected_bundle = bundles[bundle_labels.index(selected_bundle_label)]
+                if current_bundle != selected_bundle:
+                    state.set_data_bundle(selected_bundle)
+                    st.rerun()
+            else:
+                st.sidebar.warning("No Data Bundle configured for this endpoint.", icon=":material/info:")
+
     except HTTPError as err:
         message = get_HTTP_ERROR_message(err)
         st.error(message)

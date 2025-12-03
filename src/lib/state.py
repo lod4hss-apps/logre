@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Dict
+import hashlib
 from os import getenv
 from os.path import exists as path_exists
 from pathlib import Path
@@ -7,6 +8,62 @@ from yaml import safe_load, dump
 from graphly.schema import Prefixes, Prefix, Resource, Property
 from streamlit import session_state as state, query_params
 from schema.data_bundle import DataBundle
+
+
+##### INTERNAL HELPERS #####
+
+def __build_endpoint_signature(data_bundle: DataBundle) -> str:
+    """
+    Create a deterministic string representing the SPARQL endpoint of a Data Bundle.
+    """
+    technology = data_bundle.endpoint.technology_name or ''
+    url = data_bundle.endpoint.url or ''
+    username = data_bundle.endpoint.username or ''
+    return f"{technology}|{url}|{username}"
+
+
+def __build_endpoint_key(data_bundle: DataBundle) -> str:
+    """
+    Generate a hashed key used to reference an endpoint group in the UI or query params.
+    """
+    signature = __build_endpoint_signature(data_bundle)
+    return hashlib.sha256(signature.encode('utf-8')).hexdigest()
+
+
+def __build_endpoint_label(data_bundle: DataBundle) -> str:
+    """
+    Build a human readable endpoint label for selectors.
+    """
+    label = data_bundle.endpoint.url or 'Unknown endpoint'
+    technology = data_bundle.endpoint.technology_name
+    username = data_bundle.endpoint.username
+    if username:
+        return f"{label} ({technology}, {username})"
+    return f"{label} ({technology})"
+
+
+def __ensure_active_data_bundle() -> None:
+    """
+    Ensure the session always references a valid data bundle / endpoint pair when any exist.
+    """
+    if 'data_bundles' not in state or not state['data_bundles']:
+        state.pop('data_bundle', None)
+        state.pop('endpoint_key', None)
+        return
+
+    current_db = state.get('data_bundle')
+    all_dbs = state['data_bundles']
+
+    if current_db and current_db in all_dbs:
+        state['endpoint_key'] = __build_endpoint_key(current_db)
+        return
+
+    default_db = state.get('default_data_bundle')
+    if default_db and default_db in all_dbs:
+        set_data_bundle(default_db)
+        return
+
+    set_data_bundle(all_dbs[0])
 
 
 
@@ -97,8 +154,14 @@ def set_query_params(query_param_keys: List[str]) -> None:
 
     Args:
         query_param_keys (List[str]): A list of query parameter keys to update.
-                                    Supported keys are "db", "uri".
+                                    Supported keys are "endpoint", "db", "uri".
     """
+    # Endpoint key: from state to query param
+    if 'endpoint' in query_param_keys and 'endpoint' not in query_params:
+        endpoint_key = get_endpoint_key()
+        if endpoint_key:
+            query_params['endpoint'] = endpoint_key
+
     # Data bundle: from state to query param
     if 'db' in query_param_keys and 'db' not in query_params:
         db = get_data_bundle()
@@ -114,12 +177,20 @@ def parse_query_params() -> None:
     """
     Parse query parameters and update the session state accordingly.
 
-    For each recognized query parameter ("db", "uri"), the corresponding
+    For each recognized query parameter ("endpoint", "db", "uri"), the corresponding
     value is retrieved from `query_params` and stored in the session state.
 
+    - "endpoint": Matches the provided key with available endpoints and sets the selected endpoint.
     - "db": Matches the provided key with available data bundles and sets the selected bundle.
     - "uri": Sets the current entity URI.
     """
+    # Endpoint: from query param to state
+    if 'endpoint' in query_params:
+        endpoint_key = query_params['endpoint']
+        available_endpoints = [group['key'] for group in get_endpoint_groups()]
+        if endpoint_key in available_endpoints:
+            set_endpoint_key(endpoint_key)
+
     # Data bundle: from query param to state
     if 'db' in query_params:
         data_bundle = next((db for db in get_data_bundles() if db.key == query_params['db']), None)
@@ -179,6 +250,7 @@ def load_config() -> None:
                 if "default_data_bundle" in obj.keys() and obj['default_data_bundle']:
                     default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == obj['default_data_bundle'])
                     if default_db: set_default_data_bundle(default_db)
+                __ensure_active_data_bundle()
             
                 # Extract saved SPARQL Queries
                 if 'sparql_queries'in obj.keys():
@@ -276,7 +348,10 @@ def get_data_bundles() -> List[DataBundle]:
     Returns:
         List[DataBundle]: A list of data bundle objects stored in the session state.
     """
-    return state['data_bundles']
+    if 'data_bundles' in state:
+        return state['data_bundles']
+    else:
+        return []
 
 
 def set_data_bundles(dbs: List[DataBundle]) -> None:
@@ -290,6 +365,7 @@ def set_data_bundles(dbs: List[DataBundle]) -> None:
         None
     """
     state['data_bundles'] = dbs
+    __ensure_active_data_bundle()
 
 
 def get_data_bundle() -> DataBundle | None:
@@ -303,14 +379,9 @@ def get_data_bundle() -> DataBundle | None:
         DataBundle | None: The selected data bundle, or None if not found.
     """
     # If there is none in state
-    if 'data_bundle' not in state: 
-        # Return the default one, only if it exists
-        db = get_default_data_bundle()
-        if db:
-            db.load_model()
-            return db
-    else:
-        return state['data_bundle']
+    if 'data_bundle' not in state:
+        __ensure_active_data_bundle()
+    return state.get('data_bundle')
     
 
 def set_data_bundle(data_bundle: DataBundle) -> None:
@@ -321,9 +392,70 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
         data_bundle (DataBundle): The data bundle to set as active.
     """
     state['data_bundle'] = data_bundle
+    state['endpoint_key'] = __build_endpoint_key(data_bundle)
 
     # When a data bundle is chosen, load its model
     data_bundle.load_model()
+
+
+def get_endpoint_groups() -> List[Dict[str, object]]:
+    """
+    Build endpoint group information based on configured data bundles.
+
+    Returns:
+        List[dict]: Each dict contains "key", "label" and "data_bundles".
+    """
+    groups: Dict[str, Dict[str, object]] = {}
+    for data_bundle in get_data_bundles():
+        key = __build_endpoint_key(data_bundle)
+        if key not in groups:
+            groups[key] = {
+                'key': key,
+                'label': __build_endpoint_label(data_bundle),
+                'data_bundles': []
+            }
+        groups[key]['data_bundles'].append(data_bundle)
+    # Sort endpoints by label for deterministic UI order
+    return sorted(groups.values(), key=lambda endpoint: endpoint['label'])
+
+
+def get_endpoint_key() -> str | None:
+    """
+    Retrieve the currently selected endpoint key from the session state.
+    """
+    if 'endpoint_key' not in state:
+        endpoints = get_endpoint_groups()
+        if len(endpoints) == 1:
+            set_endpoint_key(endpoints[0]['key'])
+    return state.get('endpoint_key')
+
+
+def set_endpoint_key(endpoint_key: str) -> None:
+    """
+    Set the active endpoint in session state. If the current Data Bundle does not belong
+    to this endpoint, the first bundle from that endpoint is selected.
+    """
+    state['endpoint_key'] = endpoint_key
+    current_db = state.get('data_bundle')
+    if current_db and __build_endpoint_key(current_db) == endpoint_key:
+        return
+
+    endpoint_groups = get_endpoint_groups()
+    endpoint = next((group for group in endpoint_groups if group['key'] == endpoint_key), None)
+    if endpoint and endpoint['data_bundles']:
+        set_data_bundle(endpoint['data_bundles'][0])
+    else:
+        state.pop('data_bundle', None)
+
+
+def get_data_bundles_for_endpoint(endpoint_key: str) -> List[DataBundle]:
+    """
+    Return all data bundles assigned to the provided endpoint key.
+    """
+    endpoint = next((group for group in get_endpoint_groups() if group['key'] == endpoint_key), None)
+    if not endpoint:
+        return []
+    return endpoint['data_bundles']
 
 
 def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> None:
@@ -349,6 +481,7 @@ def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> 
 
     # Write to disk
     save_config()
+    __ensure_active_data_bundle()
 
 
 def get_default_data_bundle() -> DataBundle | None:
@@ -372,7 +505,8 @@ def set_default_data_bundle(db: DataBundle) -> None:
         db (DataBundle): The data bundle to set as the default.
     """
     state['default_data_bundle'] = db
-    save_config() 
+    save_config()
+    __ensure_active_data_bundle()
 
 
 

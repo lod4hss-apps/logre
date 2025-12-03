@@ -12,7 +12,7 @@ from dialogs.query_name import dialog_query_name
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize
-init(layout='wide')
+init(layout='wide', query_param_keys=['endpoint', 'db'])
 menu()
 
 try:
