@@ -297,7 +297,6 @@ def show_configuration_panel(current_bundle, data_bundles):
             st.info("Configure an endpoint and a Data Bundle from the Configuration page.", icon=":material/info:")
             return
 
-        st.caption("Selections are controlled from the sidebar. Use it to switch endpoints or bundles.")
         st.caption("Need to edit bundles, prefixes or import data? Head to the full [Configuration page](/configuration).")
 
         endpoint_key = state.get_endpoint_key()
@@ -320,6 +319,7 @@ def show_configuration_panel(current_bundle, data_bundles):
             st.warning("No active Data Bundle for this endpoint. Select one from the sidebar.", icon=":material/info:")
 
         if active:
+            st.markdown(f"**Data bundle**: {active.name}")
             st.caption(f"Base URI: {active.base_uri}")
             st.markdown(
                 f"""
