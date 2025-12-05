@@ -25,12 +25,10 @@ class Allegrograph(Sparql):
         technology_name (str): Set to 'Allegrograph' to indicate the SPARQL technology.
     """
 
-    # AllegroGraph expects a valid IRI for option prefixes even if it only relies on
-    # the prefix name. Using a concrete Franz namespace avoids malformed prefix errors.
-    additional_prefix = Prefix(
-        'franzOption_defaultDatasetBehavior',
-        'http://franz.com/ns/allegrograph/7.0/options#defaultDatasetBehavior'
-    )
+    # AllegroGraph requires option values such as franz:rdf, so we must provide both the
+    # franz namespace and the option prefix definition.
+    franz_prefix = Prefix('franz', 'http://franz.com/ns/allegrograph/7.0/')
+    additional_prefix = Prefix('franzOption_defaultDatasetBehavior', 'franz:rdf')
     
 
     def __init__(self, url: str, username: str, password: str) -> None:
@@ -58,13 +56,15 @@ class Allegrograph(Sparql):
         Returns:
             None | list[dict]: The parsed query results for SELECT/ASK queries, or None for update operations.
         """
+        required_prefixes = [self.franz_prefix, self.additional_prefix]
         if prefixes is None:
-            local_prefixes = Prefixes([self.additional_prefix])
+            local_prefixes = Prefixes(required_prefixes.copy())
         else:
             # Work on a copy so we don't mutate the shared Prefixes of the bundle.
             local_prefixes = Prefixes(prefixes.prefix_list.copy())
-            if not local_prefixes.has(self.additional_prefix.short):
-                local_prefixes.add(self.additional_prefix)
+            for prefix in required_prefixes:
+                if not local_prefixes.has(prefix.short):
+                    local_prefixes.add(prefix)
         return super().run(text, local_prefixes)
 
 
