@@ -3,5 +3,5 @@
 __pycache__
 pipenv_logre
 graphly
-*.yaml
+/*.yaml
 *.nq
