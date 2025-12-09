@@ -138,3 +138,5 @@ def __get_graph_list(technology: str | None, url: str | None, username: str | No
             graphs = endpoint.run("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o . } }", prefixes=prefixes)
         
         return [g['g'] for g in graphs]
+    else: 
+        return []
