@@ -1,8 +1,8 @@
 .DS_Store
 .env
+.env.*
 __pycache__
 pipenv_logre
+graphly
 *.yaml
 *.nq
-.env
-.env.*
