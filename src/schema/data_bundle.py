@@ -1133,6 +1133,22 @@ class DataBundle:
         return pd.DataFrame(data=instances)
 
 
+    def get_model_as_turtle(self) -> str:
+        query = f"""
+            CONSTRUCT {{
+                ?s ?p ?o
+            }}
+            WHERE {{
+                {self.graph_model.sparql_begin}
+                    ?s ?p ?o
+                {self.graph_model.sparql_end}
+            }}
+        """
+        response = self.run(query)
+
+        return response
+
+
     @staticmethod
     def from_dict(obj: dict, prefixes: Prefixes) -> 'DataBundle':
         """

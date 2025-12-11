@@ -85,6 +85,12 @@ def __clear_caches() -> None:
 VERSION_FILE_PATH = getenv('LOGRE_VERSION_FILE', './VERSION')
 CONFIG_FILE_PATH = getenv('LOGRE_CONFIG_PATH', './logre-config.yaml')
 DEFAULT_CONFIG_FILE_PATH = getenv('LOGRE_DEFAULT_CONFIG_PATH', './logre-config-default.txt')
+VERSION_FILE_PATH = './version'
+CONFIG_FILE_PATH = './logre-config.yaml'
+DEFAULTS_PREFIXES = './defaults/prefixes.yaml'
+DEFAULTS_DATA_BUNDLES = './defaults/data-bundles.yaml'
+DEFAULTS_DATA_BUNDLE_DEFAULT = './defaults/default-data-bundle.yaml'
+DEFAULTS_SPARQL_QUERIES = './defaults/sparql-queries.yaml'
 
 # Change config path if Logre runs from DEV branch
 branch_name = None
@@ -243,23 +249,20 @@ def load_config() -> None:
     # If the config is not yet loaded
     if 'has_config' not in state:
 
-        # Read the file on disk, if any, else read default config
-        file_to_read = CONFIG_FILE_PATH if path_exists(CONFIG_FILE_PATH) else DEFAULT_CONFIG_FILE_PATH
-
-        # Only load the configuration if the file exists (normal or default one)
-        if path_exists(file_to_read):
-            with open(file_to_read, 'r', encoding='utf-8') as file:
+        # If the config file exists, load it
+        if path_exists(CONFIG_FILE_PATH):
+            with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as file:
 
                 # Use YAML to parse the file content
                 obj: dict = safe_load(file.read())
 
                 # Extract prefixes
                 if 'prefixes' in obj.keys():
-                    prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in obj['prefixes']])
+                    loaded_prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in obj['prefixes']])
                 else:
-                    prefixes = Prefixes()
-                set_prefixes(prefixes)
-                
+                    loaded_prefixes = Prefixes()
+                set_prefixes(loaded_prefixes)
+
                 # Extract Data Bundles
                 if 'data_bundles' in obj.keys():
                     dbs = [DataBundle.from_dict(db, state['prefixes']) for db in obj['data_bundles']]
@@ -273,6 +276,7 @@ def load_config() -> None:
                     if default_db: set_default_data_bundle(default_db)
                 __ensure_active_data_bundle()
             
+
                 # Extract saved SPARQL Queries
                 if 'sparql_queries'in obj.keys():
                     queries = obj['sparql_queries']
@@ -282,6 +286,88 @@ def load_config() -> None:
 
                 # Flag to know that state has loaded the configuration file
                 state['has_config'] = True
+
+
+        # Flag to know if something has been added from defaults
+        need_save = False
+
+        # Add all prefixes that are in the default, but not in (loaded or not) configuration
+        with open(DEFAULTS_PREFIXES, 'r', encoding='utf-8') as file:
+
+            # Use YAML to parse the file content
+            default_prefixes_raw = safe_load(file.read())
+
+            # Parse Prefixes
+            default_prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in default_prefixes_raw])
+
+            # Check if all from default are in state
+            loaded_prefixes = get_prefixes()
+            have_prefixes = set([p.short for p in loaded_prefixes])
+            for prefix in default_prefixes:
+                if prefix.short not in have_prefixes:
+                    loaded_prefixes.add(prefix)
+                    set_prefixes(loaded_prefixes)
+                    need_save = True
+
+
+        # Add all sparql queries that are in the default, but not in (loaded or not) configuration
+        with open(DEFAULTS_SPARQL_QUERIES, 'r', encoding='utf-8') as file:
+
+            # Use YAML to parse the file content
+            default_sparql_queries = safe_load(file.read())
+
+            # Here, there is no need to parse: For the model a SPARQL query is just an array with 2 elements: name, query
+
+            # Check if all from default are in state
+            loaded_queries = get_sparql_queries()
+            have_queries = set([o[0] for o in loaded_queries])
+            for query in default_sparql_queries:
+                if query[0] not in have_queries:
+                    loaded_queries.append(query)
+                    set_sparql_queries(loaded_queries)
+                    need_save = True
+
+        # Add all Data Bundles that are in the default, but not in (loaded or not) configuration
+        with open(DEFAULTS_DATA_BUNDLES, 'r', encoding='utf-8') as file:
+
+            # Use YAML to parse the file content
+            default_db_raw = safe_load(file.read())
+
+            # Parse
+            default_db = [DataBundle.from_dict(obj, get_prefixes()) for obj in default_db_raw]
+
+            # Check if all from default are in state
+            loaded_dbs = get_data_bundles()
+            have_dbs = set([o.endpoint for o in loaded_dbs])
+            for db in default_db:
+                if db.endpoint not in have_dbs:
+                    loaded_dbs.append(db)
+                    set_data_bundles(loaded_dbs)
+                    need_save = True
+
+
+        # Add the default Data Bundle from the default, if not set in the configuration
+        with open(DEFAULTS_DATA_BUNDLES, 'r', encoding='utf-8') as file:
+
+            # Use YAML to parse the file content
+            default_db_default = safe_load(file.read())
+
+            # If a defaut Data Bundle is set
+            if default_db_default:
+                # Find the DataBundle with the right key
+                default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == default_db_default)
+                if default_db:
+                    set_default_data_bundle(default_db)
+                    need_save = True
+        
+
+        # If the default configuration changed the state, then save the configuration
+        if need_save:
+            save_config()
+
+
+        # Flag to know that state has loaded the configuration file
+        state['has_config'] = True
 
 
 def save_config() -> None:
