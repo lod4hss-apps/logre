@@ -1,111 +1,105 @@
 import streamlit as st
-
-# Local imports
-import lib.state as state
-from lib.configuration import load_config
-from dialogs import dialog_find_entity, dialog_entity_form
+from requests.exceptions import HTTPError, ConnectionError
+from lib import state
+from lib.errors import get_HTTP_ERROR_message
+from dialogs.find_entity import dialog_find_entity
+from dialogs.entity_creation import dialog_entity_creation
+from components.help import help_text
 
 
 def menu() -> None:
-    """Logre sidebar."""
+    """
+    Builds and renders the Streamlit sidebar menu for the application.
 
-    # Fetch variables from State
-    version = state.get_version()
-    all_endpoints = state.get_endpoints()
-    endpoint = state.get_endpoint()
+    Features:
+        - Displays the application title and version.
+        - Provides navigation links to the various application pages.
+        - Displays data bundle-related commands (e.g., Find entity, Create entity) when a bundle is selected.
 
-    # Sidebar title
-    col1, col2 = st.sidebar.columns([2, 1], vertical_alignment='bottom')
-    col1.markdown(f"# Logre")
-    col2.markdown(f"<small>v{version}</small>", unsafe_allow_html=True)
+    Returns:
+        None
+    """
+    try:
+        # From state
+        version = state.get_version()
+        data_bundle = state.get_data_bundle()
 
-    # Page links
-    st.sidebar.page_link("pages/documentation.py", label="Documentation")
-    st.sidebar.page_link("pages/configuration.py", label="Configuration")
-    st.sidebar.page_link("pages/import-export.py", label="Import and Export", disabled=not endpoint)
-    st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL editor", disabled=not endpoint)
-    st.sidebar.page_link("pages/data-tables.py", label="Data tables", disabled=not endpoint)
+        # Sidebar title
+        with st.sidebar.container(horizontal=True, vertical_alignment='bottom'):
+            st.markdown(f"# Logre", width='content')
+            st.markdown(f"<small>v{version}</small>", unsafe_allow_html=True, width='content')
 
-    st.sidebar.divider()
+        # Page links
+        nav_sections = [
+            (None, [("pages/dashboard.py", "Dashboard")]),
+            ("Data exploration", [
+                ("pages/data-table.py", "Data Table"),
+                ("pages/entity-card.py", "Entity"),
+                ("pages/sparql-editor.py", "SPARQL Editor"),
+            ]),
+            ("Configuration & support", [
+                ("pages/configuration.py", "Configuration"),
+                ("pages/documentation.py", "Documentation (FAQ)"),
+            ])
+        ]
 
+        for section_title, links in nav_sections:
+            if section_title:
+                st.sidebar.markdown(f"#### {section_title}")
+            for target, label in links:
+                st.sidebar.page_link(target, label=label)
 
-    ##### SET CONFIGURATION #####
+        st.sidebar.divider()
 
-    # If there is not configuration, allow user to upload a yaml file
-    if not state.get_has_config():
-        
-        # TOML file uploader
-        config_file = st.sidebar.file_uploader('Set a configuration:', 'yaml', accept_multiple_files=False)
+        endpoint_groups = state.get_endpoint_groups()
+        endpoint_key = state.get_endpoint_key()
 
-        # On file upload, load its content to state
-        if config_file:
-            file_content = config_file.getvalue().decode("utf-8")
-            load_config(file_content)
-            st.rerun()
+        if not endpoint_groups:
+            st.sidebar.info("Configure an endpoint and at least one Data Bundle to start.", icon=":material/info:")
+        else:
+            endpoint_labels = [group['label'] for group in endpoint_groups]
+            endpoint_index = 0
+            if endpoint_key:
+                endpoint_index = next((i for i, group in enumerate(endpoint_groups) if group['key'] == endpoint_key), 0)
 
-
-    ##### ENDPOINT SELECTION #####
-    
-    # Or display the endpoint select box
-    else:
-
-        # List of all endpoint labels
-        endpoint_labels = list(map(lambda endpoint: endpoint.name, all_endpoints))
-
-        # Find the index of the current selected endpoint (if any)
-        if endpoint: selected_index = endpoint_labels.index(endpoint.name)
-        else: selected_index = None
-
-        # Endpoint selection
-        endpoint_label = st.sidebar.selectbox(label='Endpoint', options=endpoint_labels, index=selected_index, placeholder="No Endpoint selected")
-
-        # If an endpoint is selected...
-        if endpoint_label:
-
-            # ...that is different that the one in session
-            if not endpoint or endpoint_label != endpoint.name:
-                
-                # Get the right endpoint instance from session, and update selected one
-                endpoint = next((e for e in all_endpoints if e.name == endpoint_label), None)
-                state.set_endpoint(endpoint)
-
-                # When a new endpoint is selected, the cache need to be cleansed
-                st.cache_data.clear()
-                st.cache_resource.clear()
+            selected_endpoint_label = st.sidebar.selectbox(
+                label='Endpoint',
+                options=endpoint_labels,
+                index=endpoint_index,
+                key='sidebar-endpoint-select'
+            )
+            selected_endpoint = endpoint_groups[endpoint_labels.index(selected_endpoint_label)]
+            if endpoint_key != selected_endpoint['key']:
+                state.set_endpoint_key(selected_endpoint['key'])
                 st.rerun()
-                
 
-            ##### DATA BUNDLE SELECTION #####
+            bundles = selected_endpoint['data_bundles']
+            if bundles:
+                bundle_labels = [db.name for db in bundles]
+                current_bundle = state.get_data_bundle()
+                if current_bundle and current_bundle in bundles:
+                    bundle_index = bundles.index(current_bundle)
+                else:
+                    bundle_index = 0
 
-            # Fetch the one in session (if any)
-            data_bundle = state.get_data_bundle()
-
-            # If none is selected, by default, select the first
-            if not data_bundle and len(endpoint.data_bundles): 
-                data_bundle = endpoint.data_bundles[0]
-                state.set_data_bundle(data_bundle)
-
-            st.sidebar.text('')
-
-            # Get all data bundles names
-            data_bundles_labels = [s.name for s in endpoint.data_bundles]
-
-            # Manage the data bundle selection
-            if len(endpoint.data_bundles):
-                data_bundles_label = st.sidebar.radio(
-                    label='Working Data Bundle', 
-                    options=data_bundles_labels, 
-                    index=endpoint.data_bundles.index(data_bundle), 
-                    key='radio-btn-data_bundle-selection', 
+                selected_bundle_label = st.sidebar.radio(
+                    label='Working Data Bundle',
+                    options=bundle_labels,
+                    index=bundle_index,
+                    key='sidebar-data-bundle'
                 )
-                state.set_data_bundle([d for d in endpoint.data_bundles if d.name == data_bundles_label][0])
+                selected_bundle = bundles[bundle_labels.index(selected_bundle_label)]
+                if current_bundle != selected_bundle:
+                    state.set_data_bundle(selected_bundle)
+                    st.rerun()
             else:
-                st.sidebar.markdown("*⚠️ No Data Bundle. Add one in your endpoint configuration.*")
+                st.sidebar.warning("No Data Bundle configured for this endpoint.", icon=":material/info:")
 
-            st.sidebar.divider()
-
-
-            ##### DATA BUNDLE COMMANDS #####
-            if data_bundle:
-                st.sidebar.button('Find entity', icon=':material/search:', on_click=dialog_find_entity)
-                st.sidebar.button('Create an entity', icon=':material/line_start_circle:', on_click=dialog_entity_form)
+    except HTTPError as err:
+        message = get_HTTP_ERROR_message(err)
+        st.error(message)
+        print(message.replace('\n\n', '\n'))
+    
+    except ConnectionError as err:
+        st.error('Failed to connect to server: check your internet connection and/or server status.')
+        print('[CONNECTION ERROR]')

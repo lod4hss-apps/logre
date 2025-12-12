@@ -5,17 +5,22 @@ import streamlit as st
 @st.dialog("Confirmation")
 def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
     """
-    Dialog function that ask confirmation on any given action.
-    Allow caller to give information (as string) and a callback to execute if the user clicks on "Yes".
-    Clicking on "No" has no actions.
-    Callback should handle errors; if there is any, it will be forwarded upwards.
+    Displays a confirmation dialog with "Yes" and "No" options, executing a callback if confirmed.
 
     Args:
-        text (str): The text to display in the confirmation. "Do you confirm?" will be appended.
-        callback (function): function to execute if the user clicks "Yes".
-        **kwargs: parameters that will be given to the callback.
+        text (str): The message or information to display in the dialog.
+        callback (Callable): The function to execute if the user confirms by clicking "Yes".
+        **kwargs: Additional keyword arguments to pass to the callback function.
+
+    Returns:
+        None
+
+    Behavior:
+        - Shows the provided text and asks for user confirmation.
+        - "No" button cancels the action and reruns the page.
+        - "Yes" button executes the callback with provided kwargs inside a spinner and reruns the page if successful.
+        - Any exceptions raised during callback execution are propagated.
     """
-    
     # Display information
     st.markdown(text, unsafe_allow_html=True)
     st.markdown('Do you confirm?')

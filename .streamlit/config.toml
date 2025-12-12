@@ -2,4 +2,4 @@
 showSidebarNavigation = false
 
 [server]
-maxUploadSize = 500
+maxUploadSize = 1500

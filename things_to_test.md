@@ -1,0 +1,4 @@
+- No configuration (only default)
+- No configuration at all
+- Empty prefix queries
+- No SHACL db

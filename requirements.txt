@@ -5,3 +5,5 @@ pyperclip
 pyvis
 pyyaml
 python-dotenv
+plotly
+git+https://github.com/lod4hss-apps/graphly.git
