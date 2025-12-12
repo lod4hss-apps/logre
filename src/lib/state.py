@@ -82,15 +82,20 @@ def __clear_caches() -> None:
 
 ##### PATHS #####
 
-VERSION_FILE_PATH = getenv('LOGRE_VERSION_FILE', './VERSION')
+VERSION_FILE_PATH = getenv('LOGRE_VERSION_FILE')
+if not VERSION_FILE_PATH:
+    for candidate in ('./VERSION', './version'):
+        if Path(candidate).exists():
+            VERSION_FILE_PATH = candidate
+            break
+    else:
+        VERSION_FILE_PATH = './VERSION'
 CONFIG_FILE_PATH = getenv('LOGRE_CONFIG_PATH', './logre-config.yaml')
 DEFAULT_CONFIG_FILE_PATH = getenv('LOGRE_DEFAULT_CONFIG_PATH', './logre-config-default.txt')
-VERSION_FILE_PATH = './version'
-CONFIG_FILE_PATH = './logre-config.yaml'
-DEFAULTS_PREFIXES = './defaults/prefixes.yaml'
-DEFAULTS_DATA_BUNDLES = './defaults/data-bundles.yaml'
-DEFAULTS_DATA_BUNDLE_DEFAULT = './defaults/default-data-bundle.yaml'
-DEFAULTS_SPARQL_QUERIES = './defaults/sparql-queries.yaml'
+DEFAULTS_PREFIXES = getenv('LOGRE_DEFAULTS_PREFIXES', './defaults/prefixes.yaml')
+DEFAULTS_DATA_BUNDLES = getenv('LOGRE_DEFAULTS_DATA_BUNDLES', './defaults/data-bundles.yaml')
+DEFAULTS_DATA_BUNDLE_DEFAULT = getenv('LOGRE_DEFAULTS_DATA_BUNDLE_DEFAULT', './defaults/default-data-bundle.yaml')
+DEFAULTS_SPARQL_QUERIES = getenv('LOGRE_DEFAULTS_SPARQL_QUERIES', './defaults/sparql-queries.yaml')
 
 # Change config path if Logre runs from DEV branch
 branch_name = None
@@ -287,6 +292,10 @@ def load_config() -> None:
                 # Flag to know that state has loaded the configuration file
                 state['has_config'] = True
 
+
+        # Ensure prefixes exist before merging defaults so downstream helpers can safely read them
+        if 'prefixes' not in state:
+            set_prefixes(Prefixes())
 
         # Flag to know if something has been added from defaults
         need_save = False
