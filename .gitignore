@@ -5,3 +5,6 @@ pipenv_logre
 graphly
 /*.yaml
 *.nq
+# local files
+.env.example
+graphly_backup/
