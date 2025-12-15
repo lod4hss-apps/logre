@@ -46,25 +46,25 @@ Both services run under the `dev` Docker Compose profile and persist their state
    ```bash
    git clone https://github.com/lod4hss-apps/logre.git
    cd logre
-   
-**Without Git:**
+   ```
+   **Without Git:**
 
-* Download the ZIP archive from GitHub
+    * Download the ZIP archive from GitHub
 
-* Extract it
+    * Extract it
 
-* Open a terminal in the extracted logre directory
+    * Open a terminal in the extracted logre directory
 
 
-1. Build the images (first time or after code changes):
+2. Build the images (first time or after code changes):
 
    `docker compose --profile dev build`
 
    Podman users can run the same command with podman compose.
-2. Run the stack:
+3. Run the stack:
 
    `docker compose --profile dev up`
-3. Open the services:
+4. Verify services operation:
    * Logre UI: [http://localhost:8501](http://localhost:8501/) (or your custom LOGRE_PORT)
    * RDF4J Server API: <http://localhost:8080/rdf4j-server>
    * RDF4J Workbench UI: [http://localhost:8080/rdf4j-workbench/repositories](http://localhost:8080/rdf4j-workbench/repositories/)
