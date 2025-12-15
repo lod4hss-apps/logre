@@ -34,8 +34,6 @@ Both services run under the `dev` Docker Compose profile and persist their state
   * Downloading the repository as a ZIP archive from GitHub.
 * \~2 GB of free disk space for images and volumes.
 
-No pre-existing SPARQL endpoint is required anymore: the Compose stack starts RDF4J for you.
-
 
 ---
 
@@ -49,14 +47,13 @@ No pre-existing SPARQL endpoint is required anymore: the Compose stack starts RD
    git clone https://github.com/lod4hss-apps/logre.git
    cd logre
    
-   **Without Git:**
+**Without Git:**
 
-    * Download the ZIP archive from GitHub
+* Download the ZIP archive from GitHub
 
-    * Extract it
+* Extract it
 
-    * Open a terminal in the extracted logre directory
-
+* Open a terminal in the extracted logre directory
 
 
 1. Build the images (first time or after code changes):
