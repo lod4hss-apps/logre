@@ -1,6 +1,6 @@
 # LOGRE (LOcal GRaph Editor)
 
-Logre is an open-source UI that helps you visualize, edit, and explore RDF graph data through SPARQL endpoints. The repository now ships with a self-contained Docker stack so you can run Logre alongside a ready-to-use RDF4J server in seconds—no external endpoint required.
+Logre is an open-source UI that helps you visualize, edit, and explore RDF graph data through SPARQL endpoints. The repository now ships with a self-contained Docker stack so you can run Logre alongside a ready-to-use RDF4J server in seconds.
 
 > ⚠️ Logre does not embed its own triple store. The Docker setup simply bundles the application with an RDF4J server so you start with a working endpoint out of the box.
 
@@ -29,7 +29,9 @@ Both services run under the `dev` Docker Compose profile and persist their state
 ## Requirements
 
 * Docker Desktop on macOS/Windows or Docker Engine + Compose plugin on Linux (Podman + `podman compose` also works).
-* Git (to clone the repository) and a terminal.
+* A way to obtain the source code:
+  * Git (recommended, to clone the repository), or
+  * Downloading the repository as a ZIP archive from GitHub.
 * \~2 GB of free disk space for images and volumes.
 
 No pre-existing SPARQL endpoint is required anymore: the Compose stack starts RDF4J for you.
@@ -40,25 +42,32 @@ No pre-existing SPARQL endpoint is required anymore: the Compose stack starts RD
 ## Quick start (Docker Compose)
 
 
-1. Clone and enter the repository:
+1. Obtain the source code:
 
+   **With Git (recommended):**
    ```bash
    git clone https://github.com/lod4hss-apps/logre.git
    cd logre
-   ```
+   
+   **Without Git:**
+
+    * Download the ZIP archive from GitHub
+
+    * Extract it
+
+    * Open a terminal in the extracted logre directory
 
 
 
-1. *(Optional)* copy .env.example to .env and override ports or repository names if needed.
-2. Build the images (first time or after code changes):
+1. Build the images (first time or after code changes):
 
    `docker compose --profile dev build`
 
    Podman users can run the same command with podman compose.
-3. Run the stack:
+2. Run the stack:
 
    `docker compose --profile dev up`
-4. Open the services:
+3. Open the services:
    * Logre UI: [http://localhost:8501](http://localhost:8501/) (or your custom LOGRE_PORT)
    * RDF4J Server API: <http://localhost:8080/rdf4j-server>
    * RDF4J Workbench UI: [http://localhost:8080/rdf4j-workbench/repositories](http://localhost:8080/rdf4j-workbench/repositories/)
