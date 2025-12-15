@@ -19,7 +19,7 @@ Supported SPARQL endpoint technologies:
 | Service | Purpose | Default port(s) |
 |----|----|----|
 | `logre` | Streamlit-based UI served by this repository | `8501` (`LOGRE_PORT`) |
-| `rdf4j` | Official `eclipse/rdf4j-workbench` image (Server + Workbench) | `8080` (`RDF4J_SERVER_PORT`) for the REST API, `8081` (`RDF4J_WORKBENCH_PORT`) for the workbench UI |
+| `rdf4j` | Official `rdf4j` image (Server + Workbench) | `8080` (`RDF4J_SERVER_PORT`) for the REST API |
 
 Both services run under the `dev` Docker Compose profile and persist their state in Docker-managed volumes (`logre_data`, `rdf4j_data`).
 
