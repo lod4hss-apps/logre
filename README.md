@@ -61,7 +61,7 @@ No pre-existing SPARQL endpoint is required anymore: the Compose stack starts RD
 4. Open the services:
    * Logre UI: [http://localhost:8501](http://localhost:8501/) (or your custom LOGRE_PORT)
    * RDF4J Server API: <http://localhost:8080/rdf4j-server>
-   * RDF4J Workbench UI: [http://localhost:8081](http://localhost:8081/)
+   * RDF4J Workbench UI: [http://localhost:8080/rdf4j-workbench/repositories](http://localhost:8080/rdf4j-workbench/repositories/)
    * Default repository endpoint: http://localhost:8080/rdf4j-server/repositories/logre
 
 The Logre container waits for RDF4J to become reachable, creates the repository named after RDF4J_REPOSITORY (defaults to logre), then seeds a configuration that directly targets it.
