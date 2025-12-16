@@ -60,7 +60,7 @@ If you do not understand the next lines, we advise asking someone who does.
 
 ```bash
 docker pull eclipse/rdf4j-workbench # Pull RDF4J server + workbench image
-docker run -d -p 8080:8080 -p 8081:8081 eclipse/rdf4j-workbench # Run the RDF4J image
+docker run -d -p 8080:8080 eclipse/rdf4j-workbench # Run the RDF4J image (server + GUI on 8080)
 docker ps # Note the container ID
 docker logs [CONTAINER_ID] # Inspect logs if you need to troubleshoot the server
 ```
