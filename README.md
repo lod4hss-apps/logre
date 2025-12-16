@@ -70,6 +70,8 @@ Both services run under the `dev` Docker Compose profile and persist their state
          RDF4J_SERVER_PORT=8081
          ```
 
+      > **RDF4J Workbench note:** The Workbench UI runs next to the RDF4J server inside the same container. Even if you expose the service on another host port via `RDF4J_SERVER_PORT`, the Workbench must always connect to the internal endpoint `http://rdf4j:8080/rdf4j-server`. When you open the Workbench in a new browser session (private window, fresh profile, cleared cookies), it will prompt you for the server URL: enter `http://rdf4j:8080/rdf4j-server`, click **Connect**, then go to **Repositories → logre → Use** before navigating to repository-specific pages.
+
 
 
 
@@ -107,5 +109,4 @@ The Logre container waits for RDF4J to become reachable, creates the repository 
 ## **License & documentation**
 
 Logre is released under the MIT License (see LICENSE). A built-in FAQ becomes available from within the Logre UI once the application is running.
-
 
