@@ -1,6 +1,9 @@
 .DS_Store
 .env
-.env.*
+.env
+.env.local
+.env.production
+.env.staging
 __pycache__
 pipenv_logre
 graphly
