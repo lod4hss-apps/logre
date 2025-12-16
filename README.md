@@ -55,20 +55,20 @@ Both services run under the `dev` Docker Compose profile and persist their state
 
     * Open a terminal in the extracted logre directory
 
-### (Optional) Override default ports
+      ### (Optional) Override default ports
 
-If the default ports are already in use on your system, you can override them.
+      If the default ports are already in use on your system, you can override them.
 
-1.1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
+      1.1. Copy the example environment file:
+         ```bash
+         cp .env.example .env
+         ```
 
-1.2. Edit .env and adjust the ports:
-   ```bash
-   LOGRE_PORT=8502
-   RDF4J_SERVER_PORT=8081
-   ```
+      1.2. Edit .env and adjust the ports:
+         ```bash
+         LOGRE_PORT=8502
+         RDF4J_SERVER_PORT=8081
+         ```
 
 
 
