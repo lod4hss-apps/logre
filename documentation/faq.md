@@ -157,7 +157,7 @@ In Logre, you can [configure all your prefixes](http://www.w3.org/2001/XMLSchema
 
 ### How to create or update a Prefix?
 
-You can do that in the configuration page, in the so called "Prefixes" section.
+You can do that in the configuration page, inside the "Prefixes" section of each Endpoint card.
 
 All you need to have is:
 - The short version
@@ -193,7 +193,7 @@ No worries, everything is editable, even if you make a mistake in the configurat
 
 ### How to edit a Data Bundle?
 
-On the Configuration page, in the data bundle list, click on the pen icon to edit a data bundle.
+On the Configuration page, in the data bundle list, click on the pen icon to edit a data bundle. The same dialog now exposes the **Import data** and **Update the model (SHACL)** actions.
 
 ---
 
@@ -270,18 +270,20 @@ Caution! You can only save a query after clicking on "Run", the save option won'
 
 ### How to import data into the SPARQL endpoint?
 
-You can import data into the configured SPARQL endpoint on your selected data bundle. Reach the Import Export page and follow the formular.
+Open the Data Bundle dialog (via the pen icon) and scroll to the **Import data** section. You can then:
 
-You need to have either an n-Quad file format (.nq), or a Turtle one (.ttl)
+- Choose the file format (n-Quads or Turtle).
+- Upload your file.
+- If you selected Turtle, pick which graph it targets (Data / Model / Metadata).
+- Confirm the upload in the dialog.
 
-If you have a n-quad file, since they are quads and not triples, no more information are needed to import, they will be added to the SPARQL endpoint.
-But it you have a turtle file, you need to specify what it is (data, model or metadata) because turtle file does not have the graph information, so you need to set it in the GUI.
+You need to have either an n-Quad file format (.nq), or a Turtle one (.ttl). If you have a n-quad file, since they are quads and not triples, no more information is needed to import them. But if you have a turtle file, you need to specify what it is (data, model or metadata) because turtle file does not have the graph information, so you need to set it in the GUI.
 
 ---
 
 ### How to export my data?
 
-You can export data from a data bundle on the Import Export page, and can chose the format of your export file:
+You can export data from a data bundle on the Import/Export page (for full dumps) and download the current model directly from the Data Bundle dialog. Available formats are:
 - n-Quad (.nq): one single files with all of your data
 - Turtle (.ttl): one file for each part of your data bundle
 
