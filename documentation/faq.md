@@ -15,8 +15,9 @@ It has been developed to help researchers and data enthusiasts to work with such
 Now that Logre is running (you woud not see this page otherwise) you can know think of your data repository: Logre is just an editor, meaning that it has to connect to an existing [SPARQL endpoint](https://en.wikipedia.org/wiki/Resource_Description_Framework).
 
 - The first next step is to think of where to store your data? Have you a server dedicated for that? Is it remote? Do you need to [install one locally](https://en.wikipedia.org/wiki/Resource_Description_Framework)?
-- Then you need to [create a Data Bundle](https://en.wikipedia.org/wiki/Resource_Description_Framework) on the Configuration page in order to tell Logre how to connect to it.
-- An you are good to explore, create, edit your data!
+- Then you need to add an **Endpoint** in the Configuration page so Logre knows how to reach your triple store (URL + credentials + technology + prefixes).
+- Finally, create one or more **Data Bundles** inside this endpoint to describe where your data/model/metadata graphs live.
+- You can now explore, create and edit your data!
 
 ---
 
@@ -74,6 +75,14 @@ docker logs [CONTAINER_ID] # Inspect logs if you need to troubleshoot the server
 For now, Logre supports 4 endpoint technologies: RDF4J, Fuseki, Allegrograph and GraphDB.
 
 We have plan to add more. If you need one specific, feel free to contact us!
+
+---
+
+### How do I create or edit an Endpoint?
+
+Endpoint creation and edition happens in the **Configuration → Endpoint** section. Each endpoint stores only connection details: name, technology, URL, username/password and its dedicated prefixes list. Once you create one, you can manage as many bundles as you want underneath it without duplicating the credentials.
+
+Tip: Logre automatically seeds every endpoint with a set of commonly used prefixes (RDF/RDFS/XSD/SHACL, CIDOC CRM, Wikidata, OntoMe, SDHSS, …). You can remove or extend that list per endpoint if needed.
 
 ---
 
@@ -176,8 +185,7 @@ In the end, a data bundle is just a way **for you** to represent your data, it i
 
 First, before creating a data bundle, a [SPARQL endpoint is needed](http://localhost:8501/documentation#what-is-a-sparql-endpoint). 
 
-When you have access to a running SPARQL, you can reach the Configuration page, "Data Bundles" section. 
-There you will be display with all data bundles you have already configured, and you can add more by clicking on the button.
+In the Configuration page, open the endpoint expander and locate the **Data Bundles** sub-section. You can add or edit bundles from there: the dialog only asks for bundle-specific values (name, base URI, graphs, SHACL/model information) because the endpoint holding the connection is already selected.
 
 No worries, everything is editable, even if you make a mistake in the configuration, you will be able to correct it without impact on your data: see the configuration as glasses to watch your data: changing your glasses settings does not change the scene behind, just the way you percieve it.
 
@@ -189,12 +197,9 @@ On the Configuration page, in the data bundle list, click on the pen icon to edi
 
 ---
 
-### In the Data Bundle creation, where do I find my SPARQL endpoint username and password?
+### Where do I configure my SPARQL username and password?
 
-This depends on your SPARQL endpoint:
-If it is a local one (i.e. on your computer) you have to find credentials yourself. If you followed the tutorial [here](http://localhost:8501/documentation#how-to-install-a-sparql-endpoint-locally), then you already have the credentials.
-
-Otherwise, ask the endpoint maintainer for credentials.
+Credentials now belong to the Endpoint itself (see *How do I create or edit an Endpoint?*). When you edit a bundle, you will never be asked for network parameters any more—Logre automatically injects the SPARQL client coming from the selected endpoint.
 
 ---
 
