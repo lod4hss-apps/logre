@@ -1,10 +1,14 @@
-from typing import List, Tuple, Dict, Literal
+from __future__ import annotations
+
+from typing import List, Tuple, Dict, Literal, TYPE_CHECKING
 import pandas as pd
-from graphly.schema import Sparql, Graph, Model, Resource, Prefixes, Property, Statement, Sparql, Prefix
+from graphly.schema import Sparql, Graph, Model, Resource, Prefixes, Property, Statement, Prefix
 from graphly.tools import prepare
 from lib.utils import normalize_text, to_snake_case, from_snake_case
-from .sparql_technologies import get_sparql_technology
 from .model_framework import get_model_framework
+
+if TYPE_CHECKING:
+    from .endpoint import Endpoint
 
 
 class DataBundle:
@@ -16,6 +20,7 @@ class DataBundle:
 
     # High level attributes
     prefixes: Prefixes
+    endpoint_key: str
     endpoint: Sparql
     model: Model
 
@@ -25,21 +30,18 @@ class DataBundle:
     graph_metadata: Graph
 
 
-    def __init__(self, 
-                 name: str, 
+    def __init__(self,
+                 endpoint: 'Endpoint',
+                 name: str,
                  base_uri: str,
-                 prefixes: Prefixes, 
-                 endpoint_technology: str, 
-                 endpoint_url: str, 
-                 username: str, 
-                 password: str, 
-                 model_framework: str, 
-                 prop_type_uri: str, 
-                 prop_label_uri: str, 
-                 prop_comment_uri: str, 
-                 graph_data_uri: str, 
-                 graph_model_uri: str, 
-                 graph_metadata_uri: str, 
+                 prefixes: Prefixes,
+                 model_framework: str,
+                 prop_type_uri: str,
+                 prop_label_uri: str,
+                 prop_comment_uri: str,
+                 graph_data_uri: str,
+                 graph_model_uri: str,
+                 graph_metadata_uri: str,
         ) -> None:
         """
         Initialize a data bundle with its configuration, SPARQL endpoint, model framework, and graphs.
@@ -48,10 +50,6 @@ class DataBundle:
             name (str): The name of the data bundle.
             base_uri (str): The base URI for the data bundle.
             prefixes (Prefixes): The set of prefixes to use, extended with the base prefix.
-            endpoint_technology (str): The technology used for the SPARQL endpoint.
-            endpoint_url (str): The URL of the SPARQL endpoint.
-            username (str): The username for authenticating with the endpoint.
-            password (str): The password for authenticating with the endpoint.
             model_framework (str): The framework used to represent the model.
             prop_type_uri (str): The URI for the property type.
             prop_label_uri (str): The URI for the property label.
@@ -64,13 +62,17 @@ class DataBundle:
         self.name = name
         self.key = to_snake_case(self.name.replace(' - ', '-')) # To have a URL compatible name
         self.base_uri = base_uri
+        self.endpoint_key = endpoint.key
         existing = [p.short for p in prefixes.prefix_list]
         extra = [] if 'base' in existing else [Prefix('base', base_uri)]
         self.prefixes = Prefixes(prefixes.prefix_list + extra)
-        
-        # Get the right SPARQL technology class
-        SparqlClass = get_sparql_technology(endpoint_technology)
-        self.endpoint = SparqlClass(endpoint_url, username, password)
+
+        self.endpoint = endpoint.sparql
+
+        # Cache graph URIs for future rebindings
+        self._graph_data_uri = graph_data_uri
+        self._graph_model_uri = graph_model_uri
+        self._graph_metadata_uri = graph_metadata_uri
 
         # Get the right model framework class
         ModelClass = get_model_framework(model_framework)
@@ -80,6 +82,16 @@ class DataBundle:
         self.graph_data = Graph(self.endpoint, graph_data_uri, self.prefixes)
         self.graph_model = Graph(self.endpoint, graph_model_uri, self.prefixes)
         self.graph_metadata = Graph(self.endpoint, graph_metadata_uri, self.prefixes)
+
+    def attach_endpoint(self, endpoint: 'Endpoint') -> None:
+        """
+        Rebind the bundle to another endpoint (used when editing endpoint settings).
+        """
+        self.endpoint_key = endpoint.key
+        self.endpoint = endpoint.sparql
+        self.graph_data = Graph(self.endpoint, self._graph_data_uri, self.prefixes)
+        self.graph_model = Graph(self.endpoint, self._graph_model_uri, self.prefixes)
+        self.graph_metadata = Graph(self.endpoint, self._graph_metadata_uri, self.prefixes)
 
 
     def load_model(self) -> None:
@@ -1150,7 +1162,7 @@ class DataBundle:
 
 
     @staticmethod
-    def from_dict(obj: dict, prefixes: Prefixes) -> 'DataBundle':
+    def from_dict(obj: dict, endpoint: 'Endpoint', prefixes: Prefixes) -> 'DataBundle':
         """
         Create a DataBundle instance from a dictionary.
 
@@ -1159,19 +1171,17 @@ class DataBundle:
 
         Args:
             obj (dict): Dictionary containing the DataBundle attributes.
+            endpoint (Endpoint): Endpoint instance associated with the bundle.
             prefixes (Prefixes): Prefixes object used for URI handling.
 
         Returns:
             DataBundle: An initialized DataBundle instance.
         """
         return DataBundle(
+            endpoint = endpoint,
             prefixes = prefixes,
             name = obj.get('name'),
             base_uri = obj.get('base_uri'),
-            endpoint_url = obj.get('endpoint_url'),
-            username = obj.get('username'),
-            password = obj.get('password'),
-            endpoint_technology = obj.get('endpoint_technology'),
             model_framework = obj.get('model_framework'),
             prop_type_uri = obj.get('prop_type_uri'),
             prop_label_uri = obj.get('prop_label_uri'),
@@ -1194,11 +1204,8 @@ class DataBundle:
         """
         return {
             'name': self.name,
-            'endpoint_url': self.endpoint.url,
+            'endpoint_key': self.endpoint_key,
             'base_uri': self.base_uri,
-            'username': self.endpoint.username,
-            'password': self.endpoint.password,
-            'endpoint_technology': self.endpoint.technology_name,
             'model_framework': self.model.framework_name,
             'prop_type_uri': self.model.type_property,
             'prop_label_uri': self.model.label_property,

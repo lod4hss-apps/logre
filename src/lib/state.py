@@ -1,5 +1,4 @@
 from typing import List, Dict
-import hashlib
 import streamlit as st
 from os import getenv
 from os.path import exists as path_exists
@@ -9,65 +8,75 @@ from yaml import safe_load, dump
 from graphly.schema import Prefixes, Prefix, Resource, Property
 from streamlit import session_state as state, query_params
 from schema.data_bundle import DataBundle
+from schema.endpoint import Endpoint
 
 
 ##### INTERNAL HELPERS #####
 
-def __build_endpoint_signature(data_bundle: DataBundle) -> str:
-    """
-    Create a deterministic string representing the SPARQL endpoint of a Data Bundle.
-    """
-    technology = data_bundle.endpoint.technology_name or ''
-    url = data_bundle.endpoint.url or ''
-    username = data_bundle.endpoint.username or ''
-    # Password is intentionally ignored: two bundles hitting the same endpoint
-    # with identical credentials represent the same logical connector.
-    return f"{technology}|{url}|{username}"
-
-
-def __build_endpoint_key(data_bundle: DataBundle) -> str:
-    """
-    Generate a hashed key used to reference an endpoint group in the UI or query params.
-    """
-    signature = __build_endpoint_signature(data_bundle)
-    return hashlib.sha256(signature.encode('utf-8')).hexdigest()
-
-
-def __build_endpoint_label(data_bundle: DataBundle) -> str:
+def __build_endpoint_label(endpoint: Endpoint) -> str:
     """
     Build a human readable endpoint label for selectors.
     """
-    label = data_bundle.endpoint.url or 'Unknown endpoint'
-    technology = data_bundle.endpoint.technology_name
-    username = data_bundle.endpoint.username
+    label = endpoint.name or endpoint.url or 'Unknown endpoint'
+    username = endpoint.username
     if username:
-        return f"{label} ({technology}, {username})"
-    return f"{label} ({technology})"
+        return f"{label} ({endpoint.technology}, {username})"
+    return f"{label} ({endpoint.technology})"
 
 
-def __ensure_active_data_bundle() -> None:
+def __get_endpoint_by_key(endpoint_key: str) -> Endpoint | None:
     """
-    Ensure the session always references a valid data bundle / endpoint pair when any exist.
+    Return the endpoint matching the provided key, if any.
     """
-    if 'data_bundles' not in state or not state['data_bundles']:
-        state.pop('data_bundle', None)
+    for endpoint in state.get('endpoints', []):
+        if endpoint.key == endpoint_key:
+            return endpoint
+    return None
+
+
+def __ensure_active_selection() -> None:
+    """
+    Ensure the session always references a valid endpoint / data bundle pair.
+    """
+    endpoints = get_endpoints()
+    if not endpoints:
         state.pop('endpoint_key', None)
+        state.pop('data_bundle', None)
         __clear_caches()
         return
 
+    endpoint_key = state.get('endpoint_key')
+    if not endpoint_key or not __get_endpoint_by_key(endpoint_key):
+        endpoint_key = endpoints[0].key
+        state['endpoint_key'] = endpoint_key
+
     current_db = state.get('data_bundle')
-    all_dbs = state['data_bundles']
+    bundles = get_data_bundles_for_endpoint(endpoint_key)
 
-    if current_db and current_db in all_dbs:
-        state['endpoint_key'] = __build_endpoint_key(current_db)
-        return
+    if bundles:
+        if current_db and current_db in bundles:
+            return
 
-    default_db = state.get('default_data_bundle')
-    if default_db and default_db in all_dbs:
-        set_data_bundle(default_db)
-        return
+        default_db = state.get('default_data_bundle')
+        if default_db and default_db in bundles:
+            set_data_bundle(default_db)
+            return
 
-    set_data_bundle(all_dbs[0])
+        set_data_bundle(bundles[0])
+    else:
+        state.pop('data_bundle', None)
+        __clear_caches()
+
+
+def __reattach_bundles_to_endpoints() -> None:
+    """
+    Rebind every Data Bundle to the currently stored endpoints (needed after endpoint edits).
+    """
+    endpoints_map = {endpoint.key: endpoint for endpoint in get_endpoints()}
+    for data_bundle in get_data_bundles():
+        endpoint = endpoints_map.get(data_bundle.endpoint_key)
+        if endpoint:
+            data_bundle.attach_endpoint(endpoint)
 
 
 def __clear_caches() -> None:
@@ -93,8 +102,6 @@ if not VERSION_FILE_PATH:
 CONFIG_FILE_PATH = getenv('LOGRE_CONFIG_PATH', './logre-config.yaml')
 DEFAULT_CONFIG_FILE_PATH = getenv('LOGRE_DEFAULT_CONFIG_PATH', './logre-config-default.txt')
 DEFAULTS_PREFIXES = getenv('LOGRE_DEFAULTS_PREFIXES', './defaults/prefixes.yaml')
-DEFAULTS_DATA_BUNDLES = getenv('LOGRE_DEFAULTS_DATA_BUNDLES', './defaults/data-bundles.yaml')
-DEFAULTS_DATA_BUNDLE_DEFAULT = getenv('LOGRE_DEFAULTS_DATA_BUNDLE_DEFAULT', './defaults/default-data-bundle.yaml')
 DEFAULTS_SPARQL_QUERIES = getenv('LOGRE_DEFAULTS_SPARQL_QUERIES', './defaults/sparql-queries.yaml')
 
 # Change config path if Logre runs from DEV branch
@@ -108,6 +115,178 @@ if not skip_branch_detection and getenv('LOGRE_CONFIG_PATH') is None and Path('.
 
 if branch_name == 'dev':
     CONFIG_FILE_PATH = './logre-config-dev.yaml'
+
+
+def __load_yaml_file(path: str):
+    if not Path(path).exists():
+        return None
+    with open(path, 'r', encoding='utf-8') as file:
+        content = file.read().strip()
+    if not content:
+        return None
+    return safe_load(content)
+
+
+def __default_prefix_entries() -> List[Prefix]:
+    entries = __load_yaml_file(DEFAULTS_PREFIXES) or []
+    return [Prefix(item.get('short'), item.get('long')) for item in entries]
+
+
+def __ensure_endpoint_prefixes(endpoints: List[Endpoint]) -> bool:
+    """
+    Ensure every endpoint includes the default prefixes.
+    """
+    default_prefixes = __default_prefix_entries()
+    changed = False
+    for endpoint in endpoints:
+        existing = set(prefix.short for prefix in endpoint.prefixes)
+        for prefix in default_prefixes:
+            if prefix.short not in existing:
+                endpoint.prefixes.add(Prefix(prefix.short, prefix.long))
+                changed = True
+    return changed
+
+
+def __normalize_endpoint_entries(raw) -> List[Endpoint]:
+    if not raw:
+        return []
+    entries: List[dict]
+    if isinstance(raw, dict):
+        entries = []
+        for key, value in raw.items():
+            entry = dict(value or {})
+            entry.setdefault('key', key)
+            entries.append(entry)
+    else:
+        entries = list(raw)
+    return [Endpoint.from_dict(entry) for entry in entries]
+
+
+def __normalize_bundle_entries(raw) -> List[dict]:
+    if not raw:
+        return []
+    if isinstance(raw, dict):
+        entries = []
+        for key, value in raw.items():
+            entry = dict(value or {})
+            entry.setdefault('key', key)
+            entries.append(entry)
+        return entries
+    return list(raw)
+
+
+def __legacy_bundle_signature(bundle: dict) -> str:
+    technology = bundle.get('endpoint_technology') or ''
+    url = bundle.get('endpoint_url') or ''
+    username = bundle.get('username') or ''
+    return f"{technology}|{url}|{username}"
+
+
+def __migrate_legacy_configuration(config: dict) -> tuple[List[Endpoint], List[dict], str | None]:
+    """
+    Build endpoint entries + bundle dicts from the legacy (pre-refactor) configuration.
+    """
+    legacy_prefixes = config.get('prefixes', [])
+    prefix_objects = Prefixes([Prefix(p.get('short'), p.get('long')) for p in legacy_prefixes]) if legacy_prefixes else Prefixes()
+
+    endpoints_by_signature: Dict[str, Endpoint] = {}
+    bundles: List[dict] = []
+
+    for bundle in config.get('data_bundles', []):
+        signature = __legacy_bundle_signature(bundle)
+        if signature not in endpoints_by_signature:
+            endpoint_name = bundle.get('endpoint_url') or bundle.get('name') or 'Endpoint'
+            endpoint = Endpoint(
+                name=endpoint_name,
+                technology=bundle.get('endpoint_technology'),
+                url=bundle.get('endpoint_url'),
+                username=bundle.get('username'),
+                password=bundle.get('password'),
+                prefixes=Prefixes(prefix_objects.prefix_list.copy()) if prefix_objects else Prefixes(),
+            )
+            endpoints_by_signature[signature] = endpoint
+
+        endpoint = endpoints_by_signature[signature]
+        bundles.append({
+            'name': bundle.get('name'),
+            'base_uri': bundle.get('base_uri'),
+            'endpoint_key': endpoint.key,
+            'model_framework': bundle.get('model_framework'),
+            'prop_type_uri': bundle.get('prop_type_uri'),
+            'prop_label_uri': bundle.get('prop_label_uri'),
+            'prop_comment_uri': bundle.get('prop_comment_uri'),
+            'graph_data_uri': bundle.get('graph_data_uri'),
+            'graph_model_uri': bundle.get('graph_model_uri'),
+            'graph_metadata_uri': bundle.get('graph_metadata_uri'),
+        })
+
+    return list(endpoints_by_signature.values()), bundles, config.get('default_data_bundle')
+
+
+def get_default_endpoint_prefixes() -> Prefixes:
+    """
+    Return the default prefix template used when creating new endpoints.
+    """
+    if 'default_endpoint_prefixes' not in state:
+        state['default_endpoint_prefixes'] = Prefixes(__default_prefix_entries())
+    return state['default_endpoint_prefixes']
+
+
+def __parse_configuration(config: dict) -> tuple[List[Endpoint], List[dict], str | None]:
+    """
+    Parse the configuration dictionary and return endpoints, bundles and the default bundle key.
+    """
+    endpoints_raw = config.get('endpoints')
+
+    if endpoints_raw:
+        endpoints = __normalize_endpoint_entries(endpoints_raw)
+        bundles = __normalize_bundle_entries(config.get('data_bundles', []))
+        default_bundle_key = config.get('default_data_bundle')
+    else:
+        endpoints, bundles, default_bundle_key = __migrate_legacy_configuration(config)
+
+    __ensure_endpoint_prefixes(endpoints)
+    return endpoints, bundles, default_bundle_key
+
+
+def __instantiate_data_bundles(bundles_raw: List[dict], endpoints: List[Endpoint]) -> List[DataBundle]:
+    """
+    Instantiate DataBundle objects from dictionaries.
+    """
+    data_bundles: List[DataBundle] = []
+    endpoints_map = {endpoint.key: endpoint for endpoint in endpoints}
+
+    for bundle in bundles_raw:
+        endpoint_key = bundle.get('endpoint_key') or bundle.get('endpoint')
+        if not endpoint_key:
+            continue
+        endpoint = endpoints_map.get(endpoint_key)
+        if not endpoint:
+            continue
+        data_bundles.append(DataBundle.from_dict(bundle, endpoint, endpoint.prefixes))
+
+    return data_bundles
+
+
+def __merge_default_queries() -> bool:
+    """
+    Ensure default SPARQL queries exist alongside user-defined ones.
+    """
+    default_queries = __load_yaml_file(DEFAULTS_SPARQL_QUERIES) or []
+    if not default_queries:
+        return False
+
+    loaded_queries = get_sparql_queries()
+    have_queries = set(query[0] for query in loaded_queries)
+    changed = False
+    for query in default_queries:
+        if query[0] not in have_queries:
+            loaded_queries.append(query)
+            changed = True
+
+    if changed:
+        set_sparql_queries(loaded_queries)
+    return changed
 
 ##### VERSION #####
 # Version is only on read mode, no setter needed
@@ -251,132 +430,37 @@ def load_config() -> None:
     - Default data bundle: Stored if specified.
     - SPARQL queries: Loaded into the session state if defined.
     """
-    # If the config is not yet loaded
-    if 'has_config' not in state:
+    if 'has_config' in state:
+        return
 
-        # If the config file exists, load it
-        if path_exists(CONFIG_FILE_PATH):
-            with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as file:
+    raw_config = {}
+    if path_exists(CONFIG_FILE_PATH):
+        with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as file:
+            raw_config = safe_load(file.read()) or {}
 
-                # Use YAML to parse the file content
-                obj: dict = safe_load(file.read())
+    endpoints, bundles_raw, default_bundle_key = __parse_configuration(raw_config)
+    set_endpoints(endpoints)
 
-                # Extract prefixes
-                if 'prefixes' in obj.keys():
-                    loaded_prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in obj['prefixes']])
-                else:
-                    loaded_prefixes = Prefixes()
-                set_prefixes(loaded_prefixes)
+    data_bundles = __instantiate_data_bundles(bundles_raw, endpoints)
+    set_data_bundles(data_bundles)
 
-                # Extract Data Bundles
-                if 'data_bundles' in obj.keys():
-                    dbs = [DataBundle.from_dict(db, state['prefixes']) for db in obj['data_bundles']]
-                else:
-                    dbs = []
-                set_data_bundles(dbs)
+    if default_bundle_key:
+        default_db = next((db for db in data_bundles if db.key == default_bundle_key), None)
+        if default_db:
+            set_default_data_bundle(default_db)
 
-                # Extract default Data Bundle
-                if "default_data_bundle" in obj.keys() and obj['default_data_bundle']:
-                    default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == obj['default_data_bundle'])
-                    if default_db: set_default_data_bundle(default_db)
-                __ensure_active_data_bundle()
-            
+    queries = raw_config.get('sparql_queries', [])
+    set_sparql_queries(queries)
 
-                # Extract saved SPARQL Queries
-                if 'sparql_queries'in obj.keys():
-                    queries = obj['sparql_queries']
-                else:
-                    queries = []
-                set_sparql_queries(queries)
+    if raw_config.get('default_endpoint'):
+        set_endpoint_key(raw_config['default_endpoint'])
 
-                # Flag to know that state has loaded the configuration file
-                state['has_config'] = True
+    changed = __merge_default_queries()
+    if changed:
+        save_config()
 
-
-        # Ensure prefixes exist before merging defaults so downstream helpers can safely read them
-        if 'prefixes' not in state:
-            set_prefixes(Prefixes())
-
-        # Flag to know if something has been added from defaults
-        need_save = False
-
-        # Add all prefixes that are in the default, but not in (loaded or not) configuration
-        with open(DEFAULTS_PREFIXES, 'r', encoding='utf-8') as file:
-
-            # Use YAML to parse the file content
-            default_prefixes_raw = safe_load(file.read())
-
-            # Parse Prefixes
-            default_prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in default_prefixes_raw])
-
-            # Check if all from default are in state
-            loaded_prefixes = get_prefixes()
-            have_prefixes = set([p.short for p in loaded_prefixes])
-            for prefix in default_prefixes:
-                if prefix.short not in have_prefixes:
-                    loaded_prefixes.add(prefix)
-                    set_prefixes(loaded_prefixes)
-                    need_save = True
-
-
-        # Add all sparql queries that are in the default, but not in (loaded or not) configuration
-        with open(DEFAULTS_SPARQL_QUERIES, 'r', encoding='utf-8') as file:
-
-            # Use YAML to parse the file content
-            default_sparql_queries = safe_load(file.read())
-
-            # Here, there is no need to parse: For the model a SPARQL query is just an array with 2 elements: name, query
-
-            # Check if all from default are in state
-            loaded_queries = get_sparql_queries()
-            have_queries = set([o[0] for o in loaded_queries])
-            for query in default_sparql_queries:
-                if query[0] not in have_queries:
-                    loaded_queries.append(query)
-                    set_sparql_queries(loaded_queries)
-                    need_save = True
-
-        # Add all Data Bundles that are in the default, but not in (loaded or not) configuration
-        with open(DEFAULTS_DATA_BUNDLES, 'r', encoding='utf-8') as file:
-
-            # Use YAML to parse the file content
-            default_db_raw = safe_load(file.read())
-
-            # Parse
-            default_db = [DataBundle.from_dict(obj, get_prefixes()) for obj in default_db_raw]
-
-            # Check if all from default are in state
-            loaded_dbs = get_data_bundles()
-            have_dbs = set([o.endpoint for o in loaded_dbs])
-            for db in default_db:
-                if db.endpoint not in have_dbs:
-                    loaded_dbs.append(db)
-                    set_data_bundles(loaded_dbs)
-                    need_save = True
-
-
-        # Add the default Data Bundle from the default, if not set in the configuration
-        with open(DEFAULTS_DATA_BUNDLES, 'r', encoding='utf-8') as file:
-
-            # Use YAML to parse the file content
-            default_db_default = safe_load(file.read())
-
-            # If a defaut Data Bundle is set
-            if default_db_default:
-                # Find the DataBundle with the right key
-                default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == default_db_default)
-                if default_db:
-                    set_default_data_bundle(default_db)
-                    need_save = True
-        
-
-        # If the default configuration changed the state, then save the configuration
-        if need_save:
-            save_config()
-
-
-        # Flag to know that state has loaded the configuration file
-        state['has_config'] = True
+    __ensure_active_selection()
+    state['has_config'] = True
 
 
 def save_config() -> None:
@@ -384,12 +468,14 @@ def save_config() -> None:
     Save the current session state configuration to the config file.
     """
     default_db =  get_default_data_bundle()
+    default_endpoint_key = get_endpoint_key()
 
     # Gather config
     config = {
-        'prefixes': [p.to_dict() for p in get_prefixes() if p.short != 'base'],
+        'endpoints': [endpoint.to_dict() for endpoint in get_endpoints()],
         'data_bundles': [db.to_dict() for db in get_data_bundles()],
         'default_data_bundle': default_db.key if default_db else None,
+        'default_endpoint': default_endpoint_key,
         'sparql_queries': get_sparql_queries()
     }
 
@@ -402,57 +488,52 @@ def save_config() -> None:
 
 
 
-##### PREFIXES #####
+##### ENDPOINTS #####
 
-def get_prefixes() -> Prefixes:
+def get_endpoints() -> List[Endpoint]:
     """
-    Retrieve the current prefixes from the session state.
-
-    Returns:
-        Prefixes: The stored prefixes object.
+    Retrieve the list of endpoints from the session state.
     """
-    return state['prefixes']
+    if 'endpoints' in state:
+        return state['endpoints']
+    return []
 
 
-def set_prefixes(prefixes: Prefixes) -> None:
+def set_endpoints(endpoints: List[Endpoint]) -> None:
     """
-    Stores the given prefixes in the application state.
-
-    Args:
-        prefixes (Prefixes): Prefix mappings to be saved.
-
-    Returns:
-        None
+    Store endpoints in the session state and keep selections in sync.
     """
-    state['prefixes'] = prefixes
+    state['endpoints'] = endpoints
+    __reattach_bundles_to_endpoints()
+    __ensure_active_selection()
 
 
-def update_prefix(old_prefix: Prefix | None, new_prefix: Prefix | None) -> None:
+def update_endpoint(old_endpoint: Endpoint | None, new_endpoint: Endpoint | None) -> None:
     """
-    Add, remove, or update a prefix in the session state and save the configuration.
-
-    Args:
-        old_prefix (Prefix | None): The existing prefix to update or remove. If None, a new prefix is added.
-        new_prefix (Prefix | None): The new prefix to add or replace the old one. If None, the old prefix is removed.
+    Add, remove or update an endpoint and persist the configuration.
     """
-    # Create a new Prefix
-    if old_prefix is None:
-        state['prefixes'].add(new_prefix)
-    
-    # Remove a prefix
-    elif new_prefix is None:
-        state['prefixes'].remove(old_prefix)
+    endpoints = get_endpoints()
 
-    # Update a prefix
-    else:
-        for prefix in state['prefixes']:
-            if prefix.short == old_prefix.short and prefix.long == old_prefix.long:
-                prefix.short = new_prefix.short
-                prefix.long = new_prefix.long
+    if old_endpoint is None and new_endpoint is not None:
+        endpoints.append(new_endpoint)
+    elif new_endpoint is None and old_endpoint is not None:
+        endpoints = [endpoint for endpoint in endpoints if endpoint.key != old_endpoint.key]
+    elif old_endpoint is not None and new_endpoint is not None:
+        idx = next(i for i, endpoint in enumerate(endpoints) if endpoint.key == old_endpoint.key)
+        endpoints[idx] = new_endpoint
 
-    # Write to disk
+    set_endpoints(endpoints)
     save_config()
 
+
+def get_endpoint(endpoint_key: str | None = None) -> Endpoint | None:
+    """
+    Retrieve a specific endpoint by key (defaults to the active one).
+    """
+    key = endpoint_key or get_endpoint_key()
+    if not key:
+        return None
+    return __get_endpoint_by_key(key)
 
 
 ##### DATA BUNDLES #####
@@ -481,7 +562,7 @@ def set_data_bundles(dbs: List[DataBundle]) -> None:
         None
     """
     state['data_bundles'] = dbs
-    __ensure_active_data_bundle()
+    __ensure_active_selection()
 
 
 def get_data_bundle() -> DataBundle | None:
@@ -496,7 +577,7 @@ def get_data_bundle() -> DataBundle | None:
     """
     # If there is none in state
     if 'data_bundle' not in state:
-        __ensure_active_data_bundle()
+        __ensure_active_selection()
     return state.get('data_bundle')
     
 
@@ -508,7 +589,7 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
         data_bundle (DataBundle): The data bundle to set as active.
     """
     state['data_bundle'] = data_bundle
-    state['endpoint_key'] = __build_endpoint_key(data_bundle)
+    state['endpoint_key'] = data_bundle.endpoint_key
 
     __clear_caches()
 
@@ -523,18 +604,17 @@ def get_endpoint_groups() -> List[Dict[str, object]]:
     Returns:
         List[dict]: Each dict contains "key", "label" and "data_bundles".
     """
-    groups: Dict[str, Dict[str, object]] = {}
-    for data_bundle in get_data_bundles():
-        key = __build_endpoint_key(data_bundle)
-        if key not in groups:
-            groups[key] = {
-                'key': key,
-                'label': __build_endpoint_label(data_bundle),
-                'data_bundles': []
-            }
-        groups[key]['data_bundles'].append(data_bundle)
-    # Sort endpoints by label for deterministic UI order
-    return sorted(groups.values(), key=lambda endpoint: endpoint['label'])
+    groups: List[Dict[str, object]] = []
+    endpoints = get_endpoints()
+    for endpoint in endpoints:
+        bundles = [db for db in get_data_bundles() if db.endpoint_key == endpoint.key]
+        groups.append({
+            'key': endpoint.key,
+            'label': __build_endpoint_label(endpoint),
+            'endpoint': endpoint,
+            'data_bundles': bundles,
+        })
+    return sorted(groups, key=lambda endpoint: endpoint['label'])
 
 
 def get_endpoint_key() -> str | None:
@@ -542,9 +622,9 @@ def get_endpoint_key() -> str | None:
     Retrieve the currently selected endpoint key from the session state.
     """
     if 'endpoint_key' not in state:
-        endpoints = get_endpoint_groups()
+        endpoints = get_endpoints()
         if len(endpoints) == 1:
-            set_endpoint_key(endpoints[0]['key'])
+            set_endpoint_key(endpoints[0].key)
     return state.get('endpoint_key')
 
 
@@ -553,28 +633,18 @@ def set_endpoint_key(endpoint_key: str) -> None:
     Set the active endpoint in session state. If the current Data Bundle does not belong
     to this endpoint, the first bundle from that endpoint is selected.
     """
-    state['endpoint_key'] = endpoint_key
-    current_db = state.get('data_bundle')
-    if current_db and __build_endpoint_key(current_db) == endpoint_key:
+    if state.get('endpoint_key') == endpoint_key:
         return
 
-    endpoint_groups = get_endpoint_groups()
-    endpoint = next((group for group in endpoint_groups if group['key'] == endpoint_key), None)
-    if endpoint and endpoint['data_bundles']:
-        set_data_bundle(endpoint['data_bundles'][0])
-    else:
-        state.pop('data_bundle', None)
-        __clear_caches()
+    state['endpoint_key'] = endpoint_key
+    __ensure_active_selection()
 
 
 def get_data_bundles_for_endpoint(endpoint_key: str) -> List[DataBundle]:
     """
     Return all data bundles assigned to the provided endpoint key.
     """
-    endpoint = next((group for group in get_endpoint_groups() if group['key'] == endpoint_key), None)
-    if not endpoint:
-        return []
-    return endpoint['data_bundles']
+    return [db for db in get_data_bundles() if db.endpoint_key == endpoint_key]
 
 
 def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> None:
@@ -600,7 +670,7 @@ def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> 
 
     # Write to disk
     save_config()
-    __ensure_active_data_bundle()
+    __ensure_active_selection()
 
 
 def get_default_data_bundle() -> DataBundle | None:
@@ -625,7 +695,7 @@ def set_default_data_bundle(db: DataBundle) -> None:
     """
     state['default_data_bundle'] = db
     save_config()
-    __ensure_active_data_bundle()
+    __ensure_active_selection()
 
 
 

@@ -20,11 +20,12 @@ try:
     # From state
     sparql_queries = state.get_sparql_queries()
     sparql_query_name = state.get_sparql_query()
+    endpoint = state.get_endpoint()
     data_bundle = state.get_data_bundle()
 
-    # Make verifications
-    if not data_bundle:
-        st.warning('No Data Bundle selected')
+    if not endpoint:
+        st.markdown('# SPARQL Editor')
+        st.warning('Select an endpoint from the sidebar to run queries.')
     else:
         
         # Title
@@ -51,8 +52,11 @@ try:
         # Get the query content
         sparql_query_content = sparql_queries[sparql_queries_names.index(sparql_query_name)][1] if sparql_query_name else ''
 
-        # Display prefixes for user to know
-        prefixes_str = '`, `'.join([p.short for p in data_bundle.prefixes])
+        if not data_bundle:
+            st.info('No Data Bundle selected. Queries will run against the entire endpoint.', icon=":material/info:")
+
+        prefixes = data_bundle.prefixes if data_bundle else endpoint.prefixes
+        prefixes_str = '`, `'.join([p.short for p in prefixes])
         st.markdown('Available prefixes are: `' + prefixes_str + '`')
 
         # Code editor
@@ -69,7 +73,7 @@ try:
         if editor['type'] == 'submit' and editor['id'] != state.get_last_executed_sparql_id():
 
             # Run the query
-            result = data_bundle.endpoint.run(editor['text'], data_bundle.prefixes)
+            result = endpoint.sparql.run(editor['text'], prefixes)
             state.set_last_executed_sparql_id(editor['id'])
 
             # If there is a result
