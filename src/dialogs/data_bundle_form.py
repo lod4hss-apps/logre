@@ -7,6 +7,7 @@ from schema.data_bundle import DataBundle
 from schema.model_framework import ModelFramework
 from schema.endpoint import Endpoint
 from components.help import help_text
+from dialogs.confirmation import dialog_confirmation
 
 
 MODEL_FRAMEWORKS_STR = [e.value for e in list(ModelFramework)]
@@ -141,6 +142,123 @@ def dialog_data_bundle_form(endpoint: Endpoint, db: DataBundle = None) -> None:
 
             st.rerun()
 
+    if not db:
+        return
+
+    st.divider()
+    st.markdown("### Import data")
+
+    file_format_str = st.radio(
+        'Format',
+        options=['n-Quads (.nq)', 'Turtle (.ttl)'],
+        horizontal=True,
+        label_visibility='collapsed',
+        key=f'data-bundle-import-format-{db.key}'
+    )
+    file_format = file_format_str[file_format_str.index('(.') + 2:file_format_str.index(')')]
+
+    import_file = st.file_uploader(
+        f"Load your {file_format_str} file:",
+        type=[file_format],
+        accept_multiple_files=False,
+        key=f'data-bundle-import-file-{db.key}'
+    )
+
+    if import_file:
+        file_content = import_file.read().decode("utf-8")
+
+        st.write('')
+        st.markdown(f'The file will be imported into *{db.name}*.', width='content')
+        st.write('')
+
+        if file_format == 'nq':
+            if st.button('Upload n-Quads', type='primary', icon=':material/upload:', key=f'import-nq-btn-{db.key}'):
+                def upload_nquads(nquad_content: str) -> None:
+                    db.endpoint.upload_nquads(nquad_content)
+                    state.set_toast('n-Quad file uploaded', icon=':material/done:')
+                dialog_confirmation(
+                    f'You are about to upload the file *{import_file.name}* into *{db.name}*.',
+                    callback=upload_nquads,
+                    nquad_content=file_content
+                )
+        else:
+            data_type = st.radio(
+                'What is in the file?',
+                options=['Data', 'Model', 'Metadata'],
+                horizontal=True,
+                key=f'data-bundle-import-type-{db.key}'
+            )
+
+            graph = db.graph_data if data_type == "Data" else db.graph_model if data_type == "Model" else db.graph_metadata
+
+            if st.button(
+                f'Upload Turtle into the {data_type.upper()} graph',
+                type='primary',
+                icon=':material/upload:',
+                key=f'import-ttl-btn-{db.key}'
+            ):
+                def upload_turtle(turtle_content: str) -> None:
+                    graph.upload_turtle(turtle_content)
+                    state.set_toast('Turtle file uploaded', icon=':material/done:')
+                dialog_confirmation(
+                    f'You are about to upload the file *{import_file.name}* into the {data_type} graph.',
+                    callback=upload_turtle,
+                    turtle_content=file_content
+                )
+
+    st.divider()
+    st.markdown("### Update the model (SHACL)")
+
+    try:
+        with st.spinner("Extracting the current model..."):
+            current_model = db.graph_model.dump_turtle(db.prefixes)
+        st.download_button(
+            "Download current model (.ttl)",
+            data=current_model,
+            file_name=f"logre_{db.key}_model.ttl",
+            mime="text/turtle",
+            icon=":material/download:",
+            key=f'download-model-btn-{db.key}'
+        )
+    except Exception:
+        st.warning("Unable to download the current model.")
+
+    if st.button("Delete current model", type="secondary", icon=":material/delete:", key=f'delete-model-btn-{db.key}'):
+        def clear_model() -> None:
+            db.delete('model', [('?s', '?p', '?o')])
+            state.set_toast('Model cleared', icon=':material/delete:')
+            db.load_model()
+        dialog_confirmation(
+            "You are about to delete every triple from the model graph.",
+            callback=clear_model
+        )
+
+    files = st.file_uploader(
+        "Upload your SHACL files (.ttl)",
+        type=['ttl'],
+        accept_multiple_files=True,
+        key=f'shacl-upload-{db.key}'
+    )
+    if files:
+        files_content = ''
+        for file in files:
+            files_content += '\n' + file.read().decode("utf-8")
+
+        st.write('')
+        st.markdown("Files will be imported into the configured **model graph**.")
+        st.warning("If your model shares the same named graph as your data, this operation will delete everything in that graph.", icon=":material/warning:")
+
+        if st.button('Replace current model', type='primary', icon=':material/upload:', key=f'replace-model-btn-{db.key}'):
+            def replace_model(turtle_content: str) -> None:
+                db.delete('model', [('?s', '?p', '?o')])
+                db.graph_model.upload_turtle(turtle_content)
+                state.set_toast('Model replaced', icon=':material/done:')
+                db.load_model()
+            dialog_confirmation(
+                'You are about to replace the existing model with the provided files.',
+                callback=replace_model,
+                turtle_content=files_content
+            )
 
 def __get_graph_list(endpoint: Endpoint, base_uri: str | None) -> list[str]:
 
