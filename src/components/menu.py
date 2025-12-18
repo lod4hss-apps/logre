@@ -71,6 +71,7 @@ def menu() -> None:
             selected_endpoint = endpoint_groups[endpoint_labels.index(selected_endpoint_label)]
             if endpoint_key != selected_endpoint['key']:
                 state.set_endpoint_key(selected_endpoint['key'])
+                state.set_query_params(['endpoint', 'db', 'uri'])
                 st.rerun()
 
             bundles = selected_endpoint['data_bundles']
@@ -91,6 +92,7 @@ def menu() -> None:
                 selected_bundle = bundles[bundle_labels.index(selected_bundle_label)]
                 if current_bundle != selected_bundle:
                     state.set_data_bundle(selected_bundle)
+                    state.set_query_params(['endpoint', 'db', 'uri'])
                     st.rerun()
             else:
                 st.sidebar.warning("No Data Bundle configured for this endpoint.", icon=":material/info:")
