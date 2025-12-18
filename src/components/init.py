@@ -28,12 +28,12 @@ def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: Lis
 
         # On each run, make sure that the configuration is loaded
         state.load_config()
-        
-        # Put the needed query params in the page URL, if available
-        state.set_query_params(query_param_keys)
 
-        # Parse the query params, for the page (like in a link, reload etc)
+        # Parse the query params first (handles direct links/new tabs)
         state.parse_query_params()
+
+        # Then reflect the current state back into the URL if needed
+        state.set_query_params(query_param_keys)
 
         # Tab/page infos
         st.set_page_config(page_title='Logre', page_icon='👹', layout=layout)

@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 import streamlit as st
 from os import getenv
 from os.path import exists as path_exists
@@ -348,6 +348,20 @@ def clear_toast() -> None:
 
 ##### QUERY PARAMS #####
 
+def __get_query_param_value(key: str) -> str | None:
+    """
+    Normalize a query parameter value to a single string if present.
+    """
+    if key not in query_params:
+        return None
+
+    value: Any = query_params[key]
+    if value is None:
+        return None
+    if isinstance(value, (list, tuple)):
+        return value[0] if value else None
+    return value
+
 def set_query_params(query_param_keys: List[str]) -> None:
     """
     Update the query parameters based on the current session state.
@@ -396,21 +410,22 @@ def parse_query_params() -> None:
     - "uri": Sets the current entity URI.
     """
     # Endpoint: from query param to state
-    if 'endpoint' in query_params:
-        endpoint_key = query_params['endpoint']
+    endpoint_key = __get_query_param_value('endpoint')
+    if endpoint_key:
         available_endpoints = [group['key'] for group in get_endpoint_groups()]
         if endpoint_key in available_endpoints:
             set_endpoint_key(endpoint_key)
 
     # Data bundle: from query param to state
-    if 'db' in query_params:
-        data_bundle = next((db for db in get_data_bundles() if db.key == query_params['db']), None)
+    bundle_key = __get_query_param_value('db')
+    if bundle_key:
+        data_bundle = next((db for db in get_data_bundles() if db.key == bundle_key), None)
         if data_bundle:
             set_data_bundle(data_bundle)
 
     # Entity URI: from query param to state
-    if 'uri' in query_params:
-        uri = query_params['uri']
+    uri = __get_query_param_value('uri')
+    if uri:
         set_entity_uri(uri)
 
 
@@ -838,7 +853,7 @@ def get_last_executed_sparql_id() -> str:
 
 ##### SELECTED ENTITY #####
 
-def get_entity_uri() -> str:
+def get_entity_uri() -> str | None:
     """
     Retrieve the currently selected entity URI from the session state.
 
@@ -846,16 +861,20 @@ def get_entity_uri() -> str:
         str | None: The entity URI if set, otherwise None.
     """
     if 'entity_uri' not in state:
-        return None
+        uri = __get_query_param_value('uri')
+        if uri:
+            state['entity_uri'] = uri
+        else:
+            return None
     return state['entity_uri']
 
 
-def set_entity_uri(uri: str) -> None:
+def set_entity_uri(uri: str | None) -> None:
     """
     Set the current entity URI in the session state.
 
     Args:
-        uri (str): The entity URI to store.
+        uri (str | None): The entity URI to store, or None to clear the selection.
     """
     state['entity_uri'] = uri
 
