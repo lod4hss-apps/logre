@@ -78,7 +78,7 @@ try:
                 else:
                     origin = f"http://{base_url}:{base_port}"
                 df_instances['Open'] = [
-                    f"{origin}/entity-card?db={data_bundle.key}&uri={quote(uri, safe='')}"
+                    f"{origin}/entity-card?endpoint={data_bundle.endpoint_key}&db={data_bundle.key}&uri={quote(uri, safe='')}"
                     for uri in df_instances['URI']
                 ]
                 st.dataframe(df_instances, width='stretch', column_config={
