@@ -38,7 +38,7 @@ def menu() -> None:
         st.sidebar.divider()
 
         st.sidebar.markdown("#### Entity")
-        st.sidebar.page_link("pages/entity-card.py", label="Entity")
+        st.sidebar.page_link("pages/entity-card.py", label="Entity card")
         entity_actions = st.sidebar.container()
         model_ready = bool(data_bundle and data_bundle.has_model_definitions())
         disabled_help = "Import a SHACL model to enable this action." if data_bundle and not model_ready else None
@@ -81,6 +81,8 @@ def menu() -> None:
         st.sidebar.markdown("#### Configuration & support")
         st.sidebar.page_link("pages/configuration.py", label="Configuration")
         st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")
+
+        st.sidebar.divider()
 
         endpoint_groups = state.get_endpoint_groups()
         endpoint_key = state.get_endpoint_key()
