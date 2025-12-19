@@ -40,25 +40,35 @@ try:
         state.entity_chart_inc_list_init(entity)
         state.entity_chart_out_list_init(entity)
 
-        # Header: entity name, additional info and description
-        col_title, col_actions = st.columns([20, 10], vertical_alignment='bottom')
-        uri_text = f'<small style="font-size: 16px; color: gray; text-decoration: none;">{entity.uri}</small>'
-        col_title.markdown(f"# {entity.get_text()} ({entity_class.get_text()}) {uri_text}", unsafe_allow_html=True)
-        st.markdown(entity.comment or '')
-
-        # Header options
-        with col_actions.container(horizontal=True, horizontal_alignment="right"):
-            if st.button('Entity Card', help=help_text("entity_chart.entity_card")):
-                st.switch_page('pages/entity-card.py')
-            if st.button('Raw triples', help=help_text("entity_chart.raw_triples")):
-                st.switch_page('pages/entity-triples.py')
+        header = st.container(border=True)
+        with header:
+            col_info, col_actions = st.columns([7, 3], vertical_alignment='top')
+            with col_info:
+                st.markdown(f"### {entity.get_text()}")
+                if entity_class:
+                    st.caption(entity_class.get_text())
+                st.code(entity.uri, language='text')
+                if entity.comment:
+                    st.markdown(entity.comment)
+            with col_actions:
+                st.caption("Navigate")
+                nav_cols = st.columns(2)
+                with nav_cols[0]:
+                    if st.button('Entity Card', use_container_width=True, help=help_text("entity_chart.entity_card")):
+                        st.switch_page('pages/entity-card.py')
+                with nav_cols[1]:
+                    if st.button('Raw triples', use_container_width=True, help=help_text("entity_chart.raw_triples")):
+                        st.switch_page('pages/entity-triples.py')
+                st.caption("Filters")
+                st.markdown("*Use the controls below to hide properties or expand the graph.*")
 
         st.write('')
         
         # User input to avoid some chosen properties
-        all_properties = list(set([f"{p.get_text()} ({p.uri})" for p in data_bundle.model.properties]))
-        # all_properties += [Property(data_bundle.model.type_property, "Has Type"), Property(data_bundle.model.label_property, "Has Label"), Property(data_bundle.model.comment_property, "Has Comment")]
-        skip_prop_labels = st.multiselect("Skip properties", options=all_properties)
+        filter_section = st.expander("Filtering options", expanded=False)
+        with filter_section:
+            all_properties = list(set([f"{p.get_text()} ({p.uri})" for p in data_bundle.model.properties]))
+            skip_prop_labels = st.multiselect("Hide these properties in the graph", options=all_properties)
         skip_props = list(set([p for p in data_bundle.model.properties if f"{p.get_text()} ({p.uri})" in skip_prop_labels]))
 
         # Fetch all data (for selected entities)
@@ -179,14 +189,16 @@ try:
         shutil.rmtree('./lib/')
 
         # Display the read HTML
-        # Here we have to use "with" because it appears that it is the only way with streamlit to display HTML
-        with st.container():
-            # 617 as height because it makes the network look centered
+        with st.container(border=True):
+            st.subheader("Visualization")
+            st.caption("Drag nodes to explore the graph. Hover edges to view predicates.")
             st.components.v1.html(source_code, height=617)
 
 
         # Expand graph options
-        st.markdown('#### Expand graph with:')
+        st.divider()
+        st.markdown('#### Expand graph')
+        st.caption('Enable incoming/outgoing statements for any node to grow the network.')
 
         # List all triples targets
         fetched_out_uris = set([ent.uri for ent in state.entity_chart_out_get_list()])
@@ -198,36 +210,37 @@ try:
                 continue
             
             # The entity (node) title
-            col_name, col_outgoing, col_incoming = st.columns([3, 1, 1], vertical_alignment='center')
-            with col_name.container(horizontal=True, horizontal_alignment="right"):
-                    st.link_button(f"**{node['resource'].get_text(comment=True)}**", type='tertiary', url=f"/entity?db={data_bundle.key}&uri={node['resource'].uri}")
+            row_container = st.container(border=True)
+            with row_container:
+                col_name, col_outgoing, col_incoming = st.columns([3, 1, 1], vertical_alignment='center')
+                with col_name.container(horizontal=True, horizontal_alignment="left"):
+                    st.link_button(f"{node['resource'].get_text(comment=True)}", type='tertiary', url=f"/entity?db={data_bundle.key}&uri={node['resource'].uri}")
 
-            key = f"checkbox-{node['resource'].uri}"
+                key = f"checkbox-{node['resource'].uri}"
 
-            # Note if the node is already checked as expanded 
-            have_inc = node['resource'].uri in fetched_inc_uris
-            have_out = node['resource'].uri in fetched_out_uris
+                # Note if the node is already checked as expanded 
+                have_inc = node['resource'].uri in fetched_inc_uris
+                have_out = node['resource'].uri in fetched_out_uris
 
-            # Checkbox to expand graph on the OUTGOING path for this node
-            with col_outgoing.container(horizontal=True, horizontal_alignment="right"):
-                outgoings = st.checkbox("Fetch outgoing properties", key=f"{key}-outgoing", value=have_out)
-                if outgoings and not have_out: 
-                    state.entity_chart_out_list_add(node['resource'])
-                    st.rerun()
-                if not outgoings and have_out: 
-                    state.entity_chart_out_list_remove(node['resource'])
-                    st.rerun()
+                # Checkbox to expand graph on the OUTGOING path for this node
+                with col_outgoing:
+                    outgoings = st.checkbox("Outgoing", key=f"{key}-outgoing", value=have_out)
+                    if outgoings and not have_out: 
+                        state.entity_chart_out_list_add(node['resource'])
+                        st.rerun()
+                    if not outgoings and have_out: 
+                        state.entity_chart_out_list_remove(node['resource'])
+                        st.rerun()
 
-            # Checkbox to expand graph on the INCOMING path for this node
-            with col_incoming.container(horizontal=True, horizontal_alignment="right"):
-                incomings = st.checkbox("Fetch incoming properties", key=f"{key}-incoming", value=have_inc)
-                if incomings and not have_inc: 
-                    state.entity_chart_inc_list_add(node['resource'])
-                    st.rerun()
-                if not incomings and have_inc: 
-                    state.entity_chart_inc_list_remove(node['resource'])
-                    st.rerun()
-
+                # Checkbox to expand graph on the INCOMING path for this node
+                with col_incoming:
+                    incomings = st.checkbox("Incoming", key=f"{key}-incoming", value=have_inc)
+                    if incomings and not have_inc: 
+                        state.entity_chart_inc_list_add(node['resource'])
+                        st.rerun()
+                    if not incomings and have_inc: 
+                        state.entity_chart_inc_list_remove(node['resource'])
+                        st.rerun()
             st.write('')
 
 except HTTPError as err:

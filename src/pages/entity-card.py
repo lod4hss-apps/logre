@@ -27,33 +27,43 @@ def render_entity_details(data_bundle, entity_uri: str) -> None:
     entity_class = data_bundle.model.find_class(entity.class_uri)
     model_ready = data_bundle.has_model_definitions()
 
-    # Header: entity name, additional info and description
-    col_title, col_actions = st.columns([20, 10], vertical_alignment='bottom')
-    uri_text = f'<small style="font-size: 16px; color: gray; text-decoration: none;">{entity.uri}</small>'
-    col_title.markdown(f"# {entity.get_text()} ({entity_class.get_text()}) {uri_text}", unsafe_allow_html=True)
-    st.markdown(entity.comment or '')
+    header = st.container(border=True)
+    with header:
+        col_title, col_actions = st.columns([7, 3], vertical_alignment='top')
 
-    # Header options
-    with col_actions.container(horizontal=True, horizontal_alignment="right"):
-        # Button to switch to raw triples
-        if st.button('Raw triples', help=help_text("entity_card.raw_triples")):
-            st.switch_page('pages/entity-triples.py')
-        # Button to switch to visualization
-        if st.button('Visualize', help=help_text("entity_card.visualize")):
-            st.switch_page('pages/entity-chart.py')
-        # Button to edit the entity (open edit dialog)
-        edit_disabled = not model_ready
-        edit_help = "Import a SHACL model to edit entities." if edit_disabled else None
-        if st.button('', icon=":material/edit:", type='primary', disabled=edit_disabled, help=edit_help):
-            dialog_entity_edition(entity)
-        # Button to delete the entity (open confirmation dialog)
-        if st.button('', icon=":material/delete:", type='primary'):
-            def delete_entity(entity_uri: str) -> None:
-                data_bundle.delete('data', (entity_uri, '?p', '?o')) # Delete all outgoing
-                data_bundle.delete('data', ('?s', '?p', entity_uri)) # Delete all incomings
-                state.set_entity_uri(None)
-                st.rerun()
-            dialog_confirmation('You are about to delete all statements of this entity.', callback=delete_entity, entity_uri=entity.uri)
+        with col_title:
+            entity_name = entity.get_text()
+            st.markdown(f"### {entity_name}")
+            if entity_class:
+                st.caption(entity_class.get_text())
+            st.code(entity.uri, language='text')
+            if entity.comment:
+                st.markdown(entity.comment)
+
+        with col_actions:
+            st.caption("Quick actions")
+            row1 = st.columns(2)
+            with row1[0]:
+                if st.button('Raw triples', use_container_width=True, help=help_text("entity_card.raw_triples")):
+                    st.switch_page('pages/entity-triples.py')
+            with row1[1]:
+                if st.button('Visualize', use_container_width=True, help=help_text("entity_card.visualize")):
+                    st.switch_page('pages/entity-chart.py')
+
+            row2 = st.columns(2)
+            edit_disabled = not model_ready
+            edit_help = "Import a SHACL model to edit entities." if edit_disabled else None
+            with row2[0]:
+                if st.button('Edit', icon=":material/edit:", type='primary', use_container_width=True, disabled=edit_disabled, help=edit_help):
+                    dialog_entity_edition(entity)
+            with row2[1]:
+                if st.button('Delete', icon=":material/delete:", type='primary', use_container_width=True):
+                    def delete_entity(entity_uri: str) -> None:
+                        data_bundle.delete('data', (entity_uri, '?p', '?o')) # Delete all outgoing
+                        data_bundle.delete('data', ('?s', '?p', entity_uri)) # Delete all incomings
+                        state.set_entity_uri(None)
+                        st.rerun()
+                    dialog_confirmation('You are about to delete all statements of this entity.', callback=delete_entity, entity_uri=entity.uri)
 
     st.write('')
 
