@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Literal
 import streamlit as st
 from os import getenv
 from os.path import exists as path_exists
@@ -877,6 +877,25 @@ def set_entity_uri(uri: str | None) -> None:
         uri (str | None): The entity URI to store, or None to clear the selection.
     """
     state['entity_uri'] = uri
+
+
+##### ENTITY ACTIONS #####
+
+def set_pending_entity_action(action: Literal['find', 'create'] | None) -> None:
+    """
+    Store the next entity action the UI should trigger (e.g., open Find dialog).
+    """
+    if action:
+        state['pending_entity_action'] = action
+    elif 'pending_entity_action' in state:
+        del state['pending_entity_action']
+
+
+def pop_pending_entity_action() -> Literal['find', 'create'] | None:
+    """
+    Retrieve and clear the pending entity action if defined.
+    """
+    return state.pop('pending_entity_action', None)
 
 
 

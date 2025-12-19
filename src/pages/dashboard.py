@@ -3,11 +3,8 @@ import plotly.graph_objects as go
 import streamlit as st
 from requests.exceptions import HTTPError, ConnectionError
 
-from components.help import help_text
 from components.init import init
 from components.menu import menu
-from dialogs.entity_creation import dialog_entity_creation
-from dialogs.find_entity import dialog_find_entity
 from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from lib.stats import summarize_classes, summarize_properties
@@ -30,39 +27,6 @@ def show_metrics(overview: dict) -> None:
     ]
     for col, label, value in metrics:
         col.metric(label, format_short(value))
-
-
-def show_quick_actions() -> None:
-    """Display the primary actions prominently at the top."""
-    data_bundle = state.get_data_bundle()
-    model_ready = bool(data_bundle and data_bundle.has_model_definitions())
-    disabled_help = "Import a SHACL model to enable this action." if data_bundle and not model_ready else None
-    actions = st.columns(3)
-    with actions[0]:
-        st.button(
-            'Find entity',
-            icon=':material/search:',
-            type='primary',
-            use_container_width=True,
-            on_click=dialog_find_entity,
-            disabled=not model_ready,
-            help=disabled_help or help_text("dashboard.find_entity")
-        )
-    with actions[1]:
-        st.button(
-            'Create entity',
-            icon=':material/line_start_circle:',
-            type='primary',
-            use_container_width=True,
-            on_click=dialog_entity_creation,
-            disabled=not model_ready,
-            help=disabled_help or help_text("dashboard.create_entity")
-        )
-    with actions[2]:
-        if st.button('Export a table', icon=':material/download:', use_container_width=True, help=help_text("dashboard.export")):
-            st.switch_page("pages/data-table.py")
-    if data_bundle and not model_ready:
-        st.caption("Import a SHACL model from the Configuration page to enable Find/Create.")
 
 
 def show_top_classes(overview: dict) -> None:
@@ -379,7 +343,6 @@ try:
             for warning in overview["warnings"]:
                 st.info(warning, icon=":material/info:")
 
-        show_quick_actions()
         show_data_insights(overview, data_bundle)
 
     st.divider()
