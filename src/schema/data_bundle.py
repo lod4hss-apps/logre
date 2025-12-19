@@ -513,7 +513,7 @@ class DataBundle:
         skip_prop_str = ', '.join(list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))) if len(skip_props) != 0 else ''
         query = f"""
             # DataBundle.get_all_outgoing_statements()
-            SELECT 
+            SELECT DISTINCT
                 ?p ?o (isLiteral(?o) as ?is_literal) 
                 (COALESCE(?o_label_, '') as ?o_label)
                 (COALESCE(?o_class_uri_, '') as ?o_class_uri)
@@ -557,7 +557,7 @@ class DataBundle:
         skip_prop_str = ', '.join(list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))) if len(skip_props) != 0 else ''
         query = f"""
             # DataBundle.get_all_outgoing_statements()
-            SELECT 
+            SELECT DISTINCT
                 ?s ?p
                 (COALESCE(?s_label_, '') as ?s_label)
                 (COALESCE(?s_class_uri_, '') as ?s_class_uri)
