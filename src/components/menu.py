@@ -46,7 +46,7 @@ def menu() -> None:
             find_clicked = st.button(
                 'Find entity',
                 icon=':material/search:',
-                type='primary',
+                type='secondary',
                 use_container_width=True,
                 disabled=not model_ready,
                 help=disabled_help or help_text("dashboard.find_entity"),
@@ -58,7 +58,7 @@ def menu() -> None:
             create_clicked = st.button(
                 'Create entity',
                 icon=':material/line_start_circle:',
-                type='primary',
+                type='secondary',
                 use_container_width=True,
                 disabled=not model_ready,
                 help=disabled_help or help_text("dashboard.create_entity"),
