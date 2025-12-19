@@ -63,8 +63,8 @@ try:
                     render_resource(col_obj, statement.object, data_bundle.prefixes)
 
                 with col_info.container(horizontal=True, horizontal_alignment='right'):
-                    unique_suffix = state.get('display_triple_counter', 0)
-                    state['display_triple_counter'] = unique_suffix + 1
+                    unique_suffix = st.session_state.get('display_triple_counter', 0)
+                    st.session_state['display_triple_counter'] = unique_suffix + 1
                     key = f"btn-{unique_suffix}-{statement.subject.uri}-{statement.predicate.uri}-{statement.object.uri if hasattr(statement.object, 'uri') else statement.object.literal}-info"
                     kwargs = {'statement': statement, 'prefixes': data_bundle.prefixes, 'model': data_bundle.model}
                     st.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs=kwargs, key=key)
