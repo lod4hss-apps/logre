@@ -22,8 +22,6 @@ try:
     entity_uri = state.get_entity_uri()
 
     # Make verifications
-    if not data_bundle:
-        st.warning('No Data Bundle selected')
     if not entity_uri:
         st.warning('No Entity URI provided')
     else:

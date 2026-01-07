@@ -34,11 +34,12 @@ def menu() -> None:
         # Page links
         st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")
         st.sidebar.page_link("pages/configuration.py", label="Configuration")
-        st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL Editor")
-        st.sidebar.page_link("pages/import-export.py", label="Import, Export")
-        st.sidebar.page_link("pages/entity.py", label="Entity")
-        st.sidebar.page_link("pages/data-table.py", label="Data Table")
-        st.sidebar.page_link("pages/statistics.py", label="Statistics")
+        st.sidebar.page_link("pages/model.py", label="Model", disabled=not data_bundle)
+        st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL Editor", disabled=not data_bundle)
+        st.sidebar.page_link("pages/import-export.py", label="Import, Export", disabled=not data_bundle)
+        # st.sidebar.page_link("pages/entity.py", label="Entity", disabled=not data_bundle)
+        st.sidebar.page_link("pages/data-table.py", label="Data Table", disabled=not data_bundle)
+        st.sidebar.page_link("pages/statistics.py", label="Statistics", disabled=not data_bundle)
 
         st.sidebar.divider()
         
