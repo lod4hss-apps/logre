@@ -36,8 +36,8 @@ with st.expander("Prefixes"):
 
         # The prefix itself
         with st.container(horizontal=True, vertical_alignment="bottom"):
-            new_short = st.text_input('Prefix short', value=prefix.short, width=100)
-            new_long = st.text_input('Prefix long', value=prefix.long)
+            new_short = st.text_input('Prefix short', value=prefix.short, width=100, key=f"prefix-short-{i}")
+            new_long = st.text_input('Prefix long', value=prefix.long, key=f"prefix-long-{i}")
 
             # Delete button
             if st.button('', icon=':material/delete:', type='tertiary', key=f'config-prefix-{i}'):

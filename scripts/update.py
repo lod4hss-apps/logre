@@ -5,9 +5,10 @@ import yaml, os, subprocess
 
 def update_config_2_1() -> None:
     config_path = '../logre-config.yaml'
+    dev_config_path = '../logre-config-dev.yaml'
 
-    # Do not do anything if there is no config
-    if not os.path.exists(config_path):
+    # Do not do anything if there is no config or if there is an existing dev config
+    if not os.path.exists(config_path) or os.path.exists(dev_config_path):
         return
 
     # Load the old config
@@ -59,8 +60,9 @@ def update_config_2_1() -> None:
         # Set the updated config path
         branch_name = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
         if branch_name == 'dev':
-            new_config_path = '../logre-config-dev.yaml'
-        else: new_config_path = '../logre-config.yaml'
+            new_config_path = dev_config_path
+        else: 
+            new_config_path = config_path
 
         # And write it to disk
         with open(new_config_path, 'w') as file:
