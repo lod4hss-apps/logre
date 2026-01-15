@@ -44,6 +44,7 @@ update-verbose:
 
 
 # Set the right virtual environment (or create it), and install dependencies from requirements.txt
+# Also get other GitHub code
 install:
 	@echo "[LOGRE] Checking if environment $(PIPENV_NAME) exists..."
 	@if [ ! -d "$(PIPENV_NAME)" ]; then \
@@ -62,6 +63,8 @@ install:
 		git clone https://github.com/lod4hss-apps/graphly.git > /dev/null 2<&1; \
 		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . > /dev/null 2<&1; \
 	fi
+	@rm -f src/lib/shacl-maker.js
+	@curl -sL https://raw.githubusercontent.com/gaetanmuck/shacl-maker/refs/heads/main/src/index.js | sed -n '\|// To not include|q;p' > src/lib/shacl-maker.js
 
 # Same as previous, but with venv logs, and install logs
 install-verbose:

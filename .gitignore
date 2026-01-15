@@ -5,3 +5,4 @@ pipenv_logre
 graphly
 /*.yaml
 *.nq
+src/lib/shacl-maker.js
