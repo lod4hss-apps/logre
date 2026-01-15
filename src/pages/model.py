@@ -37,7 +37,7 @@ with col2.container(horizontal=True, horizontal_alignment='right'):
               uploadTurtle(endpointTechnology, username, password, url, graphURI, prefixes); 
           </script>
       """, unsafe_allow_javascript=True)
-    dialog_confirmation("Your are about to clear your model Named Graph and replace it by what is currently displayed.", replace_model)
+    dialog_confirmation("Your are about to clear your model Named Graph and replace it by what is currently displayed.", replace_model, rerun=False)
 
 # Get the js code
 with open("src/lib/shacl-maker.js") as file:

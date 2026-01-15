@@ -3,7 +3,7 @@ import streamlit as st
 
 
 @st.dialog("Confirmation")
-def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
+def dialog_confirmation(text: str, callback: Callable, rerun: bool = True, **kwargs) -> None:
     """
     Displays a confirmation dialog with "Yes" and "No" options, executing a callback if confirmed.
 
@@ -43,7 +43,7 @@ def dialog_confirmation(text: str, callback: Callable, **kwargs) -> None:
                 result = callback(**kwargs)
 
             # Only rerun when there was no errors in the callback execution
-            st.rerun()
+            if rerun: st.rerun()
 
         # Forward the error upwards
         except BaseException as error:
