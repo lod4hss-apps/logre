@@ -2,9 +2,11 @@ from typing import List
 from os.path import exists as path_exists
 from subprocess import check_output
 from yaml import safe_load, dump
-from graphly.schema import Prefixes, Prefix, Resource, Property
+from graphly.schema import Prefixes, Prefix, Resource, Property, Sparql
 from streamlit import session_state as state, query_params
 from schema.data_bundle import DataBundle
+from schema.sparql_technologies import get_sparql
+
 
 
 
@@ -166,6 +168,14 @@ def load_config() -> None:
                     dbs = []
                 set_data_bundles(dbs)
 
+                # Extract SPARQL endpoints
+                loaded_endpoints = []
+                if 'endpoints' in obj.keys():
+                    for sparql in obj['endpoints']:
+                        endpoint = get_sparql(sparql)
+                        loaded_endpoints.append(endpoint)
+                set_endpoints(loaded_endpoints)
+
                 # Extract default Data Bundle
                 if "default_data_bundle" in obj.keys() and obj['default_data_bundle']:
                     default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == obj['default_data_bundle'])
@@ -273,6 +283,7 @@ def save_config() -> None:
     # Gather config
     config = {
         'prefixes': [p.to_dict() for p in get_prefixes() if p.short != 'base'],
+        'endpoints': [e.to_dict() for e in get_endpoints()],
         'data_bundles': [db.to_dict() for db in get_data_bundles()],
         'default_data_bundle': default_db.key if default_db else None,
         'sparql_queries': get_sparql_queries()
@@ -338,6 +349,81 @@ def update_prefix(old_prefix: Prefix | None, new_prefix: Prefix | None) -> None:
     # Write to disk
     save_config()
 
+
+##### ENDPOINTS #####
+
+def get_endpoints() -> List[Sparql]:
+    """
+    Retrieve the list of endpoints from the session state, ensuring the configuration is loaded.
+
+    Returns:
+        List[Sparql]: A list of Sparql endpoints objects stored in the session state.
+    """
+    return state['endpoints']
+
+
+def set_endpoints(endpoints):
+    """
+    Stores the provided endpoints in the application state.
+
+    Args:
+        endpoints (List[Sparql]): List of Sparql endpoints objects to be saved.
+
+    Returns:
+        None
+    """
+    state['endpoints'] = endpoints
+
+
+def get_endpoint() -> Sparql | None:
+    """
+    Retrieve the currently selected SPARQL endpoint from the session state.
+
+    If no SPARQL endpoint is selected, returns None.
+
+    Returns:
+        Sparql | None: The selected SPARQL endpoint, or None if not found.
+    """
+    # If there is none in state
+    if 'endpoint' not in state: 
+        return None
+    else:
+        return state['endpoint']
+    
+
+def set_endpoint(endpoint: Sparql) -> None:
+    """
+    Set the active endpoint in the session state.
+
+    Args:
+        endpoint (Sparql): The SPARQL endpoint to set as active.
+    """
+    state['endpoint'] = endpoint
+    
+
+def update_endpoint(old_endpoint: Sparql | None, new_endpoint: Sparql | None) -> None:
+    """
+    Add, remove, or update an endpoint in the session state and save the configuration.
+
+    Args:
+        old_db (Sparql | None): The existing endpoint to update or remove. If None, a new endpoint is added.
+        new_db (Sparql | None): The new endpoint to add or replace the old one. If None, the old endpoint is removed.
+    """
+    # Create a new Data Bundle
+    if old_endpoint is None:
+        state['endpoints'].append(new_endpoint)
+
+    # Remove a Data Bundle
+    elif new_endpoint is None:
+        state['endpoints'] = [endpoint for endpoint in state['endpoints'] if endpoint.name != old_endpoint.name]
+
+    # Update a Data Bundle
+    else:
+        db_index = next(i for i, endpoint in enumerate(state['endpoints']) if endpoint.name == old_endpoint.name)
+        state['endpoints'][db_index] = new_endpoint
+
+    # Write to disk
+    save_config()
 
 
 ##### DATA BUNDLES #####

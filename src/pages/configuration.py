@@ -1,9 +1,10 @@
 import streamlit as st
-from graphly.schema import Prefix
+from graphly.schema import Prefix, Sparql
 from components.init import init
 from components.menu import menu
 from lib import state
 from dialogs.confirmation import dialog_confirmation
+from dialogs.endpoint_form import dialog_endpoint_form
 from dialogs.data_bundle_form import dialog_data_bundle_form
 from schema.data_bundle import DataBundle
 
@@ -64,17 +65,52 @@ with st.container(horizontal=True, horizontal_alignment='right'):
     st.markdown("More on prefixes in the [Documentation FAQ](/documentation#what-are-prefixes)", width='content')
 
 
+### SPARQL endpoints ###
+
+with st.expander(f"SPARQL endpoints"):
+    # From state
+    endpoints = state.get_endpoints()
+
+    # Loop through all endpoints, and display a short version of them
+    for i, endpoint in enumerate(endpoints):
+
+        # The endpoint itself
+        with st.container(horizontal=True, vertical_alignment='center'):
+            st.markdown(f"**{endpoint.name}**")
+
+            # Edit button
+            if st.button('', icon=':material/edit:', type='tertiary', key=f'config-endpoint-edit-{i}'):
+                dialog_endpoint_form(endpoint)
+
+            # Delete button
+            if st.button('', icon=':material/delete:', type='tertiary', key=f'config-endpoint-delete-{i}'):
+                def callback_delete_sparql_endpoint(sparql: Sparql) -> None:
+                    state.update_endpoint(endpoint, None)
+                    state.set_toast('SPARQL endpoint removed', icon=':material/delete:')
+                dialog_confirmation(f"You are about to delete the SPARQL endpoint *{endpoint.name}*", callback_delete_sparql_endpoint, sparql=endpoint)
+        
+        
+    st.write('')
+
+    # Add button
+    if st.button('Add an Endpoint'):
+        dialog_endpoint_form()
+    
+with st.container(horizontal=True, horizontal_alignment='right'):
+    st.markdown("More on SPARQL endpoints in the [Documentation FAQ](/documentation#what-is-a-sparql-endpoint)", width='content')
+
 ### Data bundles ###
 
-# Loop through all data bundles and display a short version of it
 with st.expander(f"Data bundles"):
     # From state
     data_bundles = state.get_data_bundles()
+    
+    # Loop through all data bundles and display a short version of them
     for i, db in enumerate(data_bundles):
         
         # The data bundle itself
         with st.container(horizontal=True, vertical_alignment='center'):
-            st.markdown(f"**{db.name}**")
+            st.markdown(f"**{db.name}** - *{db.endpoint.name}*")
 
             # Handle default options (set to default + label)
             if state.get_default_data_bundle() == db: 

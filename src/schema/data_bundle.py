@@ -29,6 +29,7 @@ class DataBundle:
                  name: str, 
                  base_uri: str,
                  prefixes: Prefixes, 
+                 endpoint_name: str,
                  endpoint_technology: str, 
                  endpoint_url: str, 
                  username: str, 
@@ -68,7 +69,7 @@ class DataBundle:
         
         # Get the right SPARQL technology class
         SparqlClass = get_sparql_technology(endpoint_technology)
-        self.endpoint = SparqlClass(endpoint_url, username, password)
+        self.endpoint = SparqlClass(endpoint_url, username, password, endpoint_name)
 
         # Get the right model framework class
         ModelClass = get_model_framework(model_framework)
@@ -1138,6 +1139,7 @@ class DataBundle:
             prefixes = prefixes,
             name = obj.get('name'),
             base_uri = obj.get('base_uri'),
+            endpoint_name = obj.get('endpoint_name'),
             endpoint_url = obj.get('endpoint_url'),
             username = obj.get('username'),
             password = obj.get('password'),
@@ -1164,6 +1166,7 @@ class DataBundle:
         """
         return {
             'name': self.name,
+            'endpoint_name': self.endpoint.name,
             'endpoint_url': self.endpoint.url,
             'base_uri': self.base_uri,
             'username': self.endpoint.username,

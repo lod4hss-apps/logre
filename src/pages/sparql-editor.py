@@ -19,11 +19,12 @@ try:
     # From state
     sparql_queries = state.get_sparql_queries()
     sparql_query_name = state.get_sparql_query()
-    data_bundle = state.get_data_bundle()
+    endpoint = state.get_endpoint()
+    prefixes = state.get_prefixes()
     
     # Title
     st.markdown('# SPARQL Editor')
-    st.markdown('[More about the edior in the Documentation FAQ](/documentation#what-type-of-queries-can-i-write-in-the-sparql-editor)')
+    st.markdown('[More about the editor in the Documentation FAQ](/documentation#what-type-of-queries-can-i-write-in-the-sparql-editor)')
     
     st.markdown('')
 
@@ -46,7 +47,7 @@ try:
     sparql_query_content = sparql_queries[sparql_queries_names.index(sparql_query_name)][1] if sparql_query_name else ''
 
     # Display prefixes for user to know
-    prefixes_str = '`, `'.join([p.short for p in data_bundle.prefixes])
+    prefixes_str = '`, `'.join([p.short for p in prefixes])
     st.markdown('Available prefixes are: `' + prefixes_str + '`')
 
     # Code editor
@@ -63,7 +64,7 @@ try:
     if editor['type'] == 'submit' and editor['id'] != state.get_last_executed_sparql_id():
 
         # Run the query
-        result = data_bundle.endpoint.run(editor['text'], data_bundle.prefixes)
+        result = endpoint.run(editor['text'], prefixes)
         state.set_last_executed_sparql_id(editor['id'])
 
         # If there is a result

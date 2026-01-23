@@ -17,6 +17,25 @@ class SPARQLTechnology(str, Enum):
     GRAPHDB = "GraphDB"
 
 
+def get_sparql(sparql_dict: dict[str, str]) -> Allegrograph | Fuseki | GraphDB | None:
+    """
+    Returns the right Sparql instance given a rightfull dictionnary
+    
+    Args:
+        sparql_dict (dict[str, str]): the dictionnary version of a Sparql endpoint
+
+    Returns:
+        Sparql: Instance of the right Sparql endpoint
+    """
+
+    if sparql_dict['technology'] == SPARQLTechnology.ALLEGROGRAPH:
+        return Allegrograph(sparql_dict['url'], sparql_dict['username'], sparql_dict['password'], sparql_dict['name'])
+    if sparql_dict['technology'] == SPARQLTechnology.FUSEKI:
+        return Fuseki(sparql_dict['url'], sparql_dict['username'], sparql_dict['password'], sparql_dict['name'])
+    if sparql_dict['technology'] == SPARQLTechnology.GRAPHDB:
+        return GraphDB(sparql_dict['url'], sparql_dict['username'], sparql_dict['password'], sparql_dict['name'])
+
+
 def get_sparql_technology(sparql_technology_name: str) -> Sparql:
     """
     Returns the corresponding SPARQL technology class based on the given technology name.
