@@ -19,10 +19,6 @@ DEFAULTS_DATA_BUNDLES = './defaults/data-bundles.yaml'
 DEFAULTS_DATA_BUNDLE_DEFAULT = './defaults/default-data-bundle.yaml'
 DEFAULTS_SPARQL_QUERIES = './defaults/sparql-queries.yaml'
 
-# Change config path if Logre runs from DEV branch
-branch_name = check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True).strip()
-if branch_name == 'dev':
-    CONFIG_FILE_PATH = './logre-config-dev.yaml'
 
 ##### VERSION #####
 # Version is only on read mode, no setter needed
@@ -154,6 +150,14 @@ def load_config() -> None:
                 # Use YAML to parse the file content
                 obj: dict = safe_load(file.read())
 
+                # Extract SPARQL endpoints
+                loaded_endpoints = []
+                if 'endpoints' in obj.keys():
+                    for sparql in obj['endpoints']:
+                        endpoint = get_sparql(sparql)
+                        loaded_endpoints.append(endpoint)
+                set_endpoints(loaded_endpoints)
+
                 # Extract prefixes
                 if 'prefixes' in obj.keys():
                     loaded_prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in obj['prefixes']])
@@ -163,18 +167,10 @@ def load_config() -> None:
 
                 # Extract Data Bundles
                 if 'data_bundles' in obj.keys():
-                    dbs = [DataBundle.from_dict(db, state['prefixes']) for db in obj['data_bundles']]
+                    dbs = [DataBundle.from_dict(db, state['prefixes'], state['endpoints']) for db in obj['data_bundles']]
                 else:
                     dbs = []
                 set_data_bundles(dbs)
-
-                # Extract SPARQL endpoints
-                loaded_endpoints = []
-                if 'endpoints' in obj.keys():
-                    for sparql in obj['endpoints']:
-                        endpoint = get_sparql(sparql)
-                        loaded_endpoints.append(endpoint)
-                set_endpoints(loaded_endpoints)
 
                 # Extract default Data Bundle
                 if "default_data_bundle" in obj.keys() and obj['default_data_bundle']:
@@ -187,6 +183,9 @@ def load_config() -> None:
                 else:
                     queries = []
                 set_sparql_queries(queries)
+
+                # Load the config version
+                state['config_version'] = obj['version']
 
                 # Flag to know that state has loaded the configuration file
                 state['has_config'] = True
@@ -238,7 +237,7 @@ def load_config() -> None:
             default_db_raw = safe_load(file.read())
 
             # Parse
-            default_db = [DataBundle.from_dict(obj, get_prefixes()) for obj in default_db_raw]
+            default_db = [DataBundle.from_dict(obj, state['prefixes'], state['endpoints']) for obj in default_db_raw]
 
             # Check if all from default are in state
             loaded_dbs = get_data_bundles()
@@ -251,7 +250,7 @@ def load_config() -> None:
 
 
         # Add the default Data Bundle from the default, if not set in the configuration
-        with open(DEFAULTS_DATA_BUNDLES, 'r', encoding='utf-8') as file:
+        with open(DEFAULTS_DATA_BUNDLE_DEFAULT, 'r', encoding='utf-8') as file:
 
             # Use YAML to parse the file content
             default_db_default = safe_load(file.read())
@@ -278,19 +277,20 @@ def save_config() -> None:
     """
     Save the current session state configuration to the config file.
     """
-    default_db =  get_default_data_bundle()
+    default_db = get_default_data_bundle()
 
     # Gather config
     config = {
-        'prefixes': [p.to_dict() for p in get_prefixes() if p.short != 'base'],
         'endpoints': [e.to_dict() for e in get_endpoints()],
+        'prefixes': [p.to_dict() for p in get_prefixes() if p.short != 'base'],
         'data_bundles': [db.to_dict() for db in get_data_bundles()],
         'default_data_bundle': default_db.key if default_db else None,
-        'sparql_queries': get_sparql_queries()
+        'sparql_queries': get_sparql_queries(),
+        'version': state['config_version'] if 'config_version' in state else None
     }
 
     # To YAML string
-    content = dump(config)
+    content = dump(config, sort_keys=False)
 
     # Write the config to disk
     with open(CONFIG_FILE_PATH, 'w') as file:
@@ -466,7 +466,14 @@ def get_data_bundle() -> DataBundle | None:
         # Return the default one, only if it exists
         db = get_default_data_bundle()
         if db:
+            # Data Bundle needs a fresh model each time it is needed
             db.load_model()
+
+            # Also, if the default data bundle is accessed, it is possible that no endpoint is selected 
+            # (most probably), so set it if it is the case
+            if not get_endpoint():
+                set_endpoint(db.endpoint)
+
             return db
     else:
         return state['data_bundle']

@@ -6,6 +6,7 @@ from lib import state
 from dialogs.confirmation import dialog_confirmation
 from dialogs.endpoint_form import dialog_endpoint_form
 from dialogs.data_bundle_form import dialog_data_bundle_form
+from dialogs.error_message import dialog_error_message
 from schema.data_bundle import DataBundle
 
 # Page parameters
@@ -21,11 +22,14 @@ st.markdown('# Configuration')
 st.markdown('')
 
 
+# From state
+prefixes = state.get_prefixes()
+endpoints = state.get_endpoints()
+data_bundles = state.get_data_bundles()
+
 ### Prefixes ###
 
 with st.expander("Prefixes"):
-    # From state
-    prefixes = state.get_prefixes()
 
     # Flag to allow creation of a new prefix or not (every prefixes needs to be correcteclyt set in order to create another one)
     all_prefixes_are_set = True
@@ -68,8 +72,6 @@ with st.container(horizontal=True, horizontal_alignment='right'):
 ### SPARQL endpoints ###
 
 with st.expander(f"SPARQL endpoints"):
-    # From state
-    endpoints = state.get_endpoints()
 
     # Loop through all endpoints, and display a short version of them
     for i, endpoint in enumerate(endpoints):
@@ -84,10 +86,15 @@ with st.expander(f"SPARQL endpoints"):
 
             # Delete button
             if st.button('', icon=':material/delete:', type='tertiary', key=f'config-endpoint-delete-{i}'):
-                def callback_delete_sparql_endpoint(sparql: Sparql) -> None:
-                    state.update_endpoint(endpoint, None)
-                    state.set_toast('SPARQL endpoint removed', icon=':material/delete:')
-                dialog_confirmation(f"You are about to delete the SPARQL endpoint *{endpoint.name}*", callback_delete_sparql_endpoint, sparql=endpoint)
+
+                used_endpoint = list(map(lambda db: db.endpoint, data_bundles))
+                if endpoint in used_endpoint:
+                    dialog_error_message('You can not delete this SPARQL endpoint configuration: at least one data bundle relies on it.')
+                else:
+                    def callback_delete_sparql_endpoint(sparql: Sparql) -> None:
+                        state.update_endpoint(sparql, None)
+                        state.set_toast('SPARQL endpoint removed', icon=':material/delete:')
+                    dialog_confirmation(f"You are about to delete the SPARQL endpoint *{endpoint.name}*", callback_delete_sparql_endpoint, sparql=endpoint)
         
         
     st.write('')
@@ -102,8 +109,6 @@ with st.container(horizontal=True, horizontal_alignment='right'):
 ### Data bundles ###
 
 with st.expander(f"Data bundles"):
-    # From state
-    data_bundles = state.get_data_bundles()
     
     # Loop through all data bundles and display a short version of them
     for i, db in enumerate(data_bundles):

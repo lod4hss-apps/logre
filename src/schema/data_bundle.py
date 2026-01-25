@@ -1,5 +1,6 @@
-from typing import List, Tuple, Dict, Literal
+from typing import List, Tuple, Dict
 import pandas as pd
+from requests.exceptions import HTTPError
 from graphly.schema import Sparql, Graph, Model, Resource, Prefixes, Property, Statement, Sparql, Prefix
 from graphly.tools import prepare
 from lib.utils import normalize_text, to_snake_case, from_snake_case
@@ -17,23 +18,17 @@ class DataBundle:
     # High level attributes
     prefixes: Prefixes
     endpoint: Sparql
-    model: Model
 
     # Graphs
-    graph_data: Graph
-    graph_model: Graph
-    graph_metadata: Graph
-
+    model: Model
+    data: Graph
+    metadata: Graph
 
     def __init__(self, 
                  name: str, 
                  base_uri: str,
                  prefixes: Prefixes, 
-                 endpoint_name: str,
-                 endpoint_technology: str, 
-                 endpoint_url: str, 
-                 username: str, 
-                 password: str, 
+                 endpoint: Sparql,
                  model_framework: str, 
                  prop_type_uri: str, 
                  prop_label_uri: str, 
@@ -49,15 +44,12 @@ class DataBundle:
             name (str): The name of the data bundle.
             base_uri (str): The base URI for the data bundle.
             prefixes (Prefixes): The set of prefixes to use, extended with the base prefix.
-            endpoint_technology (str): The technology used for the SPARQL endpoint.
-            endpoint_url (str): The URL of the SPARQL endpoint.
-            username (str): The username for authenticating with the endpoint.
-            password (str): The password for authenticating with the endpoint.
+            endpoint (Sparql): The endpoint to run query against.
             model_framework (str): The framework used to represent the model.
             prop_type_uri (str): The URI for the property type.
             prop_label_uri (str): The URI for the property label.
             prop_comment_uri (str): The URI for the property comment.
-            graph_data_uri (str): The URI of the data graph.
+            data_uri (str): The URI of the data graph.
             graph_model_uri (str): The URI of the model graph.
             graph_metadata_uri (str): The URI of the metadata graph.
         """
@@ -66,19 +58,17 @@ class DataBundle:
         self.key = to_snake_case(self.name.replace(' - ', '-')) # To have a URL compatible name
         self.base_uri = base_uri
         self.prefixes = Prefixes(prefixes.prefix_list + [Prefix('base', base_uri)])
-        
-        # Get the right SPARQL technology class
-        SparqlClass = get_sparql_technology(endpoint_technology)
-        self.endpoint = SparqlClass(endpoint_url, username, password, endpoint_name)
+        self.endpoint = endpoint
 
         # Get the right model framework class
         ModelClass = get_model_framework(model_framework)
-        self.model = ModelClass(self.prefixes.shorten(prop_type_uri), self.prefixes.shorten(prop_label_uri), self.prefixes.shorten(prop_comment_uri))
+        self.model = ModelClass(self.endpoint, graph_model_uri, self.prefixes, self.prefixes.shorten(prop_type_uri), self.prefixes.shorten(prop_label_uri), self.prefixes.shorten(prop_comment_uri))
 
-        # Set all the needed graphs
-        self.graph_data = Graph(self.endpoint, graph_data_uri, self.prefixes)
-        self.graph_model = Graph(self.endpoint, graph_model_uri, self.prefixes)
-        self.graph_metadata = Graph(self.endpoint, graph_metadata_uri, self.prefixes)
+        # Data graph
+        self.data = Graph(self.endpoint, graph_data_uri, self.prefixes)
+        
+        # Metadata graph
+        self.metadata = Graph(self.endpoint, graph_metadata_uri, self.prefixes)
 
 
     def load_model(self) -> None:
@@ -87,33 +77,19 @@ class DataBundle:
 
         Updates the current model with information from `graph_model` using the defined prefixes.
         """
-        self.model.update(self.graph_model, self.prefixes) # Fetch the Model
+        # Fetch the Model
+        try:
+            self.model.update() 
+        except HTTPError as err:
+            status_code = err.response.status_code
+            reason = err.response.reason
+            message = f"There was an error while loading the data bundle {self.name}'s model.\n\n"
+            message += f"[HTTP Error {status_code}]: {reason}\n\n{err.args[0]}"
+            if err.response.status_code == 400:
+                message += f'\n\n{err.response.text}'
+            raise Exception(message)
 
-
-    def delete(self, graph: Literal['data', 'model', 'metadata'], triples: List[Tuple[str, str, str]]) -> None:
-        """
-        Delete triples from the specified graph in the data bundle.
-
-        Args:
-            graph (Literal['data', 'model', 'metadata']): The graph from which to delete triples.
-            triples (List[Tuple[str, str, str]]): The list of triples to delete, each represented as (subject, predicate, object).
-        """
-        if graph == 'data': self.graph_data.delete(triples, self.prefixes)
-        if graph == 'model': self.graph_model.delete(triples, self.prefixes)
-        if graph == 'metadata': self.graph_metadata.delete(triples, self.prefixes)
-
-
-    def insert(self, graph: Literal['data', 'model', 'metadata'], triples: List[Tuple[str, str, str]]) -> None:
-        """
-        Insert triples into the specified graph in the data bundle.
-
-        Args:
-            graph (Literal['data', 'model', 'metadata']): The graph into which to insert triples.
-            triples (List[Tuple[str, str, str]]): The list of triples to insert, each represented as (subject, predicate, object).
-        """
-        if graph == 'data': self.graph_data.insert(triples, self.prefixes)
-        if graph == 'model': self.graph_model.insert(triples, self.prefixes)
-        if graph == 'metadata': self.graph_metadata.insert(triples, self.prefixes)
+              
     
 
     def run(self, text: str) -> List[Dict] | None:
@@ -159,11 +135,11 @@ class DataBundle:
                 (COALESCE(?comment_, '') as ?comment)
                 (COALESCE(?class_uri_, '{class_uri if class_uri else ""}') as ?class_uri)
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?uri_ {self.model.type_property} {prepared_class_uri if prepared_class_uri else "?class_uri_"} .
                     OPTIONAL {{ ?uri_ {self.model.label_property} ?label_ . }}
                     OPTIONAL {{ ?uri_ {self.model.comment_property} ?comment_ . }}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
                 {filter_clause}
             }}
             {f"LIMIT {limit}" if limit else ""}
@@ -171,7 +147,7 @@ class DataBundle:
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         # If there is no result, there is no point to go forward
         if not response: 
@@ -204,15 +180,15 @@ class DataBundle:
                 ?uri 
                 (COALESCE(?range_class_uri_, '') as ?range_class_uri)
             WHERE {{ 
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     {entity_uri} ?uri ?o . 
                     OPTIONAL {{ ?o {self.model.type_property} ?range_class_uri_ . }}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         # Find properties in model (for additional informations, labels, etc)
         domain_class_uri = entity.class_uri if entity.class_uri else None
@@ -245,15 +221,15 @@ class DataBundle:
                 ?uri 
                 (COALESCE(?domain_class_uri_, '') as ?domain_class_uri)
             WHERE {{ 
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?s ?uri {entity_uri} . 
                     OPTIONAL {{ ?s {self.model.type_property} ?domain_class_uri_ . }}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         # Find properties in model (for additional informations, labels, etc)
         range_class_uri = entity.class_uri if entity.class_uri else None
@@ -314,20 +290,20 @@ class DataBundle:
                 (COALESCE(?object_class_uri_, IF(isLiteral(?object_uri), DATATYPE(?object_uri), '')) as ?object_class_uri)
                 (IF(isIRI(?object_uri), 'iri', IF(isBlank(?object_uri), 'blank', IF(isLiteral(?object_uri), 'literal', ''))) as ?resource_type)
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     {entity_uri} {property_uri} ?object_uri .
                     {f"?object_uri {self.model.type_property} {object_class_uri} ." if object_class_uri and not is_range_datatype else ""}
                     OPTIONAL {{ ?object_uri {self.model.label_property} ?object_label_ . }}
                     OPTIONAL {{ ?object_uri {self.model.comment_property} ?object_comment_ . }}
                     OPTIONAL {{ ?object_uri {self.model.type_property} ?object_class_uri_ . }}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
             {f"LIMIT {limit}" if limit else ""}
             {f"OFFSET {offset}" if offset else ""}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         # Make it unique based on object URI (can have duplicates because of multiple lables, comments, ...)
         response = list({d["object_uri"]: d for d in reversed(response)}.values())
@@ -363,14 +339,14 @@ class DataBundle:
             SELECT
                 (COUNT(*) as ?count)
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     {entity_uri} {property_uri} ?object_uri .
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         return response[0]['count']
 
@@ -405,20 +381,20 @@ class DataBundle:
                 (COALESCE(?subject_class_uri_, IF(isLiteral(?subject_uri), DATATYPE(?subject_uri), '')) as ?subject_class_uri)
                 (IF(isIRI(?subject_uri), 'iri', IF(isBlank(?subject_uri), 'blank', IF(isLiteral(?subject_uri), 'literal', ''))) as ?resource_type)
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?subject_uri {property_uri} {entity_uri} .
                     {f"?subject_uri {self.model.type_property} {subject_class_uri} ." if subject_class_uri else ""}
                     OPTIONAL {{ ?subject_uri {self.model.label_property} ?subject_label_ . }}
                     OPTIONAL {{ ?subject_uri {self.model.comment_property} ?subject_comment_ . }}
                     OPTIONAL {{ ?subject_uri {self.model.type_property} ?subject_class_uri_ . }}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
             {f"LIMIT {limit}" if limit else ""}
             {f"OFFSET {offset}" if offset else ""}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         # Make it unique based on subject URI (can have duplicates because of multiple lables, comments, ...)
         response = list({d["subject_uri"]: d for d in reversed(response)}.values())
@@ -455,14 +431,14 @@ class DataBundle:
             SELECT
                 (COUNT(*) as ?count)
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?subject_uri {property_uri} {entity_uri} .
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         return response[0]['count']
     
@@ -492,17 +468,17 @@ class DataBundle:
                 (COALESCE(?o_label_, '') as ?o_label)
                 (COALESCE(?o_class_uri_, '') as ?o_class_uri)
             WHERE {{ 
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     {entity_uri} ?p ?o  .
                     OPTIONAL {{ ?o {self.model.type_property} ?o_class_uri_ . }}
                     OPTIONAL {{ ?o {self.model.label_property} ?o_label_ . }}
                     {f"FILTER(?p NOT IN ({skip_prop_str}))" if len(skip_props) else ""}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         # Parse into Statmeents
         to_return = [Statement(entity, self.model.find_properties(r['p'])[0], Resource(r['o'], r['o_label'], class_uri=r['o_class_uri'], resource_type='literal' if r['is_literal'] == 'true' else 'iri')) for r in response]
@@ -536,19 +512,19 @@ class DataBundle:
                 (COALESCE(?s_label_, '') as ?s_label)
                 (COALESCE(?s_class_uri_, '') as ?s_class_uri)
             WHERE {{ 
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?s ?p {entity_uri} .
                     OPTIONAL {{ ?s {self.model.type_property} ?s_class_uri_ . }}
                     OPTIONAL {{ ?s {self.model.label_property} ?s_label_ . }}
                     {f"FILTER(?p NOT IN ({skip_prop_str}))" if len(skip_props) else ""}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
             LIMIT {limit}
             OFFSET {offset}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         # Parse into Statmeents
         to_return = [Statement(Resource(r['s'], r['s_label'], class_uri=r['s_class_uri']), self.model.find_properties(r['p'])[0], entity) for r in response]
@@ -575,15 +551,15 @@ class DataBundle:
             # DataBundle.get_all_outgoing_statements()
             SELECT (COUNT(*) as ?count)
             WHERE {{ 
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?s ?p {entity_uri} .
                     FILTER(?p NOT IN ({self.model.type_property}, {self.model.label_property}, {self.model.comment_property}))
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute query
-        response = self.graph_data.run(query, self.prefixes)
+        response = self.data.run(query)
 
         return response[0]['count']
         
@@ -803,7 +779,7 @@ class DataBundle:
                 (COALESCE(?uri_, '') as ?uri)
                 {select_properties}
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     {{
                         SELECT ?uri_ 
                         WHERE {{ 
@@ -817,37 +793,37 @@ class DataBundle:
                         {limit}
                     }}
                     {where_properties}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
             GROUP BY ?uri_
         """
 
         # Execute the query (fetch instances with labels etc)
-        instances = self.graph_data.sparql.run(query, self.prefixes)
+        instances = self.data.sparql.run(query)
 
         # For each class instance, count outgoings triples number
         uris = list(map(lambda record: prepare(record['uri'], self.prefixes.shorts()), instances))
-        outgoings = self.graph_data.sparql.run(f"""
+        outgoings = self.data.sparql.run(f"""
             # DataBundle.get_data_table() request 2: outgoing count
             SELECT ?uri (COALESCE(COUNT(?outgoing), '0') as ?outgoing_count) 
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     VALUES ?uri {{ {' '.join(uris)} }}
                     ?uri ?p ?outgoing .
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }} GROUP BY ?uri
         """, self.prefixes)
         outgoings = pd.DataFrame(outgoings)
 
         # For each class instance, count incoming triples number
-        incomings = self.graph_data.sparql.run(f"""
+        incomings = self.data.sparql.run(f"""
             # DataBundle.get_data_table() request 3: incoming count
             SELECT ?uri (COALESCE(COUNT(?incoming), '0') as ?incoming_count) 
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     VALUES ?uri {{ {' '.join(uris)} }}
                     ?incoming ?p ?uri .
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }} GROUP BY ?uri
         """, self.prefixes)
         incomings = pd.DataFrame(incomings)
@@ -913,15 +889,15 @@ class DataBundle:
             # DataBundle.get_class_count()
             SELECT (COUNT(?uri) AS ?count)
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?uri {self.model.type_property} {class_uri} .
                     {filter_}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute the query (count instances)
-        counts = self.graph_data.sparql.run(query)
+        counts = self.data.sparql.run(query)
         
         return int(counts[0]['count'])
 
@@ -950,16 +926,16 @@ class DataBundle:
                 (COALESCE(?comment_, '') as ?comment)
                 (COALESCE(?class_uri_, '') as ?class_uri)
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     OPTIONAL {{ {entity_uri} {self.model.label_property} ?label_ . }}
                     OPTIONAL {{ {entity_uri} {self.model.comment_property} ?comment_ . }}
                     OPTIONAL {{ {entity_uri} {self.model.type_property} ?class_uri_ . }}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute the query
-        infos = self.graph_data.run(query, self.prefixes)[0]
+        infos = self.data.run(query)[0]
 
         # Build the resource
         resource = Resource(uri, infos['label'], infos['comment'], infos['class_uri'])
@@ -982,7 +958,7 @@ class DataBundle:
         # Therefore, everything can be return as a single string.
         content = ""
         content += self.graph_model.dump_nquad(self.prefixes) # Add the data bundle model
-        content += self.graph_data.dump_nquad(self.prefixes) # Add the data bundle data
+        content += self.data.dump_nquad(self.prefixes) # Add the data bundle data
         content += self.graph_metadata.dump_nquad(self.prefixes) # Add the data bundle metadata
         return content
 
@@ -1003,7 +979,7 @@ class DataBundle:
         # Therefore, there is the need to split information in 3 differents extractions (data, model, metadata)
         # Hence the returned thing is a dictionary of strings (data, model, metadata)
         return {
-            "data": self.graph_data.dump_turtle(self.prefixes), # Data bundle data
+            "data": self.data.dump_turtle(self.prefixes), # Data bundle data
             "model": self.graph_model.dump_turtle(self.prefixes), # Data bundle model
             "metadata": self.graph_metadata.dump_turtle(self.prefixes), # Data bundle metadata
         }
@@ -1091,15 +1067,15 @@ class DataBundle:
                 ('{class_uri}' as ?type)
                 {properties_outgoing_names_str}
             WHERE {{
-                {self.graph_data.sparql_begin}
+                {self.data.sparql_begin}
                     ?uri {self.model.type_property} {class_uri} .
                     {triples_outgoings_str}
-                {self.graph_data.sparql_end}
+                {self.data.sparql_end}
             }}
         """
 
         # Execute the query
-        instances = self.graph_data.sparql.run(query, self.prefixes)
+        instances = self.data.sparql.run(query)
 
         return pd.DataFrame(data=instances)
 
@@ -1121,7 +1097,7 @@ class DataBundle:
 
 
     @staticmethod
-    def from_dict(obj: dict, prefixes: Prefixes) -> 'DataBundle':
+    def from_dict(obj: dict, prefixes: Prefixes, endpoints: List[Sparql]) -> 'DataBundle':
         """
         Create a DataBundle instance from a dictionary.
 
@@ -1135,20 +1111,26 @@ class DataBundle:
         Returns:
             DataBundle: An initialized DataBundle instance.
         """
+
+        # Find the right endpoint
+        endpoints_names = [e.name for e in endpoints]
+        endpoint_name = obj.get('endpoint_name')
+        endpoint_index = endpoints_names.index(endpoint_name) if endpoint_name in endpoints_names else None
+        if endpoint_index is None:
+            db_name = obj.get('name', 'Unknown')
+            raise Exception(f'Endpoint "{endpoint_name}" not found when creating Data Bundle "{db_name}"')
+        endpoint = endpoints[endpoint_index]
+
         return DataBundle(
-            prefixes = prefixes,
             name = obj.get('name'),
             base_uri = obj.get('base_uri'),
-            endpoint_name = obj.get('endpoint_name'),
-            endpoint_url = obj.get('endpoint_url'),
-            username = obj.get('username'),
-            password = obj.get('password'),
-            endpoint_technology = obj.get('endpoint_technology'),
+            prefixes = prefixes,
+            endpoint = endpoint,
             model_framework = obj.get('model_framework'),
             prop_type_uri = obj.get('prop_type_uri'),
             prop_label_uri = obj.get('prop_label_uri'),
             prop_comment_uri = obj.get('prop_comment_uri'),
-            graph_data_uri = obj.get('graph_data_uri'),
+            graph_data_uri = obj.get('data_uri'),
             graph_model_uri = obj.get('graph_model_uri'),
             graph_metadata_uri = obj.get('graph_metadata_uri'),
         )
@@ -1166,17 +1148,13 @@ class DataBundle:
         """
         return {
             'name': self.name,
-            'endpoint_name': self.endpoint.name,
-            'endpoint_url': self.endpoint.url,
             'base_uri': self.base_uri,
-            'username': self.endpoint.username,
-            'password': self.endpoint.password,
-            'endpoint_technology': self.endpoint.technology_name,
+            'endpoint_name': self.endpoint.name,
             'model_framework': self.model.framework_name,
             'prop_type_uri': self.model.type_property,
             'prop_label_uri': self.model.label_property,
             'prop_comment_uri': self.model.comment_property,
-            'graph_data_uri': self.graph_data.uri,
-            'graph_model_uri': self.graph_model.uri,
-            'graph_metadata_uri': self.graph_metadata.uri,
+            'graph_data_uri': self.data.uri,
+            'graph_model_uri': self.model.uri,
+            'graph_metadata_uri': self.metadata.uri,
         }

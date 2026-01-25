@@ -39,7 +39,7 @@ def dialog_confirmation(text: str, callback: Callable, rerun: bool = True, **kwa
         # Callback should handle errors, but in case it does not, handle it here
         try:
             # Call the callback with given keywords args
-            with st.spinner('Executing...'):
+            with st.spinner('Executing... (Watch server logs to have more advancement information)'):
                 result = callback(**kwargs)
 
             # Only rerun when there was no errors in the callback execution

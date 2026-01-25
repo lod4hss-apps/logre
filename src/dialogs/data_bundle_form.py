@@ -2,7 +2,6 @@ import streamlit as st
 from requests.exceptions import HTTPError
 from graphly.schema import Prefixes, Prefix
 from lib import state
-from lib.errors import get_HTTP_ERROR_message
 from schema.data_bundle import DataBundle
 from schema.model_framework import ModelFramework
 from schema.sparql_technologies import SPARQLTechnology, get_sparql_technology
@@ -66,21 +65,26 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
     if st.button('List existing graphs on selected endpoint', disabled=not new_endpoint):
         try:
             graphs = __get_graph_list(new_endpoint.technology_name, new_endpoint.url, new_endpoint.username, new_endpoint.password, new_base_uri)
-            st.markdown(f"> *Default graph*")
-            for graph in graphs:
-                st.markdown(f"> {graph}")
         except HTTPError as err:
-            message = get_HTTP_ERROR_message(err)
-            st.error(message)
-            print(message.replace('\n\n', '\n'))
+            status_code = err.response.status_code
+            reason = err.response.reason
+            message = f"There was an error while loading the data bundle {new_name}'s graph list.\n\n"
+            message += f"[HTTP Error {status_code}]: {reason}\n\n{err.args[0]}"
+            if err.response.status_code == 400:
+                message += f'\n\n{err.response.text}'
+            raise Exception(message)
+        
+        st.markdown(f"> *Default graph*")
+        for graph in graphs:
+            st.markdown(f"> {graph}")
 
     st.write('')
 
     # Data Bundle graphs
     col_data, col_model, col_metadata = st.columns([1, 1, 1])
-    new_graph_data_uri = col_data.text_input('Data graph URI', value=db.graph_data.uri if db else 'base:data', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
-    new_graph_model_uri = col_model.text_input('Model graph URI', value=db.graph_model.uri if db else 'base:model', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
-    new_graph_metadata_uri = col_metadata.text_input('Metadata graph URI', value=db.graph_metadata.uri if db else 'base:metadata', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
+    new_graph_data_uri = col_data.text_input('Data graph URI', value=db.data.uri if db else 'base:data', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
+    new_graph_model_uri = col_model.text_input('Model graph URI', value=db.model.uri if db else 'base:model', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
+    new_graph_metadata_uri = col_metadata.text_input('Metadata graph URI', value=db.metadata.uri if db else 'base:metadata', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
 
     st.write('')
     st.write('')
@@ -119,7 +123,7 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
                 'graph_data_uri': new_graph_data_uri,
                 'graph_model_uri': new_graph_model_uri,
                 'graph_metadata_uri': new_graph_metadata_uri,
-            }, prefixes=state.get_prefixes())
+            }, prefixes=state.get_prefixes(), endpoints=endpoints)
 
             # And add it to state
             state.update_data_bundle(db, new_db)

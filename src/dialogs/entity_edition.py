@@ -224,9 +224,9 @@ def dialog_entity_edition(entity: Resource = None) -> None:
 
         if validated:
             # Remove triples that needs to
-            data_bundle.graph_data.delete(triples_to_remove, prefixes=data_bundle.prefixes)
+            data_bundle.data.delete(triples_to_remove, prefixes=data_bundle.prefixes)
             # Add new triples
-            data_bundle.graph_data.insert(triples_to_add, prefixes=data_bundle.prefixes)
+            data_bundle.data.insert(triples_to_add, prefixes=data_bundle.prefixes)
             state.set_toast('Entity edited', ':material/save:')
             # And then, open it
             state.set_entity_uri(entity.uri)

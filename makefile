@@ -18,9 +18,11 @@ help:
 	@echo "[make install]: Prepare everything so that the tool can be used"
 	@echo "[make install-verbose]: Same as [make install], but with logs"
 	@echo "[make reinstall]: Delete environment and install dependencies"
-	@echo "[make start]: Update, install and start Logre"
+	@echo "[make reinstall-verbose]: Same as [make reinstall], but with logs"
+	@echo "[make start]: Update, install and start Logre (main branch)"
 	@echo "[make start-verbose]: Same as [make start], but with logs"
 	@echo "[make start-dev]: Launch Logre from the dev branch"
+	@echo "[make start-dev-verbose]: Same as [make start-dev], but with logs"
 
 
 # Update code base from GitHub (main branch)
@@ -32,7 +34,7 @@ update:
 	@echo "[LOGRE] Running update scripts..."
 	@cd scripts; ${PYTHON} update.py
 
-#  Same as previous, but with git logs
+# Same as previous, but with logs
 update-verbose: 
 	echo "[LOGRE] Current version:" $$(cat ./VERSION)
 	echo "[LOGRE] Updating code base..."
@@ -40,7 +42,6 @@ update-verbose:
 	echo "[LOGRE] Now having version:" $$(cat ./VERSION)
 	echo "[LOGRE] Running update scripts..."
 	cd scripts; ${PYTHON} update.py
-
 
 
 # Set the right virtual environment (or create it), and install dependencies from requirements.txt
@@ -53,38 +54,20 @@ install:
 	fi
 	@echo "[LOGRE] Installing pip requirements..." && \
 	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
-	@echo "[LOGRE] Installing GitHub dependencies..."
-	@if [ -d "graphly" ]; then \
-		cd graphly; \
-		../${PIPENV_NAME}/bin/python -m pip uninstall graphly > /dev/null 2<&1; \
-		git pull > /dev/null 2<&1; \
-		../${PIPENV_NAME}/bin/python -m pip install . > /dev/null 2<&1; \
-	else \
-		git clone https://github.com/lod4hss-apps/graphly.git > /dev/null 2<&1; \
-		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . > /dev/null 2<&1; \
-	fi
 	@rm -f src/lib/shacl-maker.js
 	@curl -sL https://raw.githubusercontent.com/gaetanmuck/shacl-maker/refs/heads/main/src/index.js | sed -n '\|// To not include|q;p' > src/lib/shacl-maker.js
 
-# Same as previous, but with venv logs, and install logs
+# Same as previous, but with logs
 install-verbose:
 	echo "[LOGRE] Checking if environment $(PIPENV_NAME) exists..."
 	if [ ! -d "$(PIPENV_NAME)" ]; then \
 		echo "[LOGRE] Environment $(PIPENV_NAME) not found. Creating..."; \
 		$(PYTHON) -m venv $(PIPENV_NAME); \
 	fi
-	echo "[LOGRE] Installing requirements..." && \
+	echo "[LOGRE] Installing pip requirements..." && \
 	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE)
-	echo "[LOGRE] Installing GitHub dependencies..."
-	if [ -d "graphly" ]; then \
-		cd graphly; \
-		../${PIPENV_NAME}/bin/python -m pip uninstall graphly; \
-		git pull; \
-		../${PIPENV_NAME}/bin/python -m pip install .; \
-	else \
-		git clone https://github.com/lod4hss-apps/graphly.git \
-		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . \
-	fi
+	rm -f src/lib/shacl-maker.js
+	curl -sL https://raw.githubusercontent.com/gaetanmuck/shacl-maker/refs/heads/main/src/index.js | sed -n '\|// To not include|q;p' > src/lib/shacl-maker.js
 
 
 # Prune currect venv, and reinstall it
@@ -93,8 +76,14 @@ reinstall:
 	@rm -rf ./${PIPENV_NAME}
 	@make install
 
+# Same as previous, but with logs
+reinstall-verbose:
+	echo "[LOGRE] Removing environment ${PIPENV_NAME}..."
+	rm -rf ./${PIPENV_NAME}
+	make install-verbose
 
-# Update code base, install dependencies and launch the webserver (also open browser)
+
+# Set main branch, update code base, install dependencies and launch the webserver (also open browser)
 start: 
 	@git switch main > /dev/null 2>&1
 	@make update
@@ -102,19 +91,27 @@ start:
 	@echo "[LOGRE] Starting server..."
 	@./${PIPENV_NAME}/bin/python -m streamlit run src/server.py
 
-
-# Same as previous, but with update logs and install logs
+# Same as previous, but with logs
 start-verbose: 
 	git switch main
-	make update
-	make install
+	make update-verbose
+	make install-verbose
 	echo "[LOGRE] Starting server..."
 	./${PIPENV_NAME}/bin/python -m streamlit run src/server.py
 
-# Update code base, install dependencies and launch the webserver (also open browser)
+
+# Set dev branch, update code base, install dependencies and launch the webserver (also open browser)
 start-dev: 
 	@git switch dev > /dev/null 2>&1
 	@make update
 	@make install
 	@echo "[LOGRE] Starting server (dev branch)..."
 	@./${PIPENV_NAME}/bin/python -m streamlit run src/server.py
+
+# Same as previous, but with logs
+start-dev-verbose: 
+	git switch dev
+	make update-verbose
+	make install-verbose
+	echo "[LOGRE] Starting server (dev branch)..."
+	./${PIPENV_NAME}/bin/python -m streamlit run src/server.py

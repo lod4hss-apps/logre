@@ -181,7 +181,7 @@ def dialog_entity_creation() -> None:
             validated = all(mandatories.values())
             if validated:
                 # And create the entity
-                data_bundle.graph_data.insert(triples, prefixes=data_bundle.prefixes)
+                data_bundle.data.insert(triples, prefixes=data_bundle.prefixes)
                 state.set_toast('Entity created', ':material/save:')
                 # And then, open it
                 state.set_entity_uri(entity_uri)

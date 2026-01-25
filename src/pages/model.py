@@ -22,7 +22,7 @@ col1.text('')
   # if st.button('Save'):
   #   def replace_model() -> None:
   #     # Clear old model
-  #     data_bundle.delete('model', ('?s', '?p', '?o'))
+  #     data_bundle.model.delete(('?s', '?p', '?o'))
   #     # Upload new Turtle
   #     graph_uri = data_bundle.prefixes.lengthen(data_bundle.graph_model.uri)
   #     prefixes = json.dumps('\n'.join(list(map(lambda prefix: prefix.to_turtle(), data_bundle.prefixes))).split('<'))

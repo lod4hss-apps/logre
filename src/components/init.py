@@ -1,8 +1,6 @@
 from typing import Literal, List
 import streamlit as st
-from requests.exceptions import HTTPError
 from lib import state
-from lib.errors import get_HTTP_ERROR_message
 from dotenv import load_dotenv
 
 def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: List[str] = [], avoid_anchor_titles: bool = True) -> None:
@@ -23,32 +21,32 @@ def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: Lis
         - Injects custom CSS to hide header anchor links.
         - Displays a toast notification if one is present in the state, then clears it.
     """
+    load_dotenv()
+
+    # On each run, make sure that the configuration is loaded
     try:
-        load_dotenv()
-
-        # On each run, make sure that the configuration is loaded
         state.load_config()
-        
-        # Put the needed query params in the page URL, if available
-        state.set_query_params(query_param_keys)
-
-        # Parse the query params, for the page (like in a link, reload etc)
-        state.parse_query_params()
-
-        # Tab/page infos
-        st.set_page_config(page_title='Logre', page_icon='👹', layout=layout)
-
-        # Hide anchor link for titles
-        if avoid_anchor_titles:
-            st.html("<style>[data-testid='stHeaderActionElements'] {display: none;}</style>")
-
-        # Handle toasts: if a toast is asked, display it, and clear the state, so that it does not appear anymore
-        text, icon = state.get_toast()
-        if text: 
-            st.toast(text, icon=icon if icon else ':material/info:') # By default, icon is "info"
-            state.clear_toast()
-
-    except HTTPError as err:
-        message = get_HTTP_ERROR_message(err)
+    except Exception as err:
+        message = f"There was an error while loading the configuration file:\n\n{str(err)}"
         st.error(message)
-        print(message.replace('\n\n', '\n'))
+        st.stop()
+
+    
+    # Put the needed query params in the page URL, if available
+    state.set_query_params(query_param_keys)
+
+    # Parse the query params, for the page (like in a link, reload etc)
+    state.parse_query_params()
+
+    # Tab/page infos
+    st.set_page_config(page_title='Logre', page_icon='👹', layout=layout)
+
+    # Hide anchor link for titles
+    if avoid_anchor_titles:
+        st.html("<style>[data-testid='stHeaderActionElements'] {display: none;}</style>")
+
+    # Handle toasts: if a toast is asked, display it, and clear the state, so that it does not appear next rerun
+    text, icon = state.get_toast()
+    if text: 
+        st.toast(text, icon=icon if icon else ':material/info:') # By default, icon is "info"
+        state.clear_toast()

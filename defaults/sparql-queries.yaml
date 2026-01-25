@@ -4,4 +4,4 @@
   - "SELECT ?graph_uri (COUNT(*) AS ?triples_count)\nWHERE {\n  GRAPH ?graph_uri {\n\
     \    ?s ?p ?o\n  }\n}\nGROUP BY ?graph_uri\nORDER BY DESC(?triples_count)"
 - - Delete all data
-  - CLEAR ALL
+  - DROP ALL

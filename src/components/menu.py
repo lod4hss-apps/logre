@@ -1,7 +1,5 @@
 import streamlit as st
-from requests.exceptions import HTTPError, ConnectionError
 from lib import state
-from lib.errors import get_HTTP_ERROR_message
 from dialogs.find_entity import dialog_find_entity
 from dialogs.entity_creation import dialog_entity_creation
 
@@ -42,9 +40,8 @@ def menu() -> None:
         st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")
         st.sidebar.page_link("pages/configuration.py", label="Configuration")
         st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL Editor", disabled=not endpoint)
-        st.sidebar.page_link("pages/model.py", label="Model", disabled=not data_bundle)
         st.sidebar.page_link("pages/import-export.py", label="Import, Export", disabled=not data_bundle)
-        # st.sidebar.page_link("pages/entity.py", label="Entity", disabled=not data_bundle)
+        st.sidebar.page_link("pages/model.py", label="Model", disabled=not data_bundle)
         st.sidebar.page_link("pages/data-table.py", label="Data Table", disabled=not data_bundle)
         st.sidebar.page_link("pages/statistics.py", label="Statistics", disabled=not data_bundle)
 
@@ -55,15 +52,18 @@ def menu() -> None:
         endpoint_index = endpoints_names.index(endpoint.name) if endpoint else None
         endpoint_selected_name = st.sidebar.selectbox(label="SPARQL endpoint", options=endpoints_names, index=endpoint_index, placeholder="None selected", help="[What are SPARQL endpoints?](/documentation#what-is-a-sparql-endpoint)")
 
+        # Set the endpoint only if not yet the case
         if endpoint_selected_name and ((endpoint and endpoint_selected_name != endpoint.name) or not endpoint):
             endpoint_selected_index = endpoints_names.index(endpoint_selected_name)
             endpoint_selected = endpoints[endpoint_selected_index]
             state.set_endpoint(endpoint_selected)
             st.rerun()
 
+        # When an endpoint is selected, allow to select all related data bundles
         if endpoint:
             st.sidebar.write("")
 
+            # Filter data bundles only on those with the current endpoint
             data_bundles = list(filter(lambda db: db.endpoint.name == endpoint.name, data_bundles))
 
             # Data bundle selection
@@ -88,11 +88,6 @@ def menu() -> None:
                     if st.button('Create entity', icon=':material/line_start_circle:', type='primary', width='stretch', help="[How to create my data?](/documentation#how-to-create-new-data)"):
                         dialog_entity_creation()
 
-    except HTTPError as err:
-        message = get_HTTP_ERROR_message(err)
-        st.error(message)
-        print(message.replace('\n\n', '\n'))
-    
-    except ConnectionError as err:
-        st.error('Failed to connect to server: check your internet connection and/or server status.')
-        print('[CONNECTION ERROR]')
+    except Exception as err:
+        st.error(str(err))
+        st.stop()
