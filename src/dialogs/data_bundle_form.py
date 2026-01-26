@@ -128,6 +128,7 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
             # And add it to state
             state.update_data_bundle(db, new_db)
 
+            state.set_data_bundle(None) # To make sure new things are loaded
             st.rerun()
 
 

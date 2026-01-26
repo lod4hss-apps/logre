@@ -489,7 +489,8 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
     state['data_bundle'] = data_bundle
 
     # When a data bundle is chosen, load its model
-    data_bundle.load_model()
+    if data_bundle:
+        data_bundle.load_model()
 
 
 def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> None:

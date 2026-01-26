@@ -1130,7 +1130,7 @@ class DataBundle:
             prop_type_uri = obj.get('prop_type_uri'),
             prop_label_uri = obj.get('prop_label_uri'),
             prop_comment_uri = obj.get('prop_comment_uri'),
-            graph_data_uri = obj.get('data_uri'),
+            graph_data_uri = obj.get('graph_data_uri'),
             graph_model_uri = obj.get('graph_model_uri'),
             graph_metadata_uri = obj.get('graph_metadata_uri'),
         )

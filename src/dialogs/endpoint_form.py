@@ -61,4 +61,5 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
             # And add it to state
             state.update_endpoint(endpoint, new_endpoint)
 
+            state.set_endpoint(None)  # To make sure new things are loaded
             st.rerun()
