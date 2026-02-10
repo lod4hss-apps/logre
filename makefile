@@ -115,3 +115,26 @@ start-dev-verbose:
 	make install-verbose
 	echo "[LOGRE] Starting server (dev branch)..."
 	./${PIPENV_NAME}/bin/python -m streamlit run src/server.py
+
+build-app-macos:
+	./${PIPENV_NAME}/bin/python -m pip install PyInstaller
+	rm -rf ./dist; rm -rf ./dist
+	./${PIPENV_NAME}/bin/python -m PyInstaller \
+		--windowed \
+		--add-data=.streamlit:.streamlit \
+		--add-data=defaults:defaults \
+		--add-data=documentation:documentation \
+		--add-data=src:src \
+		--add-data=.env:.env \
+		--add-data=logre-config.yaml:. \
+		--add-data=README.md:. \
+		--add-data=VERSION:. \
+		--collect-all streamlit \
+		--collect-all graphly \
+		--collect-all dotenv \
+		--icon=icon.ico \
+		logre-launcher.py
+	rm -rf ./build logre-launcher.spec
+	cp ./icon.ico ./dist/logre-launcher.app/Contents/Resources/
+	./${PIPENV_NAME}/bin/python ./scripts/finder-icon.py
+	touch ./dist/logre-launcher

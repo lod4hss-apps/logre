@@ -8,7 +8,8 @@ init(avoid_anchor_titles=False)
 menu()
 
 
-folder_path = './documentation/faq.md'
+BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
+folder_path = BASE_DIR + '/documentation/faq.md'
 
 with open(folder_path, 'r', encoding='utf-8') as f:
     content = f.read()

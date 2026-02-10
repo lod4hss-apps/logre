@@ -1,4 +1,4 @@
-import yaml, os, subprocess
+import yaml, os
 
 
 # This scripts needs to be called when code base is updated

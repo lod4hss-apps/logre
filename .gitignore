@@ -6,3 +6,4 @@ graphly
 /*.yaml
 *.nq
 src/lib/shacl-maker.js
+dist

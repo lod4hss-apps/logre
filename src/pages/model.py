@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+from pathlib import Path
 from components.init import init
 from components.menu import menu
 from lib import state
@@ -8,6 +9,8 @@ from dialogs.confirmation import dialog_confirmation
 # Initialize
 init('wide')
 menu()
+
+BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 
 # From state
 data_bundle = state.get_data_bundle()
@@ -40,7 +43,7 @@ col1.text('')
   #   dialog_confirmation("Your are about to clear your model Named Graph and replace it by what is currently displayed.", replace_model, rerun=False)
 
 # Get the js code
-with open("src/lib/shacl-maker.js") as file:
+with open(BASE_DIR + "src/lib/shacl-maker.js") as file:
   js_code = file.read().strip()
 
 properties_string = json.dumps([property.to_dict() for property in data_bundle.model.properties], ensure_ascii=False).replace("'", '')

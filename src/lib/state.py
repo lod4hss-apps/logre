@@ -1,6 +1,6 @@
 from typing import List
 from os.path import exists as path_exists
-from subprocess import check_output
+from pathlib import Path
 from yaml import safe_load, dump
 from graphly.schema import Prefixes, Prefix, Resource, Property, Sparql
 from streamlit import session_state as state, query_params
@@ -8,16 +8,16 @@ from schema.data_bundle import DataBundle
 from schema.sparql_technologies import get_sparql
 
 
-
-
 ##### PATHS #####
 
-VERSION_FILE_PATH = './version'
-CONFIG_FILE_PATH = './logre-config.yaml'
-DEFAULTS_PREFIXES = './defaults/prefixes.yaml'
-DEFAULTS_DATA_BUNDLES = './defaults/data-bundles.yaml'
-DEFAULTS_DATA_BUNDLE_DEFAULT = './defaults/default-data-bundle.yaml'
-DEFAULTS_SPARQL_QUERIES = './defaults/sparql-queries.yaml'
+BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
+
+VERSION_FILE_PATH = BASE_DIR + '/version'
+CONFIG_FILE_PATH = BASE_DIR + '/logre-config.yaml'
+DEFAULTS_PREFIXES = BASE_DIR + '/defaults/prefixes.yaml'
+DEFAULTS_DATA_BUNDLES = BASE_DIR + '/defaults/data-bundles.yaml'
+DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR + '/defaults/default-data-bundle.yaml'
+DEFAULTS_SPARQL_QUERIES = BASE_DIR + '/defaults/sparql-queries.yaml'
 
 
 ##### VERSION #####
