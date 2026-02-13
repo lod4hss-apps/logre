@@ -799,7 +799,7 @@ class DataBundle:
         """
 
         # Execute the query (fetch instances with labels etc)
-        instances = self.data.sparql.run(query)
+        instances = self.data.sparql.run(query, self.prefixes)
 
         # For each class instance, count outgoings triples number
         uris = list(map(lambda record: prepare(record['uri'], self.prefixes.shorts()), instances))
@@ -1113,13 +1113,9 @@ class DataBundle:
         """
 
         # Find the right endpoint
-        endpoints_names = [e.name for e in endpoints]
-        endpoint_name = obj.get('endpoint_name')
-        endpoint_index = endpoints_names.index(endpoint_name) if endpoint_name in endpoints_names else None
-        if endpoint_index is None:
-            db_name = obj.get('name', 'Unknown')
-            raise Exception(f'Endpoint "{endpoint_name}" not found when creating Data Bundle "{db_name}"')
-        endpoint = endpoints[endpoint_index]
+        endpoint = next((end for end in endpoints if end.name == obj.get('endpoint_name')), None)
+        if endpoint is None:
+            raise Exception(f"Endpoint \"{obj.get('endpoint_name')}\" not found when creating Data Bundle \"{obj.get('name')}\"")
 
         return DataBundle(
             name = obj.get('name'),

@@ -43,7 +43,7 @@ col1.text('')
   #   dialog_confirmation("Your are about to clear your model Named Graph and replace it by what is currently displayed.", replace_model, rerun=False)
 
 # Get the js code
-with open(BASE_DIR + "src/lib/shacl-maker.js") as file:
+with open(BASE_DIR + "/src/lib/shacl-maker.js") as file:
   js_code = file.read().strip()
 
 properties_string = json.dumps([property.to_dict() for property in data_bundle.model.properties], ensure_ascii=False).replace("'", '')

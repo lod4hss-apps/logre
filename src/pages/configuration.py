@@ -111,6 +111,8 @@ with st.container(horizontal=True, horizontal_alignment='right'):
 with st.expander(f"Data bundles"):
     
     # Loop through all data bundles and display a short version of them
+    # Group them by their endpoint
+    data_bundles.sort(key=lambda db: db.endpoint.name)
     for i, db in enumerate(data_bundles):
         
         # The data bundle itself

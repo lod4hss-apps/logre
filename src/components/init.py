@@ -3,7 +3,7 @@ import streamlit as st
 from lib import state
 from dotenv import load_dotenv
 
-def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: List[str] = [], avoid_anchor_titles: bool = True) -> None:
+def init(layout: Literal['centered', 'wide'] = 'centered', required_query_params: List[str] = [], avoid_anchor_titles: bool = True) -> None:
     """
     Initializes the page with configuration, query parameters, and UI settings.
 
@@ -30,13 +30,9 @@ def init(layout: Literal['centered', 'wide'] = 'centered', query_param_keys: Lis
         message = f"There was an error while loading the configuration file:\n\n{str(err)}"
         st.error(message)
         st.stop()
-
     
     # Put the needed query params in the page URL, if available
-    state.set_query_params(query_param_keys)
-
-    # Parse the query params, for the page (like in a link, reload etc)
-    state.parse_query_params()
+    state.handle_query_params(required_query_params)
 
     # Tab/page infos
     st.set_page_config(page_title='Logre', page_icon='👹', layout=layout)

@@ -6,4 +6,5 @@ pyvis
 pyyaml
 python-dotenv
 plotly
+streamlit_code_editor
 git+https://github.com/lod4hss-apps/graphly.git

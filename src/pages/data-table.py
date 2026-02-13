@@ -9,7 +9,7 @@ PAGINATION_LENGTH = 5
 MAX_STRING_LENGTH = 80
 
 # Initialize
-init(layout='wide', query_param_keys=['db'])
+init(layout='wide', required_query_params=['db'])
 menu()
 
 # From state
@@ -68,7 +68,7 @@ if class_label:
             'URI': st.column_config.TextColumn(width='small'),
             'Outgoing Count': st.column_config.NumberColumn(width='small'),
             'Incoming Count': st.column_config.NumberColumn(width='small'),
-            'Link':st.column_config.LinkColumn(display_text="Open", width='small'),
+            'Link': st.column_config.LinkColumn(display_text="Open", width='small'),
         })
     else:
         st.markdown('*No records found*')

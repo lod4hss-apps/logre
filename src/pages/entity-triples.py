@@ -10,7 +10,7 @@ from dialogs.triple_info import dialog_triple_info
 INCOMING_TRIPLES_FETCHED = 5
 
 # Initialize
-init(layout='wide', query_param_keys=['db', 'uri'])
+init(layout='wide', required_query_params=['db', 'uri'])
 menu()
 
 # From state

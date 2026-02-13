@@ -58,7 +58,12 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
             SparqlClass = get_sparql_technology(new_technology)
             new_endpoint = SparqlClass(new_url, new_username, new_password, new_name)
 
-            # And add it to state
+            # Loop through all Data Bundles, and also update their endpoint
+            for db in state.get_data_bundles():
+                if db.endpoint == endpoint:
+                    db.endpoint = new_endpoint
+            
+            # And add it to state (has to be done after updating data_bundles, because of configuration saving)
             state.update_endpoint(endpoint, new_endpoint)
 
             state.set_endpoint(None)  # To make sure new things are loaded

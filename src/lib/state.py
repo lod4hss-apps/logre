@@ -80,7 +80,7 @@ def clear_toast() -> None:
 
 ##### QUERY PARAMS #####
 
-def set_query_params(query_param_keys: List[str]) -> None:
+def handle_query_params(required_keys: List[str]) -> None:
     """
     Update the query parameters based on the current session state.
 
@@ -91,37 +91,32 @@ def set_query_params(query_param_keys: List[str]) -> None:
         query_param_keys (List[str]): A list of query parameter keys to update.
                                     Supported keys are "db", "uri".
     """
-    # Data bundle: from state to query param
-    if 'db' in query_param_keys and 'db' not in query_params:
+
+    # If the 'db' query param is required
+    if 'db' in required_keys:
         db = get_data_bundle()
-        if db: query_params['db'] = db.key
 
-    # Entity URI: from state to query param
-    if 'uri' in query_param_keys and 'uri' not in query_params:
-        uri = get_entity_uri()
-        if uri: query_params['uri'] = uri
+        # If it is in state but not in the URL: add it to URL
+        if 'db' not in query_params and db:
+            query_params['db'] = db.key
 
-
-def parse_query_params() -> None:
-    """
-    Parse query parameters and update the session state accordingly.
-
-    For each recognized query parameter ("db", "uri"), the corresponding
-    value is retrieved from `query_params` and stored in the session state.
-
-    - "db": Matches the provided key with available data bundles and sets the selected bundle.
-    - "uri": Sets the current entity URI.
-    """
-    # Data bundle: from query param to state
-    if 'db' in query_params:
-        data_bundle = next((db for db in get_data_bundles() if db.key == query_params['db']), None)
-        if data_bundle:
+        # If it is in URL, but not in state: add to state
+        elif 'db' in query_params and not db:
+            data_bundle = next((db2 for db2 in get_data_bundles() if db2.key == query_params['db']), None)
             set_data_bundle(data_bundle)
 
-    # Entity URI: from query param to state
-    if 'uri' in query_params:
-        uri = query_params['uri']
-        set_entity_uri(uri)
+
+    # If the 'uri' query param is required
+    if 'uri' in required_keys:
+        uri = get_entity_uri()
+
+        # If it is in state but not in the URL: add it to URL
+        if 'uri' not in query_params and uri is not None:
+            query_params['uri'] = uri
+
+        # If it is in URL, but not in state: add to state
+        elif 'uri' in query_params and uri is None:
+            set_entity_uri(query_params['uri'])
 
 
 

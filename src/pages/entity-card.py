@@ -12,7 +12,7 @@ PAGINATION_LENGTH = 5
 MAX_STRING_LENGTH = 80
 
 # Initialize
-init(layout='wide', query_param_keys=['db', 'uri'])
+init(layout='wide', required_query_params=['db', 'uri'])
 menu()
 
 # From state
