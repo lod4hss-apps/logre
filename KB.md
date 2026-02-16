@@ -13,7 +13,7 @@ Logre is a Streamlit-based client that connects to existing SPARQL endpoints (RD
 | `src/dialogs/` | Streamlit dialog fragments used from multiple pages (entity creation, editing, triple info, confirmations, saved-query naming, etc.). |
 | `src/lib/` | Application state & utility layer. `state.py` is the central store that abstracts config files, Streamlit session state, toast notifications, pagination offsets, and cached SPARQL metadata. |
 | `src/schema/` | Domain objects describing data bundles, model frameworks, SPARQL technology adapters, and error helpers. `data_bundle.py` defines how each bundle connects to a SPARQL backend and provides higher-level queries (find entities, fetch statements, run SPARQL). |
-| `graphly/` | Vendored dependency providing RDF graph utilities, schema abstractions (`Graph`, `Model`, `Resource`, `Property`), and SPARQL helpers used throughout the app. |
+| `graphly` (dependency) | External library providing RDF graph utilities, schema abstractions (`Graph`, `Model`, `Resource`, `Property`), and SPARQL helpers used throughout the app. |
 | `docker/`, `docker-compose.yml`, `Dockerfile` | Containerized stack bundling Logre with RDF4J. The `dev` profile spins up both UI and RDF4J server with persistent volumes and optional auto-bootstrap of repositories/config. |
 | `scripts/` | Automation helpers (`bootstrap-rdf4j.sh`, `wait-for-http.sh`, `update.py`). |
 | `logre-config-default.txt`, `logre-config.yaml` (generated), `.env` | User-editable configuration defining prefixes, data bundles, SPARQL queries, and runtime overrides (custom Python binary, endpoint credentials). |

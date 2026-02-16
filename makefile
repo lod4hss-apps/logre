@@ -52,16 +52,6 @@ install:
 	fi
 	@echo "[LOGRE] Installing pip requirements..." && \
 	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE) > /dev/null 2>&1
-	@echo "[LOGRE] Installing GitHub dependencies..."
-	@if [ -d "graphly" ]; then \
-		cd graphly; \
-		../${PIPENV_NAME}/bin/python -m pip uninstall graphly > /dev/null 2<&1; \
-		git pull > /dev/null 2<&1; \
-		../${PIPENV_NAME}/bin/python -m pip install . > /dev/null 2<&1; \
-	else \
-		git clone https://github.com/lod4hss-apps/graphly.git > /dev/null 2<&1; \
-		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . > /dev/null 2<&1; \
-	fi
 
 # Same as previous, but with venv logs, and install logs
 install-verbose:
@@ -72,16 +62,6 @@ install-verbose:
 	fi
 	echo "[LOGRE] Installing requirements..." && \
 	./${PIPENV_NAME}/bin/python -m pip install -r $(REQUIREMENTS_FILE)
-	echo "[LOGRE] Installing GitHub dependencies..."
-	if [ -d "graphly" ]; then \
-		cd graphly; \
-		../${PIPENV_NAME}/bin/python -m pip uninstall graphly; \
-		git pull; \
-		../${PIPENV_NAME}/bin/python -m pip install .; \
-	else \
-		git clone https://github.com/lod4hss-apps/graphly.git \
-		cd graphly; ../${PIPENV_NAME}/bin/python -m pip install . \
-	fi
 
 
 # Prune currect venv, and reinstall it

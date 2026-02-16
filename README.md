@@ -34,6 +34,10 @@ Both services run under the `dev` Docker Compose profile and persist their state
   * Downloading the repository as a ZIP archive from GitHub.
 * \~2 GB of free disk space for images and volumes.
 
+**Graphly dependency note**
+
+Logre currently pins Graphly to `Mauvois/graphly@compat` for compatibility testing. Once the upstream PR is merged, this will be switched back to `lod4hss-apps/graphly` main.
+
 
 ---
 
@@ -109,4 +113,3 @@ The Logre container waits for RDF4J to become reachable, creates the repository 
 ## **License & documentation**
 
 Logre is released under the MIT License (see LICENSE). A built-in FAQ becomes available from within the Logre UI once the application is running.
-

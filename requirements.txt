@@ -6,4 +6,6 @@ pyvis
 pyyaml
 python-dotenv
 plotly
-git+https://github.com/lod4hss-apps/graphly.git
+# Temporary pin for compatibility testing; target is upstream graphly main after PR merge.
+# git+https://github.com/lod4hss-apps/graphly.git
+git+https://github.com/Mauvois/graphly.git@compat
