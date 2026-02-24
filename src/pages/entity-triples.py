@@ -1,9 +1,12 @@
 import streamlit as st
+from requests.exceptions import HTTPError
 from graphly.schema import Statement, Resource, Property
 from components.init import init
 from components.menu import menu
+from components.help import help_text
 from lib import state
 from lib.utils import get_max_length_text
+from lib.errors import get_HTTP_ERROR_message
 from dialogs.triple_info import dialog_triple_info
 
 # Page parameters
@@ -13,60 +16,72 @@ INCOMING_TRIPLES_FETCHED = 5
 init(layout='wide', required_query_params=['db', 'uri'])
 menu()
 
-# From state
-data_bundle = state.get_data_bundle()
-entity_uri = state.get_entity_uri()
+try:
 
-# Make verifications
-if not entity_uri:
-    st.warning('No Entity URI provided')
-else:
+    # From state
+    data_bundle = state.get_data_bundle()
+    entity_uri = state.get_entity_uri()
 
-    # If there is none, Inform the user
+    # Make verifications
+    if not data_bundle:
+        st.warning('No Data Bundle selected')
     if not entity_uri:
-        st.info("Logre needs an URI to show triples.")
-    else: 
-        
-        # Function that is used for each category (Basic, Incomings, Outgoings)
-        def display_triple(statement: Statement) -> None:
-            col_sub, col_pred, col_obj, col_info = st.columns([6, 6, 6, 1], gap="medium", vertical_alignment='bottom')
+        st.warning('No Entity URI provided')
+    else:
 
-            # Subject
-            subject_text = f"{statement.subject.uri} ({get_max_length_text(statement.subject.get_text(), 40)})"
-            subject_link = data_bundle.prefixes.lengthen(statement.subject.uri)
-            col_sub.markdown(f"[{subject_text}]({subject_link})")
+        entity = data_bundle.get_entity_basics(entity_uri)
 
-            # Predicate
-            predicate_text = f"{statement.predicate.uri} ({get_max_length_text(statement.predicate.get_text(), 40)})"
-            predicate_link = data_bundle.prefixes.lengthen(statement.predicate.uri)
-            col_pred.markdown(f"[{predicate_text}]({predicate_link})")
+        def render_resource(column, resource, prefixes, empty_placeholder='–'):
+            """Pretty-print a resource or property within a column."""
+            if getattr(resource, 'resource_type', None) == 'literal':
+                text = get_max_length_text(resource.get_text(), 80) or empty_placeholder
+                column.markdown(f"**{text}**")
+                datatype = getattr(resource, 'datatype', None)
+                if datatype:
+                    column.caption(datatype)
+                return
 
-            # Object (Class instance)
-            if statement.object.resource_type == 'iri':
-                object_text = f"{statement.object.uri} ({get_max_length_text(statement.object.get_text(), 40)})"
-                object_link = data_bundle.prefixes.lengthen(statement.object.uri)
-                col_obj.markdown(f"[{object_text}]({object_link})")
-            # Object (Literal)
+            uri = getattr(resource, 'uri', None)
+            label = get_max_length_text(resource.get_text(), 80) if hasattr(resource, 'get_text') else None
+            if uri:
+                short = prefixes.shorten(uri)
+                display = label or short or uri
+                column.markdown(f"[**{display}**]({prefixes.lengthen(uri)})")
+                column.caption(f"`{short or uri}`")
             else:
-                object_text = get_max_length_text(statement.object.get_text(), 40)
-                col_obj.markdown(f"> {object_text}")
+                column.markdown(f"**{label or empty_placeholder}**")
 
-            with col_info.container(horizontal=True, horizontal_alignment='right'):
-                key = f"btn-{statement.subject.uri}-{statement.predicate.uri}-{statement.object.uri if hasattr(statement.object, 'uri') else statement.object.literal}-info"
-                kwargs = {'statement': statement, 'prefixes': data_bundle.prefixes, 'model': data_bundle.model}
-                st.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs=kwargs, key=key)
+        def display_triple(statement: Statement) -> None:
+            """Render a triple row with subject/predicate/object visually aligned."""
+            with st.container(border=True):
+                col_sub, col_pred, col_obj, col_info = st.columns([5, 4, 5, 1], gap="small", vertical_alignment='bottom')
+                render_resource(col_sub, statement.subject, data_bundle.prefixes)
+                render_resource(col_pred, statement.predicate, data_bundle.prefixes)
+                if statement.object.resource_type == 'iri':
+                    render_resource(col_obj, statement.object, data_bundle.prefixes)
+                else:
+                    render_resource(col_obj, statement.object, data_bundle.prefixes)
+
+                with col_info.container(horizontal=True, horizontal_alignment='right'):
+                    unique_suffix = st.session_state.get('display_triple_counter', 0)
+                    st.session_state['display_triple_counter'] = unique_suffix + 1
+                    key = f"btn-{unique_suffix}-{statement.subject.uri}-{statement.predicate.uri}-{statement.object.uri if hasattr(statement.object, 'uri') else statement.object.literal}-info"
+                    kwargs = {'statement': statement, 'prefixes': data_bundle.prefixes, 'model': data_bundle.model}
+                    st.button('', icon=':material/info:', type='tertiary', on_click=dialog_triple_info, kwargs=kwargs, key=key)
 
 
         # Header: entity name, additional info and description
         col_title, col_actions = st.columns([20, 10], vertical_alignment='bottom')
-        col_title.markdown(f'# {entity_uri}')
+        entity_title = entity.get_text() or data_bundle.prefixes.shorten(entity.uri)
+        col_title.markdown(f'# {entity_title}')
+        col_title.caption(entity_uri)
 
         # Header options
         with col_actions.container(horizontal=True, horizontal_alignment="right"):
-            if st.button('Entity Card', help="[What is an entity card?](/documentation#what-is-an-entity-card)"):    
+            if st.button('Entity Card', help=help_text("entity_triples.entity_card")):
                 st.switch_page('pages/entity-card.py')
             # Button to switch to visualization
-            if st.button('Visualize', help="[What is the visualization?](/documentation#what-is-shown-on-page-visualization)"):
+            if st.button('Visualize', help=help_text("entity_triples.visualize")):
                 st.switch_page('pages/entity-chart.py')
         st.write('')
 
@@ -74,8 +89,6 @@ else:
 
         # First category: Basics
         st.markdown('### Basic information')
-        entity = data_bundle.get_entity_basics(entity_uri)
-
         # Type
         if entity.class_uri:
             prop_type = next(iter(data_bundle.model.find_properties(data_bundle.model.type_property)))
@@ -92,7 +105,7 @@ else:
         if entity.comment:
             comment = next(iter(data_bundle.model.find_properties(data_bundle.model.comment_property)))
             entity_comment = Resource(entity.comment, resource_type='literal')
-            display_triple(Statement(entity, comment, entity_label))
+            display_triple(Statement(entity, comment, entity_comment))
 
         st.divider()
 
@@ -145,3 +158,8 @@ else:
             display_triple(s)
         if len(statements) == 0:
             st.markdown('*None*')
+
+except HTTPError as err:
+    message = get_HTTP_ERROR_message(err)
+    st.error(message)
+    print(message.replace('\n\n', '\n'))

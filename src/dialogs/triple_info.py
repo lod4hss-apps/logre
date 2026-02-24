@@ -68,13 +68,19 @@ def dialog_triple_info(statement: Statement, prefixes: Prefixes, model: Model) -
     to_count = statement.predicate.max_count or 'n' if statement.predicate.max_count else 'n'
     col2.markdown(f"{from_count} to {to_count}")
     
+    def format_class(resource):
+        if not resource:
+            return "_Non défini dans le modèle_"
+        uri = resource.uri or ''
+        return f"[{uri}]({prefixes.lengthen(uri)})" if uri else resource.get_text()
+
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Domain class**")
-    col2.markdown(statement.predicate.domain.uri or '')
+    col2.markdown(format_class(statement.predicate.domain))
 
     col1, col2 = st.columns([1, 3])
     col1.markdown("**Range class**")
-    col2.markdown(statement.predicate.range.uri or '')
+    col2.markdown(format_class(statement.predicate.range))
 
     st.divider()
 

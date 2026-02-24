@@ -5,6 +5,7 @@ from lib import state
 from schema.data_bundle import DataBundle
 from schema.model_framework import ModelFramework
 from schema.sparql_technologies import SPARQLTechnology, get_sparql_technology
+from components.help import help_text
 
 
 ENDPOINT_TECHNOLOGIES_STR = [e.value for e in list(SPARQLTechnology)]
@@ -56,7 +57,7 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
     st.write('')
 
     # Data Bundle base URI
-    new_base_uri = st.text_input('Base URI ❗️', value=db.base_uri if db else 'http://www.example.org/resource/', help="[what does 'Base URI' refers to?](/documentation#in-the-data-bundle-creation-what-does-base-uri-refers-to)")
+    new_base_uri = st.text_input('Base URI ❗️', value=db.base_uri if db else 'http://www.example.org/resource/', help=help_text("data_bundle_form.base_uri"))
 
     st.write('')
     st.write('')

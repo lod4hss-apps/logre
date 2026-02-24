@@ -2,6 +2,7 @@ from typing import Literal, List
 import streamlit as st
 from lib import state
 from dotenv import load_dotenv
+from errors import error_text
 
 def init(layout: Literal['centered', 'wide'] = 'centered', required_query_params: List[str] = [], avoid_anchor_titles: bool = True) -> None:
     """
@@ -27,8 +28,7 @@ def init(layout: Literal['centered', 'wide'] = 'centered', required_query_params
     try:
         state.load_config()
     except Exception as err:
-        message = f"There was an error while loading the configuration file:\n\n{str(err)}"
-        st.error(message)
+        st.error(error_text("configuration.load", str(err)))
         st.stop()
     
     # Put the needed query params in the page URL, if available

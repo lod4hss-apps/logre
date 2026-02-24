@@ -15,8 +15,9 @@ It has been developed to help researchers and data enthusiasts to work with such
 Now that Logre is running (you woud not see this page otherwise) you can know think of your data repository: Logre is just an editor, meaning that it has to connect to an existing [SPARQL endpoint](https://en.wikipedia.org/wiki/Resource_Description_Framework).
 
 - The first next step is to think of where to store your data? Have you a server dedicated for that? Is it remote? Do you need to [install one locally](https://en.wikipedia.org/wiki/Resource_Description_Framework)?
-- Then you need to [create a Data Bundle](https://en.wikipedia.org/wiki/Resource_Description_Framework) on the Configuration page in order to tell Logre how to connect to it.
-- An you are good to explore, create, edit your data!
+- Then you need to add an **Endpoint** in the Configuration page so Logre knows how to reach your triple store (URL + credentials + technology + prefixes).
+- Finally, create one or more **Data Bundles** inside this endpoint to describe where your data/model/metadata graphs live.
+- You can now explore, create and edit your data!
 
 ---
 
@@ -46,7 +47,7 @@ RDF stands for [Resource Data Framework](https://en.wikipedia.org/wiki/Resource_
 
 It is a web service that lets you query a dataset stored as RDF using the SPARQL query language. But do not worry, you do not need to know SPARQL. Logre handles it for you.
 
-See a SPARQL endpoint like a server (i.e. endpoint) having different databases (i.e. datasets) in which you can add your data. As for databases, there are many different SPARQL endpoint technologies. Just to name a few, there is [Fuseki](https://jena.apache.org/documentation/fuseki2/), [GraphDB](https://graphdb.ontotext.com/), [Allegrograph](https://allegrograph.cloud), [Neptune](https://docs.aws.amazon.com/neptune/), [qLever](https://github.com/ad-freiburg/qlever), ... 
+See a SPARQL endpoint like a server (i.e. endpoint) having different databases (i.e. datasets) in which you can add your data. As for databases, there are many different SPARQL endpoint technologies. Just to name a few, there is [RDF4J](https://rdf4j.org/), [Fuseki](https://jena.apache.org/documentation/fuseki2/), [GraphDB](https://graphdb.ontotext.com/), [Allegrograph](https://allegrograph.cloud), [Neptune](https://docs.aws.amazon.com/neptune/), [qLever](https://github.com/ad-freiburg/qlever), ... 
 
 ---
 
@@ -54,24 +55,34 @@ See a SPARQL endpoint like a server (i.e. endpoint) having different databases (
 
 You can do that in different ways, depending on your skills.
 
-Here is a recipe to install the Fuseki docker image.
+Here is a recipe to install the official RDF4J docker image.
 
 If you do not understand the next lines, we advise asking someone who does.
 
 ```bash
-docker pull stain/jena-fuseki # Pull Fuseki docker image
-docker run -d -p 3030:3030 stain/jena-fuseki # Run the Fuseki docker image
+docker pull eclipse/rdf4j-workbench # Pull RDF4J server + workbench image
+docker run -d -p 8080:8080 eclipse/rdf4j-workbench # Run the RDF4J image (server + GUI on 8080)
 docker ps # Note the container ID
-docker logs [CONTAINER_ID] # In order to fetch the default admin password that has been generated for you: keep it
+docker logs [CONTAINER_ID] # Inspect logs if you need to troubleshoot the server
 ```
+
+> Tip: the Docker Compose setup bundled with Logre already wires the UI to an RDF4J server and auto-creates a repository. Use it if you want a ready-to-go local stack.
 
 ---
 
 ### What are the supported SPARQL endpoint technologies?
 
-For now, Logre supports 3 endpoint technologies: Fuseki, Allegrograph and GraphDB.
+For now, Logre supports 4 endpoint technologies: RDF4J, Fuseki, Allegrograph and GraphDB.
 
 We have plan to add more. If you need one specific, feel free to contact us!
+
+---
+
+### How do I create or edit an Endpoint?
+
+Endpoint creation and edition happens in the **Configuration → Endpoint** section. Each endpoint stores only connection details: name, technology, URL, username/password and its dedicated prefixes list. Once you create one, you can manage as many bundles as you want underneath it without duplicating the credentials.
+
+Tip: Logre automatically seeds every endpoint with a set of commonly used prefixes (RDF/RDFS/XSD/SHACL, CIDOC CRM, Wikidata, OntoMe, SDHSS, …). You can remove or extend that list per endpoint if needed.
 
 ---
 
@@ -146,7 +157,7 @@ In Logre, you can [configure all your prefixes](http://www.w3.org/2001/XMLSchema
 
 ### How to create or update a Prefix?
 
-You can do that in the configuration page, in the so called "Prefixes" section.
+You can do that in the configuration page, inside the "Prefixes" section of each Endpoint card.
 
 All you need to have is:
 - The short version
@@ -174,8 +185,7 @@ In the end, a data bundle is just a way **for you** to represent your data, it i
 
 First, before creating a data bundle, a [SPARQL endpoint is needed](http://localhost:8501/documentation#what-is-a-sparql-endpoint). 
 
-When you have access to a running SPARQL, you can reach the Configuration page, "Data Bundles" section. 
-There you will be display with all data bundles you have already configured, and you can add more by clicking on the button.
+In the Configuration page, open the endpoint expander and locate the **Data Bundles** sub-section. You can add or edit bundles from there: the dialog only asks for bundle-specific values (name, base URI, graphs, SHACL/model information) because the endpoint holding the connection is already selected.
 
 No worries, everything is editable, even if you make a mistake in the configuration, you will be able to correct it without impact on your data: see the configuration as glasses to watch your data: changing your glasses settings does not change the scene behind, just the way you percieve it.
 
@@ -183,16 +193,13 @@ No worries, everything is editable, even if you make a mistake in the configurat
 
 ### How to edit a Data Bundle?
 
-On the Configuration page, in the data bundle list, click on the pen icon to edit a data bundle.
+On the Configuration page, in the data bundle list, click on the pen icon to edit a data bundle. The same dialog now exposes the **Import data** and **Update the model (SHACL)** actions.
 
 ---
 
-### In the Data Bundle creation, where do I find my SPARQL endpoint username and password?
+### Where do I configure my SPARQL username and password?
 
-This depends on your SPARQL endpoint:
-If it is a local one (i.e. on your computer) you have to find credentials yourself. If you followed the tutorial [here](http://localhost:8501/documentation#how-to-install-a-sparql-endpoint-locally), then you already have the credentials.
-
-Otherwise, ask the endpoint maintainer for credentials.
+Credentials now belong to the Endpoint itself (see *How do I create or edit an Endpoint?*). When you edit a bundle, you will never be asked for network parameters any more—Logre automatically injects the SPARQL client coming from the selected endpoint.
 
 ---
 
@@ -263,18 +270,20 @@ Caution! You can only save a query after clicking on "Run", the save option won'
 
 ### How to import data into the SPARQL endpoint?
 
-You can import data into the configured SPARQL endpoint on your selected data bundle. Reach the Import Export page and follow the formular.
+Open the Data Bundle dialog (via the pen icon) and scroll to the **Import data** section. You can then:
 
-You need to have either an n-Quad file format (.nq), or a Turtle one (.ttl)
+- Choose the file format (n-Quads or Turtle).
+- Upload your file.
+- If you selected Turtle, pick which graph it targets (Data / Model / Metadata).
+- Confirm the upload in the dialog.
 
-If you have a n-quad file, since they are quads and not triples, no more information are needed to import, they will be added to the SPARQL endpoint.
-But it you have a turtle file, you need to specify what it is (data, model or metadata) because turtle file does not have the graph information, so you need to set it in the GUI.
+You need to have either an n-Quad file format (.nq), or a Turtle one (.ttl). If you have a n-quad file, since they are quads and not triples, no more information is needed to import them. But if you have a turtle file, you need to specify what it is (data, model or metadata) because turtle file does not have the graph information, so you need to set it in the GUI.
 
 ---
 
 ### How to export my data?
 
-You can export data from a data bundle on the Import Export page, and can chose the format of your export file:
+You can export data from a data bundle on the Import/Export page (for full dumps) and download the current model directly from the Data Bundle dialog. Available formats are:
 - n-Quad (.nq): one single files with all of your data
 - Turtle (.ttl): one file for each part of your data bundle
 

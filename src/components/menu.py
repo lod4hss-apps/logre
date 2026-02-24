@@ -2,6 +2,7 @@ import streamlit as st
 from lib import state
 from dialogs.find_entity import dialog_find_entity
 from dialogs.entity_creation import dialog_entity_creation
+from components.help import help_text
 
 
 def menu() -> None:
@@ -40,10 +41,10 @@ def menu() -> None:
         st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")
         st.sidebar.page_link("pages/configuration.py", label="Configuration")
         st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL Editor", disabled=not endpoint)
+        st.sidebar.page_link("pages/dashboard.py", label="Overview", disabled=not data_bundle)
         st.sidebar.page_link("pages/import-export.py", label="Import, Export", disabled=not data_bundle)
         st.sidebar.page_link("pages/model.py", label="Model", disabled=not data_bundle)
         st.sidebar.page_link("pages/data-table.py", label="Data Table", disabled=not data_bundle)
-        st.sidebar.page_link("pages/statistics.py", label="Statistics", disabled=not data_bundle)
 
         st.sidebar.divider()
         
@@ -82,10 +83,13 @@ def menu() -> None:
 
             # Data bundle commands
             if data_bundle:
+                model_ready = data_bundle.has_usable_model()
                 with st.sidebar.container(horizontal=False, horizontal_alignment= 'center', vertical_alignment='bottom', height='stretch'):
-                    if st.button('Find entity', icon=':material/search:', type='primary', width='stretch', help="[How to see my data?](/documentation#how-to-see-my-data)"):
+                    help_txt = "Your model does not have any classes with at least one property." if not model_ready else help_text('menu.find_entity')
+                    if st.button('Find entity', icon=':material/search:', type='primary', width='stretch', disabled=not model_ready, help=help_txt):
                         dialog_find_entity()
-                    if st.button('Create entity', icon=':material/line_start_circle:', type='primary', width='stretch', help="[How to create my data?](/documentation#how-to-create-new-data)"):
+                    help_txt = "Your model does not have any classes with at least one property." if not model_ready else help_text('menu.create_entity')
+                    if st.button('Create entity', icon=':material/line_start_circle:', type='primary', width='stretch', disabled=not model_ready,  help=help_txt):
                         dialog_entity_creation()
 
     except Exception as err:
