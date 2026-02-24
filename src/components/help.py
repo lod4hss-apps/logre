@@ -1,9 +1,6 @@
 """Contextual help snippets reused across pages."""
 
-from __future__ import annotations
-
 from typing import Optional
-import streamlit as st
 
 HELP_TEXTS = {
     "configuration.prefixes": (
@@ -139,20 +136,5 @@ HELP_TEXTS = {
 
 
 def help_text(key: str, fallback: Optional[str] = None) -> Optional[str]:
-    """Return the textual hint associated with `key`, falling back when requested."""
+    """Return the textual hint associated with `key`, falling back when not existing."""
     return HELP_TEXTS.get(key, fallback)
-
-
-def info(key: str) -> None:
-    """Render a contextual info caption for the provided key if it exists."""
-    text = HELP_TEXTS.get(key)
-    if text:
-        st.caption(f":material/info: {text}")
-
-
-def info_icon(key: str) -> None:
-    """Render an inline info icon using Streamlit's native tooltip."""
-    text = HELP_TEXTS.get(key)
-    if not text:
-        return
-    st.caption("", help=text)

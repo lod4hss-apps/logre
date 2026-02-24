@@ -1,3 +1,8 @@
+"""
+Take the app icon and put it in the right place (for macOS)
+so that the app also have the same icon when displayed in Finder
+"""
+
 from pathlib import Path
 import plistlib
 

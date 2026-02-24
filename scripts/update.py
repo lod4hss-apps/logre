@@ -1,5 +1,11 @@
-import yaml, os
+"""
+This script regroups things that need to be done when upgrading Logre version.
+For example when the configuration format changes between version, the script 
+handles the configuration transformation.
+"""
 
+
+import yaml, os
 
 # This scripts needs to be called when code base is updated
 

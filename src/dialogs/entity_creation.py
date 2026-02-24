@@ -26,8 +26,9 @@ def dialog_entity_creation() -> None:
     """
     # From state
     data_bundle = state.get_data_bundle()
-    if not data_bundle or not data_bundle.has_model_definitions():
-        st.info("Import a SHACL model before creating entities.")
+    
+    if not data_bundle or not data_bundle.has_usable_model():
+        st.info("Import a model before creating entities.")
         return
 
     # Class filter

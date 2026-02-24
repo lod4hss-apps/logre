@@ -1,29 +1,28 @@
 # Logre Technical Knowledge Base
 
 ## 1. Purpose and Scope
-Logre is a Streamlit-based client that connects to existing SPARQL endpoints (RDF4J, Jena Fuseki, RDF4J, AllegroGraph, GraphDB) to inspect, edit, and visualize RDF knowledge graphs. This document summarizes the repository structure, runtime architecture, recommended workflow, and the main features so team members can reason about the codebase quickly and extend it safely.
+Logre is a Streamlit-based client that connects to existing SPARQL endpoints (Jena Fuseki, RDF4J, AllegroGraph, GraphDB) to inspect, edit, and visualize RDF knowledge. This document summarizes the repository structure, runtime architecture, recommended workflow, and the main features so team members can reason about the codebase quickly and extend it safely.
 
 ## 2. Repository Structure
 
 | Path | Notes |
 | --- | --- |
 | `src/` | Streamlit app. See subdirectories below. |
-| `src/pages/` | Each `.py` file is a routed page (Entity card, Data table, SPARQL editor, etc.). `server.py` simply redirects to the default documentation page. |
+| `src/pages/` | Each `.py` file is a routed page (Entity card, Data table, SPARQL editor, etc.). `server.py` redirects to the default documentation page if there is no configured data bundles (and none selected as default ones) or to the bundle overview. |
 | `src/components/` | Cross-page helpers. `init.py` bootstraps Streamlit, loads config, and synchronizes query params; `menu.py` renders the sidebar, handles data bundle switching, and exposes quick actions (find/create entity). |
 | `src/dialogs/` | Streamlit dialog fragments used from multiple pages (entity creation, editing, triple info, confirmations, saved-query naming, etc.). |
 | `src/lib/` | Application state & utility layer. `state.py` is the central store that abstracts config files, Streamlit session state, toast notifications, pagination offsets, and cached SPARQL metadata. |
 | `src/schema/` | Domain objects describing data bundles, model frameworks, SPARQL technology adapters, and error helpers. `data_bundle.py` defines how each bundle connects to a SPARQL backend and provides higher-level queries (find entities, fetch statements, run SPARQL). |
-| `graphly/` | Vendored dependency providing RDF graph utilities, schema abstractions (`Graph`, `Model`, `Resource`, `Property`), and SPARQL helpers used throughout the app. |
 | `docker/`, `docker-compose.yml`, `Dockerfile` | Containerized stack bundling Logre with RDF4J. The `dev` profile spins up both UI and RDF4J server with persistent volumes and optional auto-bootstrap of repositories/config. |
 | `scripts/` | Automation helpers (`bootstrap-rdf4j.sh`, `wait-for-http.sh`, `update.py`). |
-| `logre-config-default.txt`, `logre-config.yaml` (generated), `.env` | User-editable configuration defining prefixes, data bundles, SPARQL queries, and runtime overrides (custom Python binary, endpoint credentials). |
+| `logre-config.yaml`, `.env` | User-editable configuration defining prefixes, data bundles, SPARQL queries, and runtime overrides (custom Python binary, endpoint credentials). |
 | `examples/` | Sample RDF datasets (N-Quads/Turtle) useful for testing import/export flows. |
 | `documentation/faq.md` | End-user FAQ surfaced inside the application documentation page. |
 
 ## 3. Architecture Overview
 
 ### Streamlit entrypoint
-- `src/server.py` and every file under `src/pages/` are standard Streamlit pages. `server.py` redirects to `pages/documentation.py` so the FAQ is the first landing page when users run `python3 -m streamlit run src/server.py`.
+- `src/server.py` and every file under `src/pages/` are standard Streamlit pages. `server.py` handles the landing page
 - Each page starts with `components.init.init(...)` to load environment variables, parse config, sync query parameters, configure the UI shell, and emit pending toasts before rendering content.
 - The sidebar is injected by `components.menu.menu()` on most pages. It exposes navigation, data bundle selection, and contextual actions (find/create entity dialogs) that rely on the global state module.
 
@@ -31,15 +30,16 @@ Logre is a Streamlit-based client that connects to existing SPARQL endpoints (RD
 - `lib/state.py` wraps Streamlit's `session_state`. It memoizes the application version (`VERSION` file), loads YAML configuration from `logre-config.yaml` (or `logre-config-default.txt`), and writes updates back to disk when prefixes, bundles, or saved queries change.
 - Configuration drives:
   - Prefix registry (`graphly.schema.Prefixes`) used to shorten/expand URIs.
-  - Data bundles describing one SPARQL endpoint plus the URIs of the data/model/metadata graphs and authentication info.
+  - Saved SPARQL endpoints (`graphly.schema.Sparql`)
+  - Saved Data Bundles (`src.schema.DataBundle`)
   - Saved SPARQL queries shown in the editor.
 - State also tracks UX concerns: pagination offsets, selected entity URI, query parameters, list of entities currently expanded in charts, toast notifications, and recent SPARQL execution IDs (so multiple submissions do not rerun automatically).
 
 ### Data access layer
-- `schema/data_bundle.py` encapsulates each configured endpoint. It instantiates:
-  - A SPARQL client (`endpoint`) chosen via `schema/sparql_technologies.py` (one class per supported backend technology).
-  - Three `graphly.schema.Graph` instances pointing to the data, model, and metadata named graphs.
-  - A `graphly.schema.Model` instance chosen via `schema/model_framework.py` to interpret SHACL/ontology details (label, comment, type properties, domains, ranges, etc.).
+- `schema/data_bundle.py` encapsulates each configured Data Bundles. It instantiates:
+  - A SPARQL client (`graphly.schema.Sparql`) chosen via `schema/sparql_technologies.py` (one class per supported backend technology).
+  - Three `graphly.schema.Graph` for data, model, and metadata named graphs.
+  - A `graphly.schema.Model` instance chosen via `schema/model_framework.py` to interpret the ontology details (label, comment, type properties, domains, ranges, etc; one class for each supported ontology description technology).
 - That class exposes higher-level methods consumed by pages: running raw SPARQL queries, finding entities (with pagination/filters), retrieving card properties, computing data tables, dumping/importing triples, replacing the model graph, etc. All write operations (insert/delete) are scoped to a named graph argument so the UI can edit model metadata without touching data graphs.
 
 ### Dialog and workflow helpers
@@ -53,7 +53,7 @@ Logre is a Streamlit-based client that connects to existing SPARQL endpoints (RD
 
 2. **Configure connectivity**
    - Use the **Configuration** page to define prefixes and one or more data bundles. Each bundle collects endpoint technology, URL, credentials, base URI, model framework, and named graph URIs. The default bundle is auto-selected on load; users can switch bundles via the sidebar select box, which persists across pages thanks to `state.set_data_bundle`.
-   - Saved SPARQL queries are stored inside the configuration file, so exporting/importing `logre-config.yaml` can share curated queries with the team.
+   - Saved SPARQL queries are stored inside the configuration file, so exporting/importing `logre-config.yaml` can share curated queries with the team, or simply re-execute specific queries.
 
 3. **Import or seed data (optional)**
    - The **Import/Export** page supports uploading Turtle files into the data/model/metadata graphs or streaming entire `.nq` dumps through the SPARQL endpoint API. Model updates are handled by uploading SHACL Turtle files, after which Logre wipes the model graph and re-loads it.

@@ -1,18 +1,6 @@
 from enum import Enum
 from graphly.schema import Sparql
-from graphly.sparql import Fuseki, Allegrograph, GraphDB
-
-try:
-    from graphly.sparql import RDF4J as _GraphlyRDF4J
-except ImportError:
-    class _GraphlyRDF4J(GraphDB):
-        """Fallback RDF4J wrapper built atop GraphDB client."""
-
-        def __init__(self, url: str, username: str, password: str) -> None:
-            super().__init__(url, username, password)
-            self.technology_name = 'RDF4J'
-
-RDF4J = _GraphlyRDF4J
+from graphly.sparql import Fuseki, Allegrograph, GraphDB, RDF4J
 
 
 class SPARQLTechnology(str, Enum):
@@ -31,7 +19,7 @@ class SPARQLTechnology(str, Enum):
     RDF4J = "RDF4J"
 
 
-def get_sparql(sparql_dict: dict[str, str]) -> Allegrograph | Fuseki | GraphDB | None:
+def get_sparql(sparql_dict: dict[str, str]) -> Allegrograph | Fuseki | GraphDB | RDF4J | None:
     """
     Returns the right Sparql instance given a rightfull dictionnary
     
@@ -48,6 +36,8 @@ def get_sparql(sparql_dict: dict[str, str]) -> Allegrograph | Fuseki | GraphDB |
         return Fuseki(sparql_dict['url'], sparql_dict['username'], sparql_dict['password'], sparql_dict['name'])
     if sparql_dict['technology'] == SPARQLTechnology.GRAPHDB:
         return GraphDB(sparql_dict['url'], sparql_dict['username'], sparql_dict['password'], sparql_dict['name'])
+    if sparql_dict['technology'] == SPARQLTechnology.RDF4J:
+        return RDF4J(sparql_dict['url'], sparql_dict['username'], sparql_dict['password'], sparql_dict['name'])
 
 
 def get_sparql_technology(sparql_technology_name: str) -> Sparql:

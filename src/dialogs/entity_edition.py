@@ -29,8 +29,9 @@ def dialog_entity_edition(entity: Resource = None) -> None:
     """
     # From state
     data_bundle = state.get_data_bundle()
-    if not data_bundle or not data_bundle.has_model_definitions():
-        st.info("Import a SHACL model before editing entities.")
+
+    if not data_bundle or not data_bundle.has_usable_model():
+        st.info("Import a model before editing entities.")
         return
 
     # Triples that need to be added and removed
@@ -45,15 +46,19 @@ def dialog_entity_edition(entity: Resource = None) -> None:
     for p in properties:
         with st.container():
 
-                # Prepare
+            # Prepare
             if p.domain and p.domain.uri == entity.class_uri: # Outgoing
                 label_prefix = ""
                 target = p.range
                 way = 'outgoing'
-            else: # Incoming
+            elif p.range and p.range.uri == entity.class_uri: # Incoming
                 label_prefix = f'<small style="font-size: 10px; color: gray; text-decoration: none;">(incoming) </small>'
                 target = p.domain
                 way = 'incoming'
+            else:
+                with col_input.container():
+                    st.markdown("*This property does not define a domain or range class in the model, therefore, Logre can not suggest an adequate field*")
+                continue
 
             # Property display label
             property_label = f"#### **{label_prefix}{p.get_text()}**"
@@ -76,11 +81,6 @@ def dialog_entity_edition(entity: Resource = None) -> None:
                 input_number = 1 # Because by default the getter say 0. This is required elsewhere
 
             # And for each one of them, display it correctly
-            if not target or not target.uri:
-                with col_input.container():
-                    st.markdown("*Cette propriété ne définit pas de type dans le modèle SHACL. Elle ne peut pas être éditée automatiquement.*")
-                continue
-
             for i in range(input_number):
                 with col_input.container(horizontal=True, vertical_alignment='bottom'):
 
