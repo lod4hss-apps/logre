@@ -19,15 +19,30 @@ menu()
 def show_metrics(overview: dict) -> None:
     """Display aggregated metrics for the data bundle."""
     counts = overview["counts"]
-    col_entities, col_classes, col_props, col_triples = st.columns(4)
-    metrics = [
-        (col_entities, "Entities", counts['entities']),
+
+    col_title_model, col_title_data = st.columns(2)
+    with col_title_model.container(horizontal=True, horizontal_alignment="center"):
+        st.markdown('### Model', width="content")
+    with col_title_data.container(horizontal=True, horizontal_alignment="center"):
+        st.markdown('### Data', width="content")
+
+    col_classes, col_props, col_entities, col_triples = st.columns(4)
+    metrics_model = [
         (col_classes, "Classes", counts['classes']),
         (col_props, "Properties", counts['properties']),
+    ]
+    metrics_data = [
+        (col_entities, "Entities", counts['entities']),
         (col_triples, "Triples", counts['triples']),
     ]
-    for col, label, value in metrics:
-        col.metric(label, format_short(value))
+
+    for col, label, value in metrics_model:
+        with col.container(horizontal=True, horizontal_alignment='center'):
+            st.metric(label, format_short(value), width="content")
+
+    for col, label, value in metrics_data:
+        with col.container(horizontal=True, horizontal_alignment='center'):
+            st.metric(label, format_short(value), width="content")
 
 
 def show_top_classes(overview: dict) -> None:
@@ -290,12 +305,12 @@ def show_data_insights(overview, data_bundle):
     with chart_section:
         show_pie_charts(data_bundle)
 
-    table_section = st.container()
-    with table_section:
-        st.caption("Top 5 classes")
-        show_top_classes(overview)
-        st.caption("Top 5 properties")
-        show_top_properties(overview)
+    # table_section = st.container()
+    # with table_section:
+    #     st.caption("Top 5 classes")
+    #     show_top_classes(overview)
+    #     st.caption("Top 5 properties")
+    #     show_top_properties(overview)
 
 
 try:
