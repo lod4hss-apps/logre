@@ -1,0 +1,50 @@
+prefixes:
+  - short: rdf
+    long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  - short: rdfs
+    long: http://www.w3.org/2000/01/rdf-schema#
+  - short: xsd
+    long: http://www.w3.org/2001/XMLSchema#
+  - short: sh
+    long: http://www.w3.org/ns/shacl#
+  - short: base
+    long: http://example.org/resource/
+data_bundles:
+  - name: Local RDF4J Repository
+    base_uri: http://example.org/resource/
+    endpoint_name: Local RDF4J Repository
+    model_framework: SHACL
+    prop_type_uri: rdf:type
+    prop_label_uri: rdfs:label
+    prop_comment_uri: rdfs:comment
+    graph_data_uri: base:data
+    graph_model_uri: base:model
+    graph_metadata_uri: base:metadata
+endpoints:
+  - name: Local RDF4J Repository
+    technology: RDF4J
+    url: ${LOGRE_TEMPLATE_RDF4J_URL}
+    username: ""
+    password: ""
+default_data_bundle: local-rdf4j-repository
+version: "2.1"
+sparql_queries:
+  - - Default
+    - |
+        SELECT *
+        WHERE {
+            ?s ?p ?o .
+        }
+        LIMIT 10
+  - - List graphs
+    - |
+        SELECT ?graph_uri (COUNT(*) AS ?triples_count)
+        WHERE {
+          GRAPH ?graph_uri {
+              ?s ?p ?o
+          }
+        }
+        GROUP BY ?graph_uri
+        ORDER BY DESC(?triples_count)
+  - - Delete all data
+    - CLEAR ALL

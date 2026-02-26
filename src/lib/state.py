@@ -1,4 +1,5 @@
 from typing import List, Dict
+import os
 from os.path import exists as path_exists
 from pathlib import Path
 from yaml import safe_load, dump
@@ -12,16 +13,18 @@ from schema.sparql_technologies import get_sparql
 
 BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 
-VERSION_FILE_PATH = BASE_DIR + '/version'
-CONFIG_FILE_PATH = BASE_DIR + '/logre-config.yaml'
-DEFAULTS_PREFIXES = BASE_DIR + '/defaults/prefixes.yaml'
-DEFAULTS_DATA_BUNDLES = BASE_DIR + '/defaults/data-bundles.yaml'
-DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR + '/defaults/default-data-bundle.yaml'
-DEFAULTS_SPARQL_QUERIES = BASE_DIR + '/defaults/sparql-queries.yaml'
+VERSION_FILE_PATH = BASE_DIR + "/version"
+VERSION_FALLBACK_PATH = BASE_DIR + "/VERSION"
+CONFIG_FILE_PATH = os.getenv("LOGRE_CONFIG_PATH", BASE_DIR + "/logre-config.yaml")
+DEFAULTS_PREFIXES = BASE_DIR + "/defaults/prefixes.yaml"
+DEFAULTS_DATA_BUNDLES = BASE_DIR + "/defaults/data-bundles.yaml"
+DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR + "/defaults/default-data-bundle.yaml"
+DEFAULTS_SPARQL_QUERIES = BASE_DIR + "/defaults/sparql-queries.yaml"
 
 
 ##### VERSION #####
 # Version is only on read mode, no setter needed
+
 
 def get_version() -> str:
     """
@@ -34,15 +37,20 @@ def get_version() -> str:
         str: The application version.
     """
     # If the version is not yet loaded
-    if 'version' not in state:
+    if "version" not in state:
         # Read the version and set it into state
-        with open(VERSION_FILE_PATH, 'r', encoding='utf-8') as file:
-            state['version'] = file.read()
-    return state['version']
-
+        version_path = (
+            VERSION_FILE_PATH
+            if path_exists(VERSION_FILE_PATH)
+            else VERSION_FALLBACK_PATH
+        )
+        with open(version_path, "r", encoding="utf-8") as file:
+            state["version"] = file.read()
+    return state["version"]
 
 
 ##### TOAST #####
+
 
 def set_toast(text: str, icon: str = None) -> None:
     """
@@ -52,8 +60,9 @@ def set_toast(text: str, icon: str = None) -> None:
         text (str): The message to display in the toast.
         icon (str, optional): An optional icon identifier to display alongside the toast.
     """
-    state['toast-text'] = text
-    if icon: state['toast-icon'] = icon
+    state["toast-text"] = text
+    if icon:
+        state["toast-icon"] = icon
 
 
 def get_toast() -> tuple[str, str]:
@@ -64,8 +73,8 @@ def get_toast() -> tuple[str, str]:
         tuple[str, str]: A tuple containing the toast message text and the icon.
                         Each element may be None if not set.
     """
-    text = state['toast-text'] if 'toast-text' in state else None
-    icon = state['toast-icon'] if 'toast-icon' in state else None
+    text = state["toast-text"] if "toast-text" in state else None
+    icon = state["toast-icon"] if "toast-icon" in state else None
     return text, icon
 
 
@@ -73,12 +82,14 @@ def clear_toast() -> None:
     """
     Clear the toast notification message and icon from the session state.
     """
-    if 'toast-text' in state: del state['toast-text']
-    if 'toast-icon' in state: del state['toast-icon']
-
+    if "toast-text" in state:
+        del state["toast-text"]
+    if "toast-icon" in state:
+        del state["toast-icon"]
 
 
 ##### QUERY PARAMS #####
+
 
 def handle_query_params(required_keys: List[str]) -> None:
     """
@@ -93,41 +104,43 @@ def handle_query_params(required_keys: List[str]) -> None:
     """
 
     # If the 'db' query param is required
-    if 'db' in required_keys:
+    if "db" in required_keys:
         db = get_data_bundle()
 
         # If it is in state but not in the URL: add it to URL
-        if 'db' not in query_params and db:
-            query_params['db'] = db.key
+        if "db" not in query_params and db:
+            query_params["db"] = db.key
 
         # If it is in URL, but not in state: add to state
-        elif 'db' in query_params and not db:
-            data_bundle = next((db2 for db2 in get_data_bundles() if db2.key == query_params['db']), None)
+        elif "db" in query_params and not db:
+            data_bundle = next(
+                (db2 for db2 in get_data_bundles() if db2.key == query_params["db"]),
+                None,
+            )
             set_data_bundle(data_bundle)
 
-
     # If the 'uri' query param is required
-    if 'uri' in required_keys:
+    if "uri" in required_keys:
         uri = get_entity_uri()
 
         # If it is in state but not in the URL: add it to URL
-        if 'uri' not in query_params and uri is not None:
-            query_params['uri'] = uri
+        if "uri" not in query_params and uri is not None:
+            query_params["uri"] = uri
 
         # If it is in URL, but not in state: add to state
-        elif 'uri' in query_params and uri is None:
-            set_entity_uri(query_params['uri'])
+        elif "uri" in query_params and uri is None:
+            set_entity_uri(query_params["uri"])
 
 
+##### CONFIGURATION #####
 
-##### CONFIGURATION #####    
 
 def load_config() -> None:
     """
     Load the application configuration into the session state.
 
-    If the configuration has not yet been loaded, it is read from the config 
-    file if present, otherwise the default one. YAML is used to parse the 
+    If the configuration has not yet been loaded, it is read from the config
+    file if present, otherwise the default one. YAML is used to parse the
     file, and the following values are extracted:
 
     - Prefixes: Stored as a `Prefixes` object.
@@ -136,67 +149,75 @@ def load_config() -> None:
     - SPARQL queries: Loaded into the session state if defined.
     """
     # If the config is not yet loaded
-    if 'has_config' not in state:
-
+    if "has_config" not in state:
         # If the config file exists, load it
         if path_exists(CONFIG_FILE_PATH):
-            with open(CONFIG_FILE_PATH, 'r', encoding='utf-8') as file:
-
+            with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as file:
                 # Use YAML to parse the file content
                 obj: dict = safe_load(file.read())
 
                 # Extract SPARQL endpoints
                 loaded_endpoints = []
-                if 'endpoints' in obj.keys():
-                    for sparql in obj['endpoints']:
+                if "endpoints" in obj.keys():
+                    for sparql in obj["endpoints"]:
                         endpoint = get_sparql(sparql)
                         loaded_endpoints.append(endpoint)
                 set_endpoints(loaded_endpoints)
 
                 # Extract prefixes
-                if 'prefixes' in obj.keys():
-                    loaded_prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in obj['prefixes']])
+                if "prefixes" in obj.keys():
+                    loaded_prefixes = Prefixes(
+                        [Prefix(p.get("short"), p.get("long")) for p in obj["prefixes"]]
+                    )
                 else:
                     loaded_prefixes = Prefixes()
                 set_prefixes(loaded_prefixes)
 
                 # Extract Data Bundles
-                if 'data_bundles' in obj.keys():
-                    dbs = [DataBundle.from_dict(db, state['prefixes'], state['endpoints']) for db in obj['data_bundles']]
+                if "data_bundles" in obj.keys():
+                    dbs = [
+                        DataBundle.from_dict(db, state["prefixes"], state["endpoints"])
+                        for db in obj["data_bundles"]
+                    ]
                 else:
                     dbs = []
                 set_data_bundles(dbs)
 
                 # Extract default Data Bundle
-                if "default_data_bundle" in obj.keys() and obj['default_data_bundle']:
-                    default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == obj['default_data_bundle'])
-                    if default_db: set_default_data_bundle(default_db)
+                if "default_data_bundle" in obj.keys() and obj["default_data_bundle"]:
+                    default_db = next(
+                        db
+                        for _, db in enumerate(get_data_bundles())
+                        if db.key == obj["default_data_bundle"]
+                    )
+                    if default_db:
+                        set_default_data_bundle(default_db)
 
                 # Extract saved SPARQL Queries
-                if 'sparql_queries'in obj.keys():
-                    queries = obj['sparql_queries']
+                if "sparql_queries" in obj.keys():
+                    queries = obj["sparql_queries"]
                 else:
                     queries = []
                 set_sparql_queries(queries)
 
                 # Load the config version
-                state['config_version'] = obj['version']
+                state["config_version"] = obj["version"]
 
                 # Flag to know that state has loaded the configuration file
-                state['has_config'] = True
-
+                state["has_config"] = True
 
         # Flag to know if something has been added from defaults
         need_save = False
 
         # Add all prefixes that are in the default, but not in (loaded or not) configuration
-        with open(DEFAULTS_PREFIXES, 'r', encoding='utf-8') as file:
-
+        with open(DEFAULTS_PREFIXES, "r", encoding="utf-8") as file:
             # Use YAML to parse the file content
             default_prefixes_raw = safe_load(file.read())
 
             # Parse Prefixes
-            default_prefixes = Prefixes([Prefix(p.get('short'), p.get('long')) for p in default_prefixes_raw])
+            default_prefixes = Prefixes(
+                [Prefix(p.get("short"), p.get("long")) for p in default_prefixes_raw]
+            )
 
             # Check if all from default are in state
             loaded_prefixes = get_prefixes()
@@ -207,10 +228,8 @@ def load_config() -> None:
                     set_prefixes(loaded_prefixes)
                     need_save = True
 
-
         # Add all sparql queries that are in the default, but not in (loaded or not) configuration
-        with open(DEFAULTS_SPARQL_QUERIES, 'r', encoding='utf-8') as file:
-
+        with open(DEFAULTS_SPARQL_QUERIES, "r", encoding="utf-8") as file:
             # Use YAML to parse the file content
             default_sparql_queries = safe_load(file.read())
 
@@ -226,13 +245,15 @@ def load_config() -> None:
                     need_save = True
 
         # Add all Data Bundles that are in the default, but not in (loaded or not) configuration
-        with open(DEFAULTS_DATA_BUNDLES, 'r', encoding='utf-8') as file:
-
+        with open(DEFAULTS_DATA_BUNDLES, "r", encoding="utf-8") as file:
             # Use YAML to parse the file content
             default_db_raw = safe_load(file.read())
 
             # Parse
-            default_db = [DataBundle.from_dict(obj, state['prefixes'], state['endpoints']) for obj in default_db_raw]
+            default_db = [
+                DataBundle.from_dict(obj, state["prefixes"], state["endpoints"])
+                for obj in default_db_raw
+            ]
 
             # Check if all from default are in state
             loaded_dbs = get_data_bundles()
@@ -243,29 +264,29 @@ def load_config() -> None:
                     set_data_bundles(loaded_dbs)
                     need_save = True
 
-
         # Add the default Data Bundle from the default, if not set in the configuration
-        with open(DEFAULTS_DATA_BUNDLE_DEFAULT, 'r', encoding='utf-8') as file:
-
+        with open(DEFAULTS_DATA_BUNDLE_DEFAULT, "r", encoding="utf-8") as file:
             # Use YAML to parse the file content
             default_db_default = safe_load(file.read())
 
             # If a defaut Data Bundle is set
             if default_db_default:
                 # Find the DataBundle with the right key
-                default_db = next(db for _, db in enumerate(get_data_bundles()) if db.key == default_db_default)
+                default_db = next(
+                    db
+                    for _, db in enumerate(get_data_bundles())
+                    if db.key == default_db_default
+                )
                 if default_db:
                     set_default_data_bundle(default_db)
                     need_save = True
-        
 
         # If the default configuration changed the state, then save the configuration
         if need_save:
             save_config()
 
-
         # Flag to know that state has loaded the configuration file
-        state['has_config'] = True
+        state["has_config"] = True
 
 
 def save_config() -> None:
@@ -276,24 +297,24 @@ def save_config() -> None:
 
     # Gather config
     config = {
-        'endpoints': [e.to_dict() for e in get_endpoints()],
-        'prefixes': [p.to_dict() for p in get_prefixes() if p.short != 'base'],
-        'data_bundles': [db.to_dict() for db in get_data_bundles()],
-        'default_data_bundle': default_db.key if default_db else None,
-        'sparql_queries': get_sparql_queries(),
-        'version': state['config_version'] if 'config_version' in state else None
+        "endpoints": [e.to_dict() for e in get_endpoints()],
+        "prefixes": [p.to_dict() for p in get_prefixes() if p.short != "base"],
+        "data_bundles": [db.to_dict() for db in get_data_bundles()],
+        "default_data_bundle": default_db.key if default_db else None,
+        "sparql_queries": get_sparql_queries(),
+        "version": state["config_version"] if "config_version" in state else None,
     }
 
     # To YAML string
     content = dump(config, sort_keys=False)
 
     # Write the config to disk
-    with open(CONFIG_FILE_PATH, 'w') as file:
+    with open(CONFIG_FILE_PATH, "w") as file:
         file.write(content)
 
 
-
 ##### PREFIXES #####
+
 
 def get_prefixes() -> Prefixes:
     """
@@ -302,7 +323,7 @@ def get_prefixes() -> Prefixes:
     Returns:
         Prefixes: The stored prefixes object.
     """
-    return state['prefixes']
+    return state["prefixes"]
 
 
 def set_prefixes(prefixes: Prefixes) -> None:
@@ -315,7 +336,7 @@ def set_prefixes(prefixes: Prefixes) -> None:
     Returns:
         None
     """
-    state['prefixes'] = prefixes
+    state["prefixes"] = prefixes
 
 
 def update_prefix(old_prefix: Prefix | None, new_prefix: Prefix | None) -> None:
@@ -328,15 +349,15 @@ def update_prefix(old_prefix: Prefix | None, new_prefix: Prefix | None) -> None:
     """
     # Create a new Prefix
     if old_prefix is None:
-        state['prefixes'].add(new_prefix)
-    
+        state["prefixes"].add(new_prefix)
+
     # Remove a prefix
     elif new_prefix is None:
-        state['prefixes'].remove(old_prefix)
+        state["prefixes"].remove(old_prefix)
 
     # Update a prefix
     else:
-        for prefix in state['prefixes']:
+        for prefix in state["prefixes"]:
             if prefix.short == old_prefix.short and prefix.long == old_prefix.long:
                 prefix.short = new_prefix.short
                 prefix.long = new_prefix.long
@@ -347,6 +368,7 @@ def update_prefix(old_prefix: Prefix | None, new_prefix: Prefix | None) -> None:
 
 ##### ENDPOINTS #####
 
+
 def get_endpoints() -> List[Sparql]:
     """
     Retrieve the list of endpoints from the session state, ensuring the configuration is loaded.
@@ -354,7 +376,7 @@ def get_endpoints() -> List[Sparql]:
     Returns:
         List[Sparql]: A list of Sparql endpoints objects stored in the session state.
     """
-    return state['endpoints']
+    return state["endpoints"]
 
 
 def set_endpoints(endpoints):
@@ -367,7 +389,7 @@ def set_endpoints(endpoints):
     Returns:
         None
     """
-    state['endpoints'] = endpoints
+    state["endpoints"] = endpoints
 
 
 def get_endpoint() -> Sparql | None:
@@ -380,11 +402,11 @@ def get_endpoint() -> Sparql | None:
         Sparql | None: The selected SPARQL endpoint, or None if not found.
     """
     # If there is none in state
-    if 'endpoint' not in state: 
+    if "endpoint" not in state:
         return None
     else:
-        return state['endpoint']
-    
+        return state["endpoint"]
+
 
 def set_endpoint(endpoint: Sparql) -> None:
     """
@@ -393,8 +415,8 @@ def set_endpoint(endpoint: Sparql) -> None:
     Args:
         endpoint (Sparql): The SPARQL endpoint to set as active.
     """
-    state['endpoint'] = endpoint
-    
+    state["endpoint"] = endpoint
+
 
 def update_endpoint(old_endpoint: Sparql | None, new_endpoint: Sparql | None) -> None:
     """
@@ -406,19 +428,28 @@ def update_endpoint(old_endpoint: Sparql | None, new_endpoint: Sparql | None) ->
     """
     # Create a new Data Bundle
     if old_endpoint is None:
-        state['endpoints'].append(new_endpoint)
+        state["endpoints"].append(new_endpoint)
 
     # Remove a Data Bundle
     elif new_endpoint is None:
-        state['endpoints'] = [endpoint for endpoint in state['endpoints'] if endpoint.name != old_endpoint.name]
+        state["endpoints"] = [
+            endpoint
+            for endpoint in state["endpoints"]
+            if endpoint.name != old_endpoint.name
+        ]
 
     # Update a Data Bundle
     else:
-        db_index = next(i for i, endpoint in enumerate(state['endpoints']) if endpoint.name == old_endpoint.name)
-        state['endpoints'][db_index] = new_endpoint
+        db_index = next(
+            i
+            for i, endpoint in enumerate(state["endpoints"])
+            if endpoint.name == old_endpoint.name
+        )
+        state["endpoints"][db_index] = new_endpoint
 
     # Write to disk
     save_config()
+
 
 def get_endpoint_groups() -> List[Dict[str, object]]:
     """
@@ -431,15 +462,19 @@ def get_endpoint_groups() -> List[Dict[str, object]]:
     endpoints = get_endpoints()
     for endpoint in endpoints:
         bundles = [db for db in get_data_bundles() if db.endpoint.key == endpoint.key]
-        groups.append({
-            'key': endpoint.key,
-            'label': endpoint.name,
-            'endpoint': endpoint,
-            'data_bundles': bundles,
-        })
-    return sorted(groups, key=lambda endpoint: endpoint['label'])
+        groups.append(
+            {
+                "key": endpoint.key,
+                "label": endpoint.name,
+                "endpoint": endpoint,
+                "data_bundles": bundles,
+            }
+        )
+    return sorted(groups, key=lambda endpoint: endpoint["label"])
+
 
 ##### DATA BUNDLES #####
+
 
 def get_data_bundles() -> List[DataBundle]:
     """
@@ -448,7 +483,7 @@ def get_data_bundles() -> List[DataBundle]:
     Returns:
         List[DataBundle]: A list of data bundle objects stored in the session state.
     """
-    return state['data_bundles']
+    return state["data_bundles"]
 
 
 def set_data_bundles(dbs: List[DataBundle]) -> None:
@@ -461,7 +496,7 @@ def set_data_bundles(dbs: List[DataBundle]) -> None:
     Returns:
         None
     """
-    state['data_bundles'] = dbs
+    state["data_bundles"] = dbs
 
 
 def get_data_bundle() -> DataBundle | None:
@@ -475,19 +510,19 @@ def get_data_bundle() -> DataBundle | None:
         DataBundle | None: The selected data bundle, or None if not found.
     """
     # If there is none in state
-    if 'data_bundle' not in state: 
+    if "data_bundle" not in state:
         # Return the default one, only if it exists
         db = get_default_data_bundle()
         if db:
-            # If the default data bundle is accessed, it is possible that no endpoint is selected 
+            # If the default data bundle is accessed, it is possible that no endpoint is selected
             # (most probably), so set it if it is the case
             if not get_endpoint():
                 set_endpoint(db.endpoint)
 
             return db
     else:
-        return state['data_bundle']
-    
+        return state["data_bundle"]
+
 
 def set_data_bundle(data_bundle: DataBundle) -> None:
     """
@@ -496,7 +531,7 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
     Args:
         data_bundle (DataBundle): The data bundle to set as active.
     """
-    state['data_bundle'] = data_bundle
+    state["data_bundle"] = data_bundle
 
     # When a data bundle is chosen, load its model
     if data_bundle:
@@ -513,16 +548,20 @@ def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> 
     """
     # Create a new Data Bundle
     if old_db is None:
-        state['data_bundles'].append(new_db)
+        state["data_bundles"].append(new_db)
 
     # Remove a Data Bundle
     elif new_db is None:
-        state['data_bundles'] = [db for db in state['data_bundles'] if db.key != old_db.key]
+        state["data_bundles"] = [
+            db for db in state["data_bundles"] if db.key != old_db.key
+        ]
 
     # Update a Data Bundle
     else:
-        db_index = next(i for i, db in enumerate(state['data_bundles']) if db.key == old_db.key)
-        state['data_bundles'][db_index] = new_db
+        db_index = next(
+            i for i, db in enumerate(state["data_bundles"]) if db.key == old_db.key
+        )
+        state["data_bundles"][db_index] = new_db
 
     # Write to disk
     save_config()
@@ -535,8 +574,8 @@ def get_default_data_bundle() -> DataBundle | None:
     Returns:
         str: The default data bundle key, or an empty string if not set.
     """
-    if 'default_data_bundle' in state:
-        return state['default_data_bundle']
+    if "default_data_bundle" in state:
+        return state["default_data_bundle"]
     else:
         return None
 
@@ -548,12 +587,12 @@ def set_default_data_bundle(db: DataBundle) -> None:
     Args:
         db (DataBundle): The data bundle to set as the default.
     """
-    state['default_data_bundle'] = db
-    save_config() 
-
+    state["default_data_bundle"] = db
+    save_config()
 
 
 ##### SPARQL QUERIES #####
+
 
 def get_sparql_queries() -> List[List[str]]:
     """
@@ -563,11 +602,11 @@ def get_sparql_queries() -> List[List[str]]:
         List[List[str]]: A list of SPARQL queries, where each query is represented as a list of strings.
                         Returns an empty list if no queries are saved.
     """
-    if 'sparql_queries' in state:
-        return state['sparql_queries']
+    if "sparql_queries" in state:
+        return state["sparql_queries"]
     else:
         return []
-    
+
 
 def set_sparql_queries(queries: List[List[str]]) -> None:
     """
@@ -579,7 +618,7 @@ def set_sparql_queries(queries: List[List[str]]) -> None:
     Returns:
         None
     """
-    state['sparql_queries'] = queries
+    state["sparql_queries"] = queries
 
 
 def get_sparql_query() -> str:
@@ -592,21 +631,21 @@ def get_sparql_query() -> str:
     Returns:
         str: The name of the active SPARQL query.
     """
-    if 'sparql_query' in state:
-        return state['sparql_query']
-    
+    if "sparql_query" in state:
+        return state["sparql_query"]
+
     # If none is selected
     else:
         # And if there is any in the config
         queries = get_sparql_queries()
 
-        if len(queries): 
+        if len(queries):
             # Set the first one as selected
             first_name = queries[0][0]
             set_sparql_query(first_name)
             return first_name
-        else: 
-            return ''
+        else:
+            return ""
 
 
 def set_sparql_query(name: str) -> None:
@@ -616,8 +655,8 @@ def set_sparql_query(name: str) -> None:
     Args:
         name (str): The name of the SPARQL query to set as active.
     """
-    state['sparql_query'] = name
-    
+    state["sparql_query"] = name
+
 
 def update_sparql_query(sq: List[str]) -> None:
     """
@@ -627,17 +666,17 @@ def update_sparql_query(sq: List[str]) -> None:
         sq (List[str]): The SPARQL query to add or update, where the first element is the query name.
     """
     # List all existing SPARQL queries
-    all_queries_names = [sq[0] for sq in state['sparql_queries']]
+    all_queries_names = [sq[0] for sq in state["sparql_queries"]]
 
     # If it is a creation
     if sq[0] not in all_queries_names:
-        state['sparql_queries'].append(sq)
+        state["sparql_queries"].append(sq)
 
     # If it is an update
     else:
         sparql_query_index = all_queries_names.index(sq[0])
-        state['sparql_queries'][sparql_query_index] = sq
-    
+        state["sparql_queries"][sparql_query_index] = sq
+
     # Write to disk
     save_config()
 
@@ -653,11 +692,11 @@ def delete_sparql_query(sq_name: str) -> None:
         sq_name (str): The name of the SPARQL query to delete.
     """
     # Remove it from list
-    state['sparql_queries'] = [sq for sq in state['sparql_queries'] if sq[0] != sq_name]
+    state["sparql_queries"] = [sq for sq in state["sparql_queries"] if sq[0] != sq_name]
 
-    # Remove selected one. 
+    # Remove selected one.
     # How Logre is built makes it so that when deleting a query, it HAS to be selected
-    del state['sparql_query']
+    del state["sparql_query"]
 
     # Write on disk
     save_config()
@@ -673,7 +712,7 @@ def set_last_executed_sparql_id(id: str) -> None:
     Returns:
         None
     """
-    state['last_sparql_executed_id'] = id
+    state["last_sparql_executed_id"] = id
 
 
 def get_last_executed_sparql_id() -> str:
@@ -684,13 +723,14 @@ def get_last_executed_sparql_id() -> str:
         str | None: The identifier of the last executed SPARQL query,
         or None if no query has been executed yet.
     """
-    if 'last_sparql_executed_id' in state: 
-        return state['last_sparql_executed_id']
+    if "last_sparql_executed_id" in state:
+        return state["last_sparql_executed_id"]
     else:
         return None
 
 
 ##### SELECTED ENTITY #####
+
 
 def get_entity_uri() -> str:
     """
@@ -699,9 +739,9 @@ def get_entity_uri() -> str:
     Returns:
         str | None: The entity URI if set, otherwise None.
     """
-    if 'entity_uri' not in state:
+    if "entity_uri" not in state:
         return None
-    return state['entity_uri']
+    return state["entity_uri"]
 
 
 def set_entity_uri(uri: str) -> None:
@@ -711,11 +751,11 @@ def set_entity_uri(uri: str) -> None:
     Args:
         uri (str): The entity URI to store.
     """
-    state['entity_uri'] = uri
-
+    state["entity_uri"] = uri
 
 
 ##### FIELDS #####
+
 
 def get_offset(entity_uri: str, property_key: str) -> int:
     """
@@ -728,12 +768,12 @@ def get_offset(entity_uri: str, property_key: str) -> int:
     Returns:
         int: The stored offset value, or 0 if not set.
     """
-    key = f'offset_{entity_uri}_{property_key}'
-    if key not in state: 
+    key = f"offset_{entity_uri}_{property_key}"
+    if key not in state:
         return 0
     else:
-        return state[f'offset_{entity_uri}_{property_key}']
-    
+        return state[f"offset_{entity_uri}_{property_key}"]
+
 
 def set_offset(entity_uri: str, property_key: str, value: int) -> None:
     """
@@ -744,11 +784,11 @@ def set_offset(entity_uri: str, property_key: str, value: int) -> None:
         property_key (str): The property key associated with the offset.
         value (int): The offset value to store.
     """
-    state[f'offset_{entity_uri}_{property_key}'] = value
+    state[f"offset_{entity_uri}_{property_key}"] = value
 
 
-    
 ##### ENTITY CHART INCOMING #####
+
 
 def entity_chart_inc_get_list() -> List[Resource]:
     """
@@ -757,11 +797,11 @@ def entity_chart_inc_get_list() -> List[Resource]:
     Returns:
         List[Resource]: A list of incoming entities, or an empty list if none are set.
     """
-    if 'chart_entity_inc_list' in state:
-        return state['chart_entity_inc_list']
-    else: 
+    if "chart_entity_inc_list" in state:
+        return state["chart_entity_inc_list"]
+    else:
         return []
-    
+
 
 def entity_chart_inc_list_add(entity: Resource) -> None:
     """
@@ -772,13 +812,13 @@ def entity_chart_inc_list_add(entity: Resource) -> None:
     Args:
         entity (Resource): The incoming entity to add.
     """
-    if 'chart_entity_inc_list' in state:
-        has_entities = set([e.uri for e in state['chart_entity_inc_list']])
+    if "chart_entity_inc_list" in state:
+        has_entities = set([e.uri for e in state["chart_entity_inc_list"]])
         if entity.uri not in has_entities:
-            state['chart_entity_inc_list'].append(entity)
+            state["chart_entity_inc_list"].append(entity)
     else:
-        state['chart_entity_inc_list'] = [entity]
-        
+        state["chart_entity_inc_list"] = [entity]
+
 
 def entity_chart_inc_list_remove(entity: Resource) -> None:
     """
@@ -787,8 +827,12 @@ def entity_chart_inc_list_remove(entity: Resource) -> None:
     Args:
         entity (Resource): The incoming entity to remove.
     """
-    if 'chart_entity_inc_list' in state:
-        state['chart_entity_inc_list'] = [resource for resource in state['chart_entity_inc_list'] if resource.uri != entity.uri]
+    if "chart_entity_inc_list" in state:
+        state["chart_entity_inc_list"] = [
+            resource
+            for resource in state["chart_entity_inc_list"]
+            if resource.uri != entity.uri
+        ]
 
 
 def entity_chart_inc_list_init(entity: Resource) -> None:
@@ -807,13 +851,13 @@ def entity_chart_inc_list_init(entity: Resource) -> None:
     initiated = entity_chart_get_inc_initialized()
     if initiated and initiated.uri == entity.uri:
         return
-    
+
     # If already been initialized, check if it is the same or not
-    if 'chart_entity_inc_list' in state:
-        has_entities = set([e.uri for e in state['chart_entity_inc_list']])
+    if "chart_entity_inc_list" in state:
+        has_entities = set([e.uri for e in state["chart_entity_inc_list"]])
         if entity.uri not in has_entities:
             # If it is another one, replace it
-            state['chart_entity_inc_list'] = [entity]
+            state["chart_entity_inc_list"] = [entity]
             entity_chart_set_inc_initialized(entity)
     else:
         # If it is first initialization, set it
@@ -828,8 +872,8 @@ def entity_chart_set_inc_initialized(entity: Resource) -> None:
     Args:
         entity (Resource): The entity to mark as initialized.
     """
-    state['chart_entity_inc_initialized'] = entity
-    
+    state["chart_entity_inc_initialized"] = entity
+
 
 def entity_chart_get_inc_initialized() -> Resource | None:
     """
@@ -838,14 +882,14 @@ def entity_chart_get_inc_initialized() -> Resource | None:
     Returns:
         Resource | None: The initialized incoming entity, or None if not set.
     """
-    if 'chart_entity_inc_initialized' in state:
-        return state['chart_entity_inc_initialized']
+    if "chart_entity_inc_initialized" in state:
+        return state["chart_entity_inc_initialized"]
     else:
         return None
 
 
-
 ##### ENTITY CHART OUTGOING #####
+
 
 def entity_chart_out_get_list() -> List[Resource]:
     """
@@ -854,12 +898,12 @@ def entity_chart_out_get_list() -> List[Resource]:
     Returns:
         List[Resource]: A list of outgoing entities, or an empty list if none are set.
     """
-    if 'chart_entity_out_list' in state:
-        return state['chart_entity_out_list']
-    else: 
+    if "chart_entity_out_list" in state:
+        return state["chart_entity_out_list"]
+    else:
         return []
 
-    
+
 def entity_chart_out_list_add(entity: Resource) -> None:
     """
     Add an outgoing entity to the chart's outgoing entity list in the session state.
@@ -869,12 +913,12 @@ def entity_chart_out_list_add(entity: Resource) -> None:
     Args:
         entity (Resource): The outgoing entity to add.
     """
-    if 'chart_entity_out_list' in state:
-        has_entities = set([e.uri for e in state['chart_entity_out_list']])
+    if "chart_entity_out_list" in state:
+        has_entities = set([e.uri for e in state["chart_entity_out_list"]])
         if entity.uri not in has_entities:
-            state['chart_entity_out_list'].append(entity)
+            state["chart_entity_out_list"].append(entity)
     else:
-        state['chart_entity_out_list'] = [entity]
+        state["chart_entity_out_list"] = [entity]
 
 
 def entity_chart_out_list_remove(entity: Resource) -> None:
@@ -884,8 +928,12 @@ def entity_chart_out_list_remove(entity: Resource) -> None:
     Args:
         entity (Resource): The outgoing entity to remove.
     """
-    if 'chart_entity_out_list' in state:
-        state['chart_entity_out_list'] = [resource for resource in state['chart_entity_out_list'] if resource.uri != entity.uri]
+    if "chart_entity_out_list" in state:
+        state["chart_entity_out_list"] = [
+            resource
+            for resource in state["chart_entity_out_list"]
+            if resource.uri != entity.uri
+        ]
 
 
 def entity_chart_out_list_init(entity: Resource) -> None:
@@ -904,13 +952,13 @@ def entity_chart_out_list_init(entity: Resource) -> None:
     initiated = entity_chart_get_out_initialized()
     if initiated and initiated.uri == entity.uri:
         return
-    
+
     # If already been initialized, check if it is the same or not
-    if 'chart_entity_out_list' in state:
-        has_entities = set([e.uri for e in state['chart_entity_out_list']])
+    if "chart_entity_out_list" in state:
+        has_entities = set([e.uri for e in state["chart_entity_out_list"]])
         if entity.uri not in has_entities:
             # If it is another one, replace it
-            state['chart_entity_out_list'] = [entity]
+            state["chart_entity_out_list"] = [entity]
             entity_chart_set_out_initialized(entity)
     else:
         # If it is first initialization, set it
@@ -925,7 +973,7 @@ def entity_chart_set_out_initialized(entity: Resource) -> None:
     Args:
         entity (Resource): The entity to mark as initialized.
     """
-    state['chart_entity_out_initialized'] = entity
+    state["chart_entity_out_initialized"] = entity
 
 
 def entity_chart_get_out_initialized() -> Resource | None:
@@ -935,14 +983,14 @@ def entity_chart_get_out_initialized() -> Resource | None:
     Returns:
         Resource | None: The initialized outgoing entity, or None if not set.
     """
-    if 'chart_entity_out_initialized' in state:
-        return state['chart_entity_out_initialized']
+    if "chart_entity_out_initialized" in state:
+        return state["chart_entity_out_initialized"]
     else:
         return None
 
 
-
 ##### DATA TABLES #####
+
 
 def data_table_set_page(class_uri: str, page_nb: int) -> None:
     """
@@ -952,7 +1000,7 @@ def data_table_set_page(class_uri: str, page_nb: int) -> None:
         class_uri (str): The URI of the class for which the page number is being set.
         page_nb (int): The page number to set.
     """
-    state[f'data_table_page_{class_uri}'] = page_nb
+    state[f"data_table_page_{class_uri}"] = page_nb
 
 
 def data_table_get_page(class_uri: str) -> int:
@@ -965,15 +1013,15 @@ def data_table_get_page(class_uri: str) -> int:
     Returns:
         int: The current page number, or 1 if not set.
     """
-    key = f'data_table_page_{class_uri}'
-    if key in state: 
+    key = f"data_table_page_{class_uri}"
+    if key in state:
         return state[key]
     else:
         return 1
 
 
-
 ##### DIALOG ENTITY CREATION #####
+
 
 def entity_creation_set_input_number(property: Property, input_number: int) -> None:
     """
@@ -998,12 +1046,14 @@ def entity_creation_get_input_number(property: Property) -> int:
         int: The stored input number, or 1 if not set.
     """
     key = f"entity-creation-input-number-{property.get_key()}"
-    if key in state: return state[key]
-    else: return 1
-
+    if key in state:
+        return state[key]
+    else:
+        return 1
 
 
 ##### DIALOG ENTITY EDITION #####
+
 
 def entity_edition_set_input_number(property: Property, input_number: int) -> None:
     """
@@ -1016,7 +1066,7 @@ def entity_edition_set_input_number(property: Property, input_number: int) -> No
     key = f"entity-edition-input-number-{property.get_key()}"
     state[key] = input_number
 
-    
+
 def entity_edition_get_input_number(property: Property) -> int:
     """
     Retrieve the input number for a specific property during entity edition.
@@ -1028,5 +1078,7 @@ def entity_edition_get_input_number(property: Property) -> int:
         int: The stored input number, or 0 if not set.
     """
     key = f"entity-edition-input-number-{property.get_key()}"
-    if key in state: return state[key]
-    else: return 0
+    if key in state:
+        return state[key]
+    else:
+        return 0
