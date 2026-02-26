@@ -112,31 +112,36 @@ with st.expander(f"Data bundles"):
     
     # Loop through all data bundles and display a short version of them
     # Group them by their endpoint
-    data_bundles.sort(key=lambda db: db.endpoint.name)
-    for i, db in enumerate(data_bundles):
-        
-        # The data bundle itself
-        with st.container(horizontal=True, vertical_alignment='center'):
-            st.markdown(f"**{db.name}** - *{db.endpoint.name}*")
 
-            # Handle default options (set to default + label)
-            if state.get_default_data_bundle() == db: 
-                st.markdown('*Default*', width='content')
-            else:  
-                if st.button('Set as default', type='tertiary', key=f'config-data-bundle-default-{i}'):
-                    state.set_default_data_bundle(db)
-                    st.rerun()
+    for endpoint in endpoints:
+        st.markdown(f"**{endpoint.name}**")
 
-            # Edit button
-            if st.button('', icon=':material/edit:', type='tertiary', key=f'config-data-bundle-edit-{i}'):
-                dialog_data_bundle_form(db)
+        endpoint_data_bundles = list(filter(lambda db: db.endpoint == endpoint, data_bundles))
+        for i, db in enumerate(endpoint_data_bundles):
+            
+            # The data bundle itself
+            with st.container(horizontal=True, vertical_alignment='center'):
+                st.markdown(f"> **{db.name}**")
 
-            # Delete button
-            if st.button('', icon=':material/delete:', type='tertiary', key=f'config-data-bundle-delete-{i}'):
-                def callback_delete_data_bundle(db: DataBundle) -> None:
-                    state.update_data_bundle(db, None)
-                    state.set_toast('Data Bundle removed', icon=':material/delete:')
-                dialog_confirmation(f"You are about to delete the Data Bundle *{db.name}*", callback_delete_data_bundle, db=db)
+                # Handle default options (set to default + label)
+                if state.get_default_data_bundle() == db: 
+                    st.markdown('*Default*', width='content')
+                else:  
+                    if st.button('Set as default', type='tertiary', key=f'config-data-bundle-default-{i}'):
+                        state.set_default_data_bundle(db)
+                        st.session_state.clear()
+                        st.rerun()
+
+                # Edit button
+                if st.button('', icon=':material/edit:', type='tertiary', key=f'config-data-bundle-edit-{i}'):
+                    dialog_data_bundle_form(db)
+
+                # Delete button
+                if st.button('', icon=':material/delete:', type='tertiary', key=f'config-data-bundle-delete-{i}'):
+                    def callback_delete_data_bundle(db: DataBundle) -> None:
+                        state.update_data_bundle(db, None)
+                        state.set_toast('Data Bundle removed', icon=':material/delete:')
+                    dialog_confirmation(f"You are about to delete the Data Bundle *{db.name}*", callback_delete_data_bundle, db=db)
         
     st.write('')
 

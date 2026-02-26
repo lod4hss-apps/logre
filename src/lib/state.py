@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from os.path import exists as path_exists
 from pathlib import Path
 from yaml import safe_load, dump
@@ -84,11 +84,11 @@ def handle_query_params(required_keys: List[str]) -> None:
     """
     Update the query parameters based on the current session state.
 
-    For each key in `query_param_keys`, the corresponding value is retrieved
+    For each key in `required_keys`, the corresponding value is retrieved
     from the session state and set in the query parameters if available.
 
     Args:
-        query_param_keys (List[str]): A list of query parameter keys to update.
+        required_keys (List[str]): A list of query parameter keys to update.
                                     Supported keys are "db", "uri".
     """
 
@@ -420,6 +420,24 @@ def update_endpoint(old_endpoint: Sparql | None, new_endpoint: Sparql | None) ->
     # Write to disk
     save_config()
 
+def get_endpoint_groups() -> List[Dict[str, object]]:
+    """
+    Build endpoint group information based on configured data bundles.
+
+    Returns:
+        List[dict]: Each dict contains "key", "label" and "data_bundles".
+    """
+    groups: List[Dict[str, object]] = []
+    endpoints = get_endpoints()
+    for endpoint in endpoints:
+        bundles = [db for db in get_data_bundles() if db.endpoint.key == endpoint.key]
+        groups.append({
+            'key': endpoint.key,
+            'label': endpoint.name,
+            'endpoint': endpoint,
+            'data_bundles': bundles,
+        })
+    return sorted(groups, key=lambda endpoint: endpoint['label'])
 
 ##### DATA BUNDLES #####
 
@@ -461,10 +479,7 @@ def get_data_bundle() -> DataBundle | None:
         # Return the default one, only if it exists
         db = get_default_data_bundle()
         if db:
-            # Data Bundle needs a fresh model each time it is needed
-            db.load_model()
-
-            # Also, if the default data bundle is accessed, it is possible that no endpoint is selected 
+            # If the default data bundle is accessed, it is possible that no endpoint is selected 
             # (most probably), so set it if it is the case
             if not get_endpoint():
                 set_endpoint(db.endpoint)

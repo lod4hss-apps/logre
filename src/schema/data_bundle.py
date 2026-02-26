@@ -878,9 +878,10 @@ class DataBundle:
 
         prop_var_names = [self.__data_table_get_column_var_name(prop, i, class_uri) for i, prop in enumerate(needed_properties)]
         display_names = [self.__data_table_get_display_name(prop, class_uri) for prop in needed_properties]
-        ordered_columns = ['uri'] + prop_var_names + ['outgoing_count', 'incoming_count']
-        df = df[ordered_columns]
-        df.columns = ['URI'] + display_names + ['Outgoing count', 'Incoming count']
+        if len(df) != 0: 
+            ordered_columns = ['uri'] + prop_var_names + ['outgoing_count', 'incoming_count']
+            df = df[ordered_columns]
+            df.columns = ['URI'] + display_names + ['Outgoing count', 'Incoming count']
 
         return df
     

@@ -109,7 +109,7 @@ HELP_TEXTS = {
     "data_bundle_form.named_graphs": (
         "Lists the existing graphs in the endpoint to help you pick the right identifiers."
     ),
-    "data_bundle_form.graph_data": (
+    "data_bundle_form.data": (
         "URI of the graph containing your business data (triples)."
         " [Why three graphs?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)."
     ),

@@ -60,31 +60,31 @@ st.html(f"""
 """, unsafe_allow_javascript=True)
 
 
-st.title('How to...')
+# st.title('How to...')
 
-st.markdown('##### ... select a box or a link?')
-st.markdown('> Simply click on it.')
+# st.markdown('##### ... select a box or a link?')
+# st.markdown('> Simply click on it.')
 
-st.markdown('##### ... unselect a box or a link?')
-st.markdown('> Simply click on the empty space.')
+# st.markdown('##### ... unselect a box or a link?')
+# st.markdown('> Simply click on the empty space.')
 
-st.markdown('##### ... create a new box?')
-st.markdown('> When nothing is selected, press on "b" on your keyboard (canvas should be focused).')
+# st.markdown('##### ... create a new box?')
+# st.markdown('> When nothing is selected, press on "b" on your keyboard (canvas should be focused).')
 
-st.markdown('##### ... edit a box (class URI or name)?')
-st.markdown('> When a box(es) is(are) selected, simply hit the keyboard, this will change the box content. Remember that first line is the class URI, and second is the class name.')
+# st.markdown('##### ... edit a box (class URI or name)?')
+# st.markdown('> When a box(es) is(are) selected, simply hit the keyboard, this will change the box content. Remember that first line is the class URI, and second is the class name.')
 
-st.markdown('##### ... move one or multiple boxes?')
-st.markdown('> To move something, you need to select it, and then drag and drop on the canvas.')
+# st.markdown('##### ... move one or multiple boxes?')
+# st.markdown('> To move something, you need to select it, and then drag and drop on the canvas.')
 
-st.markdown('##### ...move everything?')
-st.markdown('> To move everything - or said otherwise, to move the camera - just have nothing selected and drag and drop')
+# st.markdown('##### ...move everything?')
+# st.markdown('> To move everything - or said otherwise, to move the camera - just have nothing selected and drag and drop')
 
-st.markdown('##### ... zoom or unzoom?')
-st.markdown('> Use your wheeler (mouse or pad) to zoom or unzoom. There is also a way of fitting all your model in the canvas at once: press "z" key.')
+# st.markdown('##### ... zoom or unzoom?')
+# st.markdown('> Use your wheeler (mouse or pad) to zoom or unzoom. There is also a way of fitting all your model in the canvas at once: press "z" key.')
 
-st.markdown('##### ... link two boxes?')
-st.markdown('> When nothing is selected, press "l" key, that will activate the create link mode (not visible at this point). Then you need to click on the first box concerned by the link (the subject). Your will then see your mouse linked to the box. Finally, click on the target (the object). You have then created a link (a predicate)!')
+# st.markdown('##### ... link two boxes?')
+# st.markdown('> When nothing is selected, press "l" key, that will activate the create link mode (not visible at this point). Then you need to click on the first box concerned by the link (the subject). Your will then see your mouse linked to the box. Finally, click on the target (the object). You have then created a link (a predicate)!')
 
-st.markdown('##### ... change information of a link?')
-st.markdown('> When a link is selected, you just can hit the keyboard, and it will start the update. To update the predicate label, write "label: " followed by the label you would like to set/update. To update the URI of the link, write "uri: " followed by the uri you want to set/update. To update the cardinatlity of the link, write "card: " followed by the cardinality you want to set/update (eg: "0..3" or "0..\*" or "1"). To update the order of appearance of the property in formular, write "order: " followed by the order you want to set/update. You can also update multiple attribute at once, for example you can write "uri: rdfs:label - label: has name - card: 0..\*"')
+# st.markdown('##### ... change information of a link?')
+# st.markdown('> When a link is selected, you just can hit the keyboard, and it will start the update. To update the predicate label, write "label: " followed by the label you would like to set/update. To update the URI of the link, write "uri: " followed by the uri you want to set/update. To update the cardinatlity of the link, write "card: " followed by the cardinality you want to set/update (eg: "0..3" or "0..\*" or "1"). To update the order of appearance of the property in formular, write "order: " followed by the order you want to set/update. You can also update multiple attribute at once, for example you can write "uri: rdfs:label - label: has name - card: 0..\*"')

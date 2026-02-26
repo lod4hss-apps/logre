@@ -10,14 +10,14 @@ def summarize_classes(data_bundle, limit: int = 5) -> Dict[str, Any]:
     query = f"""
         SELECT ?class (COUNT(?instance) AS ?count)
         WHERE {{
-            {data_bundle.graph_data.sparql_begin}
+            {data_bundle.data.sparql_begin}
                 ?instance {data_bundle.model.type_property} ?class .
-            {data_bundle.graph_data.sparql_end}
+            {data_bundle.data.sparql_end}
         }}
         GROUP BY ?class
         ORDER BY DESC(?count)
     """
-    response = data_bundle.graph_data.run(query, data_bundle.prefixes)
+    response = data_bundle.data.run(query)
     if not response:
         return {"total": 0, "rows": [], "top": []}
 
@@ -38,14 +38,14 @@ def summarize_properties(data_bundle, limit: int = 5) -> Dict[str, Any]:
     query = f"""
         SELECT ?property (COUNT(*) AS ?count)
         WHERE {{
-            {data_bundle.graph_data.sparql_begin}
+            {data_bundle.data.sparql_begin}
                 ?subject ?property ?object .
-            {data_bundle.graph_data.sparql_end}
+            {data_bundle.data.sparql_end}
         }}
         GROUP BY ?property
         ORDER BY DESC(?count)
     """
-    response = data_bundle.graph_data.run(query, data_bundle.prefixes)
+    response = data_bundle.data.run(query)
     if not response:
         return {"total": 0, "rows": [], "top": []}
 

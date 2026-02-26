@@ -5,13 +5,14 @@ from requests.exceptions import HTTPError, ConnectionError
 
 from components.init import init
 from components.menu import menu
+from schema.data_bundle import DataBundle
 from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from lib.stats import summarize_classes, summarize_properties
 
 
 # Initialize application context
-init(layout='wide', query_param_keys=['endpoint', 'db'])
+init(layout='wide', required_query_params=['endpoint', 'db'])
 menu()
 
 
@@ -33,7 +34,6 @@ def show_top_classes(overview: dict) -> None:
     """Display a table with the most populated classes in the data bundle."""
     top_classes = overview["top_classes"]
     if not top_classes:
-        st.caption("Unable to compute the most populated classes right now.")
         return
 
     df = pd.DataFrame(top_classes)
@@ -52,7 +52,6 @@ def show_top_properties(overview: dict) -> None:
     """Display a table with the most used properties in the data bundle."""
     top_props = overview.get("top_properties")
     if not top_props:
-        st.caption("Unable to compute the most used properties right now.")
         return
 
     df = pd.DataFrame(top_props)
@@ -78,7 +77,6 @@ def show_pie_charts(data_bundle) -> None:
             values=[row["count"] for row in classes_stats["top"]],
             labels=[row["label"] for row in classes_stats["top"]],
             title=f"Classes (Top {len(classes_stats['top'])})",
-            empty_message="Aucune entité pour le moment",
         )
 
     with charts[1]:
@@ -86,14 +84,12 @@ def show_pie_charts(data_bundle) -> None:
             values=[row["count"] for row in prop_stats["top"]],
             labels=[row["label"] for row in prop_stats["top"]],
             title=f"Propriétés (Top {len(prop_stats['top'])})",
-            empty_message="Aucune propriété détectée",
         )
 
 
-def render_pie_chart(values, labels, title: str, empty_message: str) -> None:
+def render_pie_chart(values, labels, title: str) -> None:
     """Helper to draw consistent donut charts."""
     if not values:
-        st.caption(empty_message)
         return
 
     chart = go.Pie(
@@ -110,7 +106,8 @@ def render_pie_chart(values, labels, title: str, empty_message: str) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 
-def get_dashboard_overview(data_bundle) -> dict:
+@st.cache_data(ttl=60, hash_funcs={DataBundle: lambda db: db.key}, show_spinner=False)
+def get_dashboard_overview(data_bundle: DataBundle) -> dict:
     """
     Gather counts and top classes from the active data bundle.
     """
@@ -118,12 +115,10 @@ def get_dashboard_overview(data_bundle) -> dict:
     top_classes = get_top_classes(data_bundle, counts["entities"])
     top_properties = get_top_properties(data_bundle, counts["triples"])
     warnings = []
-    if counts["entities"] == 0:
-        warnings.append("This bundle does not contain any entity yet. Import data or create your first entity.")
     return {"counts": counts, "top_classes": top_classes, "top_properties": top_properties, "warnings": warnings}
 
 
-def get_counts(data_bundle) -> dict:
+def get_counts(data_bundle: DataBundle) -> dict:
     """
     Retrieve total number of entities, classes and triples in the bundle.
     """
@@ -134,12 +129,12 @@ def get_counts(data_bundle) -> dict:
             (COUNT(?instance) AS ?entity_count) 
             (COUNT(DISTINCT ?class) AS ?class_count)
         WHERE {{ 
-            {data_bundle.graph_data.sparql_begin}
+            {data_bundle.data.sparql_begin}
                 ?instance {data_bundle.model.type_property} ?class .
-            {data_bundle.graph_data.sparql_end}
+            {data_bundle.data.sparql_end}
         }}
     """
-    response_entities = data_bundle.graph_data.run(query_entities, data_bundle.prefixes)
+    response_entities = data_bundle.data.run(query_entities)
     if response_entities:
         counts["entities"] = _to_int(response_entities[0].get("entity_count"))
         counts["classes"] = _to_int(response_entities[0].get("class_count"))
@@ -147,46 +142,46 @@ def get_counts(data_bundle) -> dict:
     query_props = f"""
         SELECT (COUNT(DISTINCT ?property) AS ?prop_count)
         WHERE {{
-            {data_bundle.graph_data.sparql_begin}
+            {data_bundle.data.sparql_begin}
                 ?subject ?property ?object .
-            {data_bundle.graph_data.sparql_end}
+            {data_bundle.data.sparql_end}
         }}
     """
-    response_props = data_bundle.graph_data.run(query_props, data_bundle.prefixes)
+    response_props = data_bundle.data.run(query_props)
     if response_props:
         counts["properties"] = _to_int(response_props[0].get("prop_count"))
 
     query_triples = f"""
         SELECT (COUNT(*) AS ?triples_count)
         WHERE {{
-            {data_bundle.graph_data.sparql_begin}
+            {data_bundle.data.sparql_begin}
                 ?s ?p ?o .
-            {data_bundle.graph_data.sparql_end}
+            {data_bundle.data.sparql_end}
         }}
     """
-    response_triples = data_bundle.graph_data.run(query_triples, data_bundle.prefixes)
+    response_triples = data_bundle.data.run(query_triples)
     if response_triples:
         counts["triples"] = _to_int(response_triples[0].get("triples_count"))
 
     return counts
 
 
-def get_top_classes(data_bundle, total_entities: int, limit: int = 5) -> list[dict]:
+def get_top_classes(data_bundle: DataBundle, total_entities: int, limit: int = 5) -> list[dict]:
     """
     Retrieve the most populated classes in the bundle.
     """
     query = f"""
         SELECT ?class (COUNT(?instance) AS ?count)
         WHERE {{
-            {data_bundle.graph_data.sparql_begin}
+            {data_bundle.data.sparql_begin}
                 ?instance {data_bundle.model.type_property} ?class .
-            {data_bundle.graph_data.sparql_end}
+            {data_bundle.data.sparql_end}
         }}
         GROUP BY ?class
         ORDER BY DESC(?count)
         LIMIT {limit}
     """
-    response = data_bundle.graph_data.run(query, data_bundle.prefixes)
+    response = data_bundle.data.run(query)
     if not response:
         return []
 
@@ -200,19 +195,19 @@ def get_top_classes(data_bundle, total_entities: int, limit: int = 5) -> list[di
     return rows
 
 
-def get_top_properties(data_bundle, total_triples: int, limit: int = 5) -> list[dict]:
+def get_top_properties(data_bundle: DataBundle, total_triples: int, limit: int = 5) -> list[dict]:
     query = f"""
         SELECT ?property (COUNT(*) AS ?count)
         WHERE {{
-            {data_bundle.graph_data.sparql_begin}
+            {data_bundle.data.sparql_begin}
                 ?subject ?property ?object .
-            {data_bundle.graph_data.sparql_end}
+            {data_bundle.data.sparql_end}
         }}
         GROUP BY ?property
         ORDER BY DESC(?count)
         LIMIT {limit}
     """
-    response = data_bundle.graph_data.run(query, data_bundle.prefixes)
+    response = data_bundle.data.run(query)
     if not response:
         return []
 
@@ -249,71 +244,48 @@ def format_short(value: int) -> str:
     return f"{value:,}"
 
 
-def show_configuration_panel(current_bundle, data_bundles):
+def show_configuration_panel() -> None:
     """Render a discrete configuration block with bundle selector and graph reminders."""
-    if not data_bundles:
-        st.info("No data bundle configured yet. Visit the Configuration page to create one.", icon=":material/info:")
-        return
 
-    with st.expander("Configuration & context (overview)", expanded=False):
-        endpoint_groups = state.get_endpoint_groups()
-        if not endpoint_groups:
-            st.info("Configure an endpoint and a Data Bundle from the Configuration page.", icon=":material/info:")
-            return
+    # From state
+    endpoint = state.get_endpoint()
+    data_bundle = state.get_data_bundle()
 
-        st.caption("Need to edit bundles, prefixes or import data? Head to the full [Configuration page](/configuration).")
-
-        endpoint_key = state.get_endpoint_key()
-        active_endpoint = None
-        if endpoint_key:
-            active_endpoint = next((group for group in endpoint_groups if group['key'] == endpoint_key), None)
-        if not active_endpoint and current_bundle:
-            active_endpoint = next((group for group in endpoint_groups if current_bundle in group['data_bundles']), None)
-        if not active_endpoint:
-            active_endpoint = endpoint_groups[0]
-
-        bundles = active_endpoint['data_bundles']
-        active = current_bundle if current_bundle in bundles else None
-
-        st.markdown(f"**Endpoint**: {active_endpoint['label']}")
-        if not bundles:
-            st.warning("This endpoint has no configured Data Bundle yet.", icon=":material/info:")
-            active = None
-        elif not active:
-            st.warning("No active Data Bundle for this endpoint. Select one from the sidebar.", icon=":material/info:")
-
-        if active:
-            st.markdown(f"**Data bundle**: {active.name}")
-            st.caption(f"Base URI: {active.base_uri}")
-            st.markdown(
-                f"""
-                - **Data graph**: `{active.graph_data.uri or 'default graph'}`
-                - **Model graph**: `{active.graph_model.uri or 'default graph'}`
-                - **Metadata graph**: `{active.graph_metadata.uri or 'default graph'}`
-                """
-            )
-            try:
-                model_count_query = f"""
-                    SELECT (COUNT(*) AS ?count)
-                    WHERE {{
-                        {active.graph_model.sparql_begin}
-                            ?s ?p ?o .
-                        {active.graph_model.sparql_end}
-                    }}
-                """
-                model_count_resp = active.graph_model.run(model_count_query, active.prefixes) or []
-                model_count = _to_int(model_count_resp[0]['count']) if model_count_resp else 0
-            except Exception:
-                model_count = 0
-            if model_count == 0:
-                st.warning("Your SHACL model is empty. Import a model from the Configuration page before editing entities.")
-            st.caption("See [How to configure data bundles](/documentation#how-to-create-a-data-bundle) for details.")
+    if endpoint:
+        st.markdown(f"**Endpoint**: {endpoint.name}")
+    
+    if data_bundle:
+        st.markdown(f"**Data bundle**: {data_bundle.name}")
+        st.caption(f"Base URI: {data_bundle.base_uri}")
+        st.markdown(
+            f"""
+            - **Data graph**: `{data_bundle.data.uri or '*Default Graph*'}`
+            - **Model graph**: `{data_bundle.model.uri or '*Default Graph*'}`
+            - **Metadata graph**: `{data_bundle.metadata.uri or '*Default Graph*'}`
+            """
+        )
+        # try:
+        model_count_query = f"""
+            SELECT (COUNT(*) AS ?count)
+            WHERE {{
+                {data_bundle.model.sparql_begin}
+                    ?s ?p ?o .
+                {data_bundle.model.sparql_end}
+            }}
+        """
+        model_count_resp = data_bundle.model.run(model_count_query) or []
+        model_count = _to_int(model_count_resp[0]['count']) if model_count_resp else 0
+        # except Exception:
+        #     model_count = 0
+        if model_count == 0:
+            st.warning("You do not have any model yet. Import one from the Import/export page to enable entity creation.")
+        st.caption("See [How to configure data bundles](/documentation#how-to-create-a-data-bundle) for details.")
 
 
 def show_data_insights(overview, data_bundle):
     """Grouped visualisation for metrics, charts and tables."""
     show_metrics(overview)
-
+    
     chart_section = st.container()
     with chart_section:
         show_pie_charts(data_bundle)
@@ -331,22 +303,19 @@ try:
     data_bundles = state.get_data_bundles()
 
     if not data_bundle:
-        st.warning("Aucun data bundle actif pour le moment.")
-        st.write(
-            "Sélectionnez ou créez un bundle dans la section de configuration ci-dessous pour commencer."
-        )
-        st.caption("En savoir plus : [What are data bundles?](/documentation#what-are-data-bundles).")
+        st.switch_page('server.py')
     else:
-        overview = get_dashboard_overview(data_bundle)
+        with st.spinner('Loading statistics...'):
+            overview = get_dashboard_overview(data_bundle)
 
-        if overview["warnings"]:
-            for warning in overview["warnings"]:
-                st.info(warning, icon=":material/info:")
+            if overview["warnings"]:
+                for warning in overview["warnings"]:
+                    st.info(warning, icon=":material/info:")
 
-        show_data_insights(overview, data_bundle)
+            show_data_insights(overview, data_bundle)
 
     st.divider()
-    show_configuration_panel(data_bundle, data_bundles)
+    show_configuration_panel()
 
 except HTTPError as err:
     message = get_HTTP_ERROR_message(err)

@@ -2,7 +2,7 @@ from typing import Literal, List
 import streamlit as st
 from lib import state
 from dotenv import load_dotenv
-from errors import error_text
+from components.errors import error_text
 
 def init(layout: Literal['centered', 'wide'] = 'centered', required_query_params: List[str] = [], avoid_anchor_titles: bool = True) -> None:
     """
@@ -10,7 +10,7 @@ def init(layout: Literal['centered', 'wide'] = 'centered', required_query_params
 
     Args:
         layout (Literal['centered', 'wide'], optional): The page layout style. Defaults to 'centered'.
-        query_param_keys (List[str], optional): List of query parameter keys to manage in the URL. Defaults to [].
+        required_query_params (List[str], optional): List of query parameter keys to manage in the URL. Defaults to [].
 
     Returns:
         None

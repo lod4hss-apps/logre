@@ -12,7 +12,7 @@ from dialogs.query_name import dialog_query_name
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize
-init(layout='wide', query_param_keys=['endpoint', 'db'])
+init(layout='wide', required_query_params=['endpoint', 'db'])
 menu()
 
 try:
@@ -22,6 +22,9 @@ try:
     sparql_query_name = state.get_sparql_query()
     endpoint = state.get_endpoint()
     data_bundle = state.get_data_bundle()
+
+    if not data_bundle:
+        st.switch_page("server.py")
 
     if not endpoint:
         st.markdown('# SPARQL Editor')
@@ -73,7 +76,7 @@ try:
         if editor['type'] == 'submit' and editor['id'] != state.get_last_executed_sparql_id():
 
             # Run the query
-            result = endpoint.sparql.run(editor['text'], prefixes)
+            result = endpoint.run(editor['text'], prefixes)
             state.set_last_executed_sparql_id(editor['id'])
 
             # If there is a result

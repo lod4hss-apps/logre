@@ -38,13 +38,19 @@ def menu() -> None:
             st.markdown(f"<small>v{version}</small>", unsafe_allow_html=True, width='content')
 
         # Page links
-        st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")
-        st.sidebar.page_link("pages/configuration.py", label="Configuration")
-        st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL Editor", disabled=not endpoint)
-        st.sidebar.page_link("pages/dashboard.py", label="Overview", disabled=not data_bundle)
+        st.sidebar.write("\n\n")
+        st.sidebar.write("\n\n")
+        st.sidebar.page_link("pages/dashboard.py", label="Dashboard", disabled=not data_bundle)
         st.sidebar.page_link("pages/import-export.py", label="Import, Export", disabled=not data_bundle)
         st.sidebar.page_link("pages/model.py", label="Model", disabled=not data_bundle)
         st.sidebar.page_link("pages/data-table.py", label="Data Table", disabled=not data_bundle)
+        st.sidebar.write("\n\n")
+        st.sidebar.write("\n\n")
+        st.sidebar.page_link("pages/sparql-editor.py", label="SPARQL Editor", disabled=not endpoint)
+        st.sidebar.write("\n\n")
+        st.sidebar.write("\n\n")
+        st.sidebar.page_link("pages/configuration.py", label="Configuration")
+        st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")
 
         st.sidebar.divider()
         
@@ -77,12 +83,14 @@ def menu() -> None:
                 db_selected_index = db_names.index(db_selected_name)
                 db_selected = data_bundles[db_selected_index]
                 state.set_data_bundle(db_selected)
+                st.rerun()
                 data_bundle = db_selected
 
             st.sidebar.divider()
 
             # Data bundle commands
             if data_bundle:
+                data_bundle.load_model()
                 model_ready = data_bundle.has_usable_model()
                 with st.sidebar.container(horizontal=False, horizontal_alignment= 'center', vertical_alignment='bottom', height='stretch'):
                     help_txt = "Your model does not have any classes with at least one property." if not model_ready else help_text('menu.find_entity')

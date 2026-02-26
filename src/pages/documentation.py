@@ -5,15 +5,17 @@ from streamlit.components.v1 import html
 from components.init import init
 from components.menu import menu
 
-
+# Page initialization
 init(avoid_anchor_titles=False)
 menu()
 
-
+# Path to documentation
 BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
-folder_path = BASE_DIR + '/documentation/faq.md'
+documentation_path = BASE_DIR + '/documentation/faq.md'
 
-content = folder_path.read_text(encoding='utf-8')
+# Read documentation
+with open(documentation_path, 'r', encoding='utf-8') as file:
+    content = file.read()
 
 
 def parse_sections(text: str):
@@ -57,7 +59,6 @@ intro_md, sections = parse_sections(content)
 
 st.markdown(intro_md)
 
-st.subheader("FAQ détaillée")
 anchors_seen: dict[str, int] = {}
 for title, body in sections:
     if not body:

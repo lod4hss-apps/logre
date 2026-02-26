@@ -43,7 +43,10 @@ def dialog_confirmation(text: str, callback: Callable, rerun: bool = True, **kwa
                 result = callback(**kwargs)
 
             # Only rerun when there was no errors in the callback execution
-            if rerun: st.rerun()
+            if rerun: 
+                st.session_state.clear()
+                st.rerun()
+
 
         # Forward the error upwards
         except BaseException as error:

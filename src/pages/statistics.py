@@ -25,9 +25,9 @@ with st.container(horizontal=True, horizontal_alignment='distribute'):
         query = f"""
             SELECT ?class (COUNT(?instance) AS ?count)
             WHERE {{
-                {data_bundle.graph_data.sparql_begin}
+                {data_bundle.data.sparql_begin}
                     ?instance {data_bundle.model.type_property} ?class .
-                {data_bundle.graph_data.sparql_end}
+                {data_bundle.data.sparql_end}
             }}
             GROUP BY ?class
             ORDER BY DESC(?count)
@@ -65,9 +65,9 @@ with st.container(horizontal=True, horizontal_alignment='distribute'):
         query = f"""
             SELECT ?property (COUNT(*) AS ?count)
             WHERE {{
-                {data_bundle.graph_data.sparql_begin}
+                {data_bundle.data.sparql_begin}
                     ?subject ?property ?object .
-                {data_bundle.graph_data.sparql_end}
+                {data_bundle.data.sparql_end}
             }}
             GROUP BY ?property
             ORDER BY DESC(?count)
