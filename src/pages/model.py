@@ -7,7 +7,7 @@ from lib import state
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize
-init('wide')
+init("wide")
 menu()
 
 BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
@@ -19,45 +19,60 @@ entity_uri = state.get_entity_uri()
 # Title
 col1, col2 = st.columns([5, 1], vertical_alignment="center")
 col1.title("Data Bundle model")
-col1.text('')
+col1.text("")
 
 # with col2.container(horizontal=True, horizontal_alignment='right'):
-  # if st.button('Save'):
-  #   def replace_model() -> None:
-  #     # Clear old model
-  #     data_bundle.model.delete(('?s', '?p', '?o'))
-  #     # Upload new Turtle
-  #     graph_uri = data_bundle.prefixes.lengthen(data_bundle.graph_model.uri)
-  #     prefixes = json.dumps('\n'.join(list(map(lambda prefix: prefix.to_turtle(), data_bundle.prefixes))).split('<'))
-  #     st.html(f"""
-  #         <script>
-  #             var endpointTechnology = "{data_bundle.endpoint.technology_name}";
-  #             var username = "{data_bundle.endpoint.username}";
-  #             var password = "{data_bundle.endpoint.password}";
-  #             var url = "{data_bundle.endpoint.url}";
-  #             var graphURI = "{graph_uri}";
-  #             var prefixes = {prefixes}.join("<");
-  #             uploadTurtle(endpointTechnology, username, password, url, graphURI, prefixes); 
-  #         </script>
-  #     """, unsafe_allow_javascript=True)
-  #   dialog_confirmation("Your are about to clear your model Named Graph and replace it by what is currently displayed.", replace_model, rerun=False)
+# if st.button('Save'):
+#   def replace_model() -> None:
+#     # Clear old model
+#     data_bundle.model.delete(('?s', '?p', '?o'))
+#     # Upload new Turtle
+#     graph_uri = data_bundle.prefixes.lengthen(data_bundle.graph_model.uri)
+#     prefixes = json.dumps('\n'.join(list(map(lambda prefix: prefix.to_turtle(), data_bundle.prefixes))).split('<'))
+#     st.html(f"""
+#         <script>
+#             var endpointTechnology = "{data_bundle.endpoint.technology_name}";
+#             var username = "{data_bundle.endpoint.username}";
+#             var password = "{data_bundle.endpoint.password}";
+#             var url = "{data_bundle.endpoint.url}";
+#             var graphURI = "{graph_uri}";
+#             var prefixes = {prefixes}.join("<");
+#             uploadTurtle(endpointTechnology, username, password, url, graphURI, prefixes);
+#         </script>
+#     """, unsafe_allow_javascript=True)
+#   dialog_confirmation("Your are about to clear your model Named Graph and replace it by what is currently displayed.", replace_model, rerun=False)
 
 # Get the js code
-with open(BASE_DIR + "/src/lib/shacl-maker.js") as file:
-  js_code = file.read().strip()
+js_code = None
+try:
+    with open(BASE_DIR + "/src/lib/shacl-maker.js", encoding="utf-8") as file:
+        js_code = file.read().strip()
+except FileNotFoundError:
+    st.warning(
+        "Missing shacl-maker.js. Run `make install` locally or rebuild the Docker image to fetch it."
+    )
+    st.stop()
 
-properties_string = json.dumps([property.to_dict() for property in data_bundle.model.properties], ensure_ascii=False).replace("'", '')
+properties_string = json.dumps(
+    [property.to_dict() for property in data_bundle.model.properties],
+    ensure_ascii=False,
+).replace("'", "")
 
-st.html('<canvas id="canvas-shacl-maker" width="1450" height="800" tabindex="0"></canvas>')
+st.html(
+    '<canvas id="canvas-shacl-maker" width="1450" height="800" tabindex="0"></canvas>'
+)
 st.html(f"<script>{js_code}</script>", unsafe_allow_javascript=True)
-st.html(f"""
+st.html(
+    f"""
   <script>
     setCanvas(document.getElementById('canvas-shacl-maker'));
     var triples = JSON.parse('{properties_string}')
 
     addTriples(triples);
   </script>
-""", unsafe_allow_javascript=True)
+""",
+    unsafe_allow_javascript=True,
+)
 
 
 # st.title('How to...')

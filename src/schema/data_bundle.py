@@ -1,14 +1,23 @@
 from typing import List, Tuple, Dict
 import pandas as pd
 from requests.exceptions import HTTPError
-from graphly.schema import Sparql, Graph, Model, Resource, Prefixes, Property, Statement, Sparql, Prefix
+from graphly.schema import (
+    Sparql,
+    Graph,
+    Model,
+    Resource,
+    Prefixes,
+    Property,
+    Statement,
+    Sparql,
+    Prefix,
+)
 from graphly.tools import prepare
 from lib.utils import normalize_text, to_snake_case, from_snake_case
 from .model_framework import get_model_framework
 
 
 class DataBundle:
-
     # Attributes
     name: str
     key: str
@@ -23,19 +32,20 @@ class DataBundle:
     data: Graph
     metadata: Graph
 
-    def __init__(self,
-                 name: str,
-                 base_uri: str,
-                 prefixes: Prefixes, 
-                 endpoint: Sparql,
-                 model_framework: str, 
-                 prop_type_uri: str, 
-                 prop_label_uri: str, 
-                 prop_comment_uri: str, 
-                 graph_data_uri: str, 
-                 graph_model_uri: str, 
-                 graph_metadata_uri: str, 
-        ) -> None:
+    def __init__(
+        self,
+        name: str,
+        base_uri: str,
+        prefixes: Prefixes,
+        endpoint: Sparql,
+        model_framework: str,
+        prop_type_uri: str,
+        prop_label_uri: str,
+        prop_comment_uri: str,
+        graph_data_uri: str,
+        graph_model_uri: str,
+        graph_metadata_uri: str,
+    ) -> None:
         """
         Initialize a data bundle with its configuration, SPARQL endpoint, model framework, and graphs.
 
@@ -54,18 +64,30 @@ class DataBundle:
         """
         # Attributes
         self.name = name
-        self.key = to_snake_case(self.name.replace(' - ', '-')) # To have a URL compatible name
+        self.key = to_snake_case(
+            self.name.replace(" - ", "-")
+        )  # To have a URL compatible name
         self.base_uri = base_uri
-        self.prefixes = Prefixes(prefixes.prefix_list + [Prefix('base', base_uri)])
+        base_prefixes = [
+            prefix for prefix in prefixes.prefix_list if prefix.short != "base"
+        ]
+        self.prefixes = Prefixes(base_prefixes + [Prefix("base", base_uri)])
         self.endpoint = endpoint
 
         # Get the right model framework class
         ModelClass = get_model_framework(model_framework)
-        self.model = ModelClass(self.endpoint, graph_model_uri, self.prefixes, self.prefixes.shorten(prop_type_uri), self.prefixes.shorten(prop_label_uri), self.prefixes.shorten(prop_comment_uri))
+        self.model = ModelClass(
+            self.endpoint,
+            graph_model_uri,
+            self.prefixes,
+            self.prefixes.shorten(prop_type_uri),
+            self.prefixes.shorten(prop_label_uri),
+            self.prefixes.shorten(prop_comment_uri),
+        )
 
         # Data graph
         self.data = Graph(self.endpoint, graph_data_uri, self.prefixes)
-        
+
         # Metadata graph
         self.metadata = Graph(self.endpoint, graph_metadata_uri, self.prefixes)
 
@@ -78,7 +100,6 @@ class DataBundle:
         self.model.sparql = endpoint
         self.metadata.sparql = endpoint
 
-
     def load_model(self) -> None:
         """
         Load and update the model for the data bundle by fetching it from the model graph.
@@ -87,17 +108,16 @@ class DataBundle:
         """
         # Fetch the Model
         try:
-            self.model.update() 
+            self.model.update()
         except HTTPError as err:
             status_code = err.response.status_code
             reason = err.response.reason
             message = f"There was an error while loading the data bundle {self.name}'s model.\n\n"
             message += f"[HTTP Error {status_code}]: {reason}\n\n{err.args[0]}"
             if err.response.status_code == 400:
-                message += f'\n\n{err.response.text}'
+                message += f"\n\n{err.response.text}"
             raise Exception(message)
-        
-        
+
     def has_usable_model(self) -> bool:
         """
         Indicate whether the current bundle has any non-datatype classes or properties loaded.
@@ -108,9 +128,10 @@ class DataBundle:
         """
         if not self.model:
             return False
-        has_classes = any(cls.class_uri != 'rdfs:Datatype' for cls in self.model.classes)
+        has_classes = any(
+            cls.class_uri != "rdfs:Datatype" for cls in self.model.classes
+        )
         return has_classes or bool(self.model.properties)
-              
 
     def run(self, text: str) -> List[Dict] | None:
         """
@@ -125,8 +146,13 @@ class DataBundle:
         """
         return self.endpoint.run(text, self.prefixes)
 
-
-    def find_entities(self, label: str = None, class_uri: str = None, limit: int | None = 10, offset: int | None = 0) -> List[Resource]:
+    def find_entities(
+        self,
+        label: str = None,
+        class_uri: str = None,
+        limit: int | None = 10,
+        offset: int | None = 0,
+    ) -> List[Resource]:
         """
         Find entities in the data graph, optionally filtered by label and/or class.
 
@@ -145,7 +171,9 @@ class DataBundle:
         """
         # Prepare query
         label = label.replace("'", "\\'") if label else None
-        filter_clause = f"FILTER(CONTAINS(LCASE(?label_), LCASE('{label}'))) ." if label else ""
+        filter_clause = (
+            f"FILTER(CONTAINS(LCASE(?label_), LCASE('{label}'))) ." if label else ""
+        )
         prepared_class_uri = prepare(class_uri, self.prefixes.shorts())
         query = f"""
             # DataBundle.find_entities()
@@ -170,14 +198,16 @@ class DataBundle:
         response = self.data.run(query)
 
         # If there is no result, there is no point to go forward
-        if not response: 
+        if not response:
             return []
-        
+
         # Parse response into Resource instance list
-        resources = [Resource(r['uri'], r['label'], r['comment'], r['class_uri']) for r in response]
+        resources = [
+            Resource(r["uri"], r["label"], r["comment"], r["class_uri"])
+            for r in response
+        ]
 
         return resources
-
 
     def get_outgoing_properties_of(self, entity: Resource) -> List[Property]:
         """
@@ -212,13 +242,19 @@ class DataBundle:
 
         # Find properties in model (for additional informations, labels, etc)
         domain_class_uri = entity.class_uri if entity.class_uri else None
-        properties = [self.model.find_properties(prop['uri'], domain_class_uri=domain_class_uri, range_class_uri=prop['range_class_uri']) for prop in response]
+        properties = [
+            self.model.find_properties(
+                prop["uri"],
+                domain_class_uri=domain_class_uri,
+                range_class_uri=prop["range_class_uri"],
+            )
+            for prop in response
+        ]
 
         # Flatten the list
         properties = [p for props in properties for p in props]
 
         return properties
-    
 
     def get_incoming_properties_of(self, entity: Resource) -> List[Property]:
         """
@@ -253,14 +289,20 @@ class DataBundle:
 
         # Find properties in model (for additional informations, labels, etc)
         range_class_uri = entity.class_uri if entity.class_uri else None
-        properties = [self.model.find_properties(prop['uri'], domain_class_uri=prop['domain_class_uri'], range_class_uri=range_class_uri) for prop in response]
+        properties = [
+            self.model.find_properties(
+                prop["uri"],
+                domain_class_uri=prop["domain_class_uri"],
+                range_class_uri=range_class_uri,
+            )
+            for prop in response
+        ]
 
         # Flatten the list
         properties = [p for props in properties for p in props]
 
         return properties
-    
-        
+
     def get_card_properties_of(self, class_uri: str) -> List[Property]:
         """
         Retrieve the card properties of a given class from the model.
@@ -274,12 +316,17 @@ class DataBundle:
         Returns:
             List[Property]: A sorted list of card properties for the class.
         """
-        card_properties = [p for p in self.model.properties if p.card_of != None and p.card_of.uri == class_uri]
-        card_properties.sort(key=lambda p: p.order or 10**18) 
+        card_properties = [
+            p
+            for p in self.model.properties
+            if p.card_of != None and p.card_of.uri == class_uri
+        ]
+        card_properties.sort(key=lambda p: p.order or 10**18)
         return card_properties
 
-
-    def get_objects_of(self, entity: Resource, property: Property, limit: int = 5, offset: int = 0) -> List[Statement]:
+    def get_objects_of(
+        self, entity: Resource, property: Property, limit: int = 5, offset: int = 0
+    ) -> List[Statement]:
         """
         Retrieve the objects of a given entity for a specific property from the data graph.
 
@@ -299,8 +346,12 @@ class DataBundle:
         # Prepare the query
         entity_uri = prepare(entity.uri, self.prefixes.shorts())
         property_uri = prepare(property.uri, self.prefixes.shorts())
-        object_class_uri = prepare(property.range.uri if property.range else None, self.prefixes.shorts())
-        is_range_datatype = property.range.class_uri == 'rdfs:Datatype' if property.range else False
+        object_class_uri = prepare(
+            property.range.uri if property.range else None, self.prefixes.shorts()
+        )
+        is_range_datatype = (
+            property.range.class_uri == "rdfs:Datatype" if property.range else False
+        )
         query = f"""
             # DataBundle.get_objects_of()
             SELECT
@@ -329,14 +380,23 @@ class DataBundle:
         response = list({d["object_uri"]: d for d in reversed(response)}.values())
 
         # Parse response into Statement instance list
-        statements = [Statement(
-            entity,
-            property,
-            Resource(r['object_uri'], r['object_label'], r['object_comment'], r['object_class_uri'], r['resource_type'] or None),
-        ) for r in response]
+        statements = [
+            Statement(
+                entity,
+                property,
+                Resource(
+                    r["object_uri"],
+                    r["object_label"],
+                    r["object_comment"],
+                    r["object_class_uri"],
+                    r["resource_type"] or None,
+                ),
+            )
+            for r in response
+        ]
 
         return statements
-    
+
     def get_objects_of_count(self, entity: Resource, property: Property) -> int:
         """
         Count the number of objects linked to a given entity by a specific property.
@@ -368,10 +428,11 @@ class DataBundle:
         # Execute query
         response = self.data.run(query)
 
-        return response[0]['count']
+        return response[0]["count"]
 
-
-    def get_subjects_of(self, entity: Resource, property: Property, limit: int = 5, offset: int = 0) -> List[Statement]:
+    def get_subjects_of(
+        self, entity: Resource, property: Property, limit: int = 5, offset: int = 0
+    ) -> List[Statement]:
         """
         Retrieve the subjects of a given entity for a specific property from the data graph.
 
@@ -391,7 +452,9 @@ class DataBundle:
         # Prepare the query
         entity_uri = prepare(entity.uri, self.prefixes.shorts())
         property_uri = prepare(property.uri, self.prefixes.shorts())
-        subject_class_uri = prepare(property.domain.uri if property.domain else None, self.prefixes.shorts())
+        subject_class_uri = prepare(
+            property.domain.uri if property.domain else None, self.prefixes.shorts()
+        )
         query = f"""
             # DataBundle.get_subjects_of()
             SELECT
@@ -420,14 +483,22 @@ class DataBundle:
         response = list({d["subject_uri"]: d for d in reversed(response)}.values())
 
         # Parse response into Statement instance list
-        statements = [Statement(
-            Resource(r['subject_uri'], r['subject_label'], r['subject_comment'], r['subject_class_uri'], r['resource_type'] or None),
-            property,
-            entity,
-        ) for r in response]
+        statements = [
+            Statement(
+                Resource(
+                    r["subject_uri"],
+                    r["subject_label"],
+                    r["subject_comment"],
+                    r["subject_class_uri"],
+                    r["resource_type"] or None,
+                ),
+                property,
+                entity,
+            )
+            for r in response
+        ]
 
         return statements
-    
 
     def get_subjects_of_count(self, entity: Resource, property: Property) -> int:
         """
@@ -460,10 +531,11 @@ class DataBundle:
         # Execute query
         response = self.data.run(query)
 
-        return response[0]['count']
-    
+        return response[0]["count"]
 
-    def get_outgoing_statements_of(self, entity: Resource, skip_props: List[Property] = []) -> List[Statement]:
+    def get_outgoing_statements_of(
+        self, entity: Resource, skip_props: List[Property] = []
+    ) -> List[Statement]:
         """
         Retrieve all outgoing statements of a given entity from the data graph, optionally skipping specified properties.
 
@@ -480,7 +552,13 @@ class DataBundle:
         """
         # Prepare the query
         entity_uri = prepare(entity.uri, self.prefixes.shorts())
-        skip_prop_str = ', '.join(list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))) if len(skip_props) != 0 else ''
+        skip_prop_str = (
+            ", ".join(
+                list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))
+            )
+            if len(skip_props) != 0
+            else ""
+        )
         query = f"""
             # DataBundle.get_all_outgoing_statements()
             SELECT DISTINCT
@@ -501,12 +579,29 @@ class DataBundle:
         response = self.data.run(query)
 
         # Parse into Statmeents
-        to_return = [Statement(entity, self.model.find_properties(r['p'])[0], Resource(r['o'], r['o_label'], class_uri=r['o_class_uri'], resource_type='literal' if r['is_literal'] == 'true' else 'iri')) for r in response]
+        to_return = [
+            Statement(
+                entity,
+                self.model.find_properties(r["p"])[0],
+                Resource(
+                    r["o"],
+                    r["o_label"],
+                    class_uri=r["o_class_uri"],
+                    resource_type="literal" if r["is_literal"] == "true" else "iri",
+                ),
+            )
+            for r in response
+        ]
 
         return to_return
-    
-    
-    def get_incoming_statements_of(self, entity: Resource, limit: int = 5, offset: int = 0, skip_props: List[Property] = []) -> List[Statement]:
+
+    def get_incoming_statements_of(
+        self,
+        entity: Resource,
+        limit: int = 5,
+        offset: int = 0,
+        skip_props: List[Property] = [],
+    ) -> List[Statement]:
         """
         Retrieve incoming statements for a given entity from the data graph, optionally skipping specified properties.
 
@@ -524,7 +619,13 @@ class DataBundle:
         """
         # Prepare the query
         entity_uri = prepare(entity.uri, self.prefixes.shorts())
-        skip_prop_str = ', '.join(list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))) if len(skip_props) != 0 else ''
+        skip_prop_str = (
+            ", ".join(
+                list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))
+            )
+            if len(skip_props) != 0
+            else ""
+        )
         query = f"""
             # DataBundle.get_all_outgoing_statements()
             SELECT DISTINCT
@@ -547,10 +648,16 @@ class DataBundle:
         response = self.data.run(query)
 
         # Parse into Statmeents
-        to_return = [Statement(Resource(r['s'], r['s_label'], class_uri=r['s_class_uri']), self.model.find_properties(r['p'])[0], entity) for r in response]
+        to_return = [
+            Statement(
+                Resource(r["s"], r["s_label"], class_uri=r["s_class_uri"]),
+                self.model.find_properties(r["p"])[0],
+                entity,
+            )
+            for r in response
+        ]
 
         return to_return
-    
 
     def get_incoming_statements_of_count(self, entity: Resource) -> List[Statement]:
         """
@@ -581,10 +688,15 @@ class DataBundle:
         # Execute query
         response = self.data.run(query)
 
-        return response[0]['count']
-        
+        return response[0]["count"]
 
-    def __data_table_prepare_sorting(self, sort_col: str, sort_way: str, needed_properties: List[Property], class_uri: str) -> Tuple[str, str]:
+    def __data_table_prepare_sorting(
+        self,
+        sort_col: str,
+        sort_way: str,
+        needed_properties: List[Property],
+        class_uri: str,
+    ) -> Tuple[str, str]:
         """
         Prepare the SPARQL components for sorting a data table by a specified column.
 
@@ -603,31 +715,44 @@ class DataBundle:
         """
         # Prepare sorting
         if sort_col is not None:
-            clean_sort_col = sort_col[:sort_col.index(' (')]
+            clean_sort_col = sort_col[: sort_col.index(" (")]
             # Find the property with the given label
-            sort_prop = next(prop for prop in needed_properties if prop.label == clean_sort_col)
-            if sort_prop.domain.uri == class_uri: # ie: is outgoing
-                if sort_prop.range.class_uri == 'rdfs:Datatype': # ie: no need to get the label
+            sort_prop = next(
+                prop for prop in needed_properties if prop.label == clean_sort_col
+            )
+            if sort_prop.domain.uri == class_uri:  # ie: is outgoing
+                if (
+                    sort_prop.range.class_uri == "rdfs:Datatype"
+                ):  # ie: no need to get the label
                     sort_prop = f"?uri_ {prepare(sort_prop.uri, self.prefixes.shorts())} ?sort_on ."
-                else: # ie: need extra path to the label
+                else:  # ie: need extra path to the label
                     sort_prop = f"?uri_ {prepare(sort_prop.uri, self.prefixes.shorts())} ?sort_entity . ?sort_entity {self.model.label_property} ?sort_on ."
-            else: # ie: is incoming
-                if sort_prop.range.class_uri == 'rdfs:Datatype': # ie: no need to get the label
+            else:  # ie: is incoming
+                if (
+                    sort_prop.range.class_uri == "rdfs:Datatype"
+                ):  # ie: no need to get the label
                     sort_prop = f"?sort_on {prepare(sort_prop.uri, self.prefixes.shorts())} ?uri_ ."
-                else: # ie: need extra path to the label
+                else:  # ie: need extra path to the label
                     sort_prop = f"?sort_entity {prepare(sort_prop.uri, self.prefixes.shorts())} ?uri_ . ?sort_entity {self.model.label_property} ?sort_on ."
 
             # Create the SPARQL appendix for the sorting
-            if sort_way == 'ASC': order_by = "ORDER BY ASC(?sort_on)"
-            else: order_by = "ORDER BY DESC(?sort_on)"
-        else: # ie: no sorting
+            if sort_way == "ASC":
+                order_by = "ORDER BY ASC(?sort_on)"
+            else:
+                order_by = "ORDER BY DESC(?sort_on)"
+        else:  # ie: no sorting
             sort_prop = ""
             order_by = ""
-        
+
         return sort_prop, order_by
 
-
-    def __data_table_prepare_filtering(self, filter_col: str, filter_value: str, needed_properties: List[Property], class_uri: str) -> Tuple[str, str]:
+    def __data_table_prepare_filtering(
+        self,
+        filter_col: str,
+        filter_value: str,
+        needed_properties: List[Property],
+        class_uri: str,
+    ) -> Tuple[str, str]:
         """
         Prepare the SPARQL components for filtering a data table by a specified column and value.
 
@@ -646,30 +771,37 @@ class DataBundle:
             Tuple[str, str]: A tuple containing the SPARQL pattern for filtering and the FILTER clause.
         """
         if filter_col is not None:
-            clean_filter_col = filter_col[:filter_col.index(' (')]
+            clean_filter_col = filter_col[: filter_col.index(" (")]
             # Find the property with the given label
-            filter_prop = list(filter(lambda prop: prop.label == clean_filter_col, needed_properties))[0]
-            if filter_prop.domain.uri == class_uri: # ie: is outgoing
-                if filter_prop.range.class_uri == 'rdfs:Datatype': # ie: no need to get the label
+            filter_prop = list(
+                filter(lambda prop: prop.label == clean_filter_col, needed_properties)
+            )[0]
+            if filter_prop.domain.uri == class_uri:  # ie: is outgoing
+                if (
+                    filter_prop.range.class_uri == "rdfs:Datatype"
+                ):  # ie: no need to get the label
                     filter_prop_str1 = f"?uri_ {prepare(filter_prop.uri, self.prefixes.shorts())} ?filter_on ."
-                else: # ie: need extra path to the label
+                else:  # ie: need extra path to the label
                     filter_prop_str1 = f"?uri_ {prepare(filter_prop.uri, self.prefixes.shorts())} ?filter_entity . ?filter_entity {self.model.label_property} ?filter_on ."
-            else: # ie: is incoming
-                if filter_prop.range.class_uri == 'rdfs:Datatype': # ie: no need to get the label
+            else:  # ie: is incoming
+                if (
+                    filter_prop.range.class_uri == "rdfs:Datatype"
+                ):  # ie: no need to get the label
                     filter_prop_str1 = f"?filter_on {prepare(filter_prop.uri, self.prefixes.shorts())} ?uri_ ."
-                else: # ie: need extra path to the label
+                else:  # ie: need extra path to the label
                     filter_prop_str1 = f"?filter_entity {prepare(filter_prop.uri, self.prefixes.shorts())} ?uri_ . ?filter_entity {self.model.label_property} ?filter_on ."
 
             # Create the SPARQL appendix for the sorting
             filter_prop_str2 = f'FILTER(CONTAINS(LCASE(STR(?filter_on)), LCASE("{normalize_text(filter_value)}")))'
-        else: # ie: no filter
+        else:  # ie: no filter
             filter_prop_str1 = ""
             filter_prop_str2 = ""
 
         return filter_prop_str1, filter_prop_str2
-        
 
-    def __data_table_get_select_property(self, property: Property, index: int, class_uri: str) -> str:
+    def __data_table_get_select_property(
+        self, property: Property, index: int, class_uri: str
+    ) -> str:
         """
         Generate the SPARQL SELECT expression for a property in a data table query.
 
@@ -687,15 +819,18 @@ class DataBundle:
         """
         # Get the SPARQL label of the column (label to snake case)
         # Prepend an index, to make sure that it will work even with same labelled properties (eg "is participation of")
-        base_label = f"{to_snake_case(property.label)}_{index}".replace('-', '_').replace("'", "_")
+        base_label = f"{to_snake_case(property.label)}_{index}".replace(
+            "-", "_"
+        ).replace("'", "_")
         column_alias = self.__data_table_get_column_var_name(property, index, class_uri)
-        if property.domain and class_uri == property.domain.uri: # i.e. is outgoing
+        if property.domain and class_uri == property.domain.uri:  # i.e. is outgoing
             return f"(GROUP_CONCAT(DISTINCT COALESCE(?{base_label}_, ''); separator=\" - \") as ?{column_alias})"
-        else: # i.e. is incoming
+        else:  # i.e. is incoming
             return f"(GROUP_CONCAT(DISTINCT COALESCE(?{base_label}_, ''); separator=\" - \") as ?{column_alias})"
 
-
-    def __data_table_get_where_property(self, property: Property, index: int, class_uri: str) -> str:
+    def __data_table_get_where_property(
+        self, property: Property, index: int, class_uri: str
+    ) -> str:
         """
         Generate the SPARQL WHERE clause for a property in a data table query.
 
@@ -716,29 +851,55 @@ class DataBundle:
         # Get the SPARQL label of the column (label to snake case)
         # Prepend an index, to make sure that it will work even with same labelled properties (eg "is participation of")
         property_label = f"{to_snake_case(property.label)}_{index}"
-        property_label = property_label.replace('-', '_').replace("'", "_")
-        if property.domain and class_uri == property.domain.uri: # i.e. is outgoing
+        property_label = property_label.replace("-", "_").replace("'", "_")
+        if property.domain and class_uri == property.domain.uri:  # i.e. is outgoing
             # When the property is already a "value property" (label, comment, or other values), directly retrieve the value
-            if property_uri == self.model.label_property or property_uri == self.model.comment_property or property.range.class_uri == 'rdfs:Datatype':
-                return "OPTIONAL { " + f"?uri_ {property_uri} ?{property_label}_" + " . }"
+            if (
+                property_uri == self.model.label_property
+                or property_uri == self.model.comment_property
+                or property.range.class_uri == "rdfs:Datatype"
+            ):
+                return (
+                    "OPTIONAL { " + f"?uri_ {property_uri} ?{property_label}_" + " . }"
+                )
             else:
                 # Because we want to display labels and not URIs in the data table cells, once ranges are fetched, get the label out of them
-                return "OPTIONAL { " + f"?uri_ {property_uri} ?{property_label}_uri" + " . " + \
-                    "OPTIONAL { " + f"?{property_label}_uri {self.model.label_property} ?{property_label}_" + " . } }"
-        else: # i.e. is incoming ("value properties" are impossible here)
+                return (
+                    "OPTIONAL { "
+                    + f"?uri_ {property_uri} ?{property_label}_uri"
+                    + " . "
+                    + "OPTIONAL { "
+                    + f"?{property_label}_uri {self.model.label_property} ?{property_label}_"
+                    + " . } }"
+                )
+        else:  # i.e. is incoming ("value properties" are impossible here)
             # Because we want to display labels and not URIs in the data table cells, once domains are fetched, get the label out of them
-            return "OPTIONAL { " + f"?{property_label}_uri {property_uri} ?uri_" + " . " + \
-                    "OPTIONAL { " + f"?{property_label}_uri {self.model.label_property} ?{property_label}_" + " . } }"
+            return (
+                "OPTIONAL { "
+                + f"?{property_label}_uri {property_uri} ?uri_"
+                + " . "
+                + "OPTIONAL { "
+                + f"?{property_label}_uri {self.model.label_property} ?{property_label}_"
+                + " . } }"
+            )
 
-    def __data_table_get_column_var_name(self, property: Property, index: int, class_uri: str) -> str:
+    def __data_table_get_column_var_name(
+        self, property: Property, index: int, class_uri: str
+    ) -> str:
         property_label = f"{to_snake_case(property.label)}_{index}"
-        property_label = property_label.replace('-', '_').replace("'", "_")
+        property_label = property_label.replace("-", "_").replace("'", "_")
         if property.domain and property.domain.uri == class_uri:
             return property_label
         return f"{property_label}_inc"
 
     def __data_table_get_display_name(self, property: Property, class_uri: str) -> str:
-        range_label = property.range.label if property.range and property.range.label else property.range.uri if property.range and property.range.uri else ''
+        range_label = (
+            property.range.label
+            if property.range and property.range.label
+            else property.range.uri
+            if property.range and property.range.uri
+            else ""
+        )
         label = f"{property.label} ({range_label})" if range_label else property.label
         if not (property.domain and property.domain.uri == class_uri):
             label = f"{label} (incoming)"
@@ -757,12 +918,27 @@ class DataBundle:
         Returns:
             List[str]: A list of column names for the data table.
         """
-        needed_properties = [prop for prop in self.model.properties if prop.card_of and prop.card_of.uri == cls.uri]
+        needed_properties = [
+            prop
+            for prop in self.model.properties
+            if prop.card_of and prop.card_of.uri == cls.uri
+        ]
         needed_properties.sort(key=lambda x: x.order or 10**18)
-        return [self.__data_table_get_display_name(prop, cls.uri) for prop in needed_properties]
+        return [
+            self.__data_table_get_display_name(prop, cls.uri)
+            for prop in needed_properties
+        ]
 
-
-    def get_data_table(self, cls: Resource, limit: int = None, offset: int = 0, sort_col: str = None, sort_way: str = None, filter_col: str = None, filter_value: str = None) -> pd.DataFrame:
+    def get_data_table(
+        self,
+        cls: Resource,
+        limit: int = None,
+        offset: int = 0,
+        sort_col: str = None,
+        sort_way: str = None,
+        filter_col: str = None,
+        filter_value: str = None,
+    ) -> pd.DataFrame:
         """
         Generate a data table for a given class, optionally supporting pagination, sorting, and filtering.
 
@@ -784,22 +960,40 @@ class DataBundle:
             pd.DataFrame: A DataFrame containing the instances, their properties, and counts of incoming and outgoing triples.
         """
         # List all wanted properties for this class (according to ontology)
-        needed_properties = [prop for prop in self.model.properties if prop.card_of and prop.card_of.uri == cls.uri]
+        needed_properties = [
+            prop
+            for prop in self.model.properties
+            if prop.card_of and prop.card_of.uri == cls.uri
+        ]
         needed_properties.sort(key=lambda x: x.order or 10**18)
 
         class_uri = cls.uri
         class_uri_prepared = prepare(class_uri, self.prefixes.shorts())
 
         # Prepare Sorting
-        sort_prop_str1, order_by = self.__data_table_prepare_sorting(sort_col, sort_way, needed_properties, class_uri)
+        sort_prop_str1, order_by = self.__data_table_prepare_sorting(
+            sort_col, sort_way, needed_properties, class_uri
+        )
 
         # Prepare filtering
-        filter_prop_str1, filter_prop_str2 = self.__data_table_prepare_filtering(filter_col, filter_value, needed_properties, class_uri)
+        filter_prop_str1, filter_prop_str2 = self.__data_table_prepare_filtering(
+            filter_col, filter_value, needed_properties, class_uri
+        )
 
         # For each wanted properties, used the small private function to build SPARQL "select" text
-        select_properties = "\n                ".join([self.__data_table_get_select_property(prop, i, class_uri) for i, prop in enumerate(needed_properties)])
+        select_properties = "\n                ".join(
+            [
+                self.__data_table_get_select_property(prop, i, class_uri)
+                for i, prop in enumerate(needed_properties)
+            ]
+        )
         # For each wanted properties, used the small private function to build SPARQL "where" text
-        where_properties = "\n                    ".join([self.__data_table_get_where_property(prop, i, class_uri) for i, prop in enumerate(needed_properties)])
+        where_properties = "\n                    ".join(
+            [
+                self.__data_table_get_where_property(prop, i, class_uri)
+                for i, prop in enumerate(needed_properties)
+            ]
+        )
 
         # Add the pagination
         limit = f"LIMIT {limit}" if limit else ""
@@ -835,58 +1029,79 @@ class DataBundle:
         instances = self.data.sparql.run(query, self.prefixes)
 
         # For each class instance, count outgoings triples number
-        uris = list(map(lambda record: prepare(record['uri'], self.prefixes.shorts()), instances))
-        outgoings = self.data.sparql.run(f"""
+        uris = list(
+            map(
+                lambda record: prepare(record["uri"], self.prefixes.shorts()), instances
+            )
+        )
+        outgoings = self.data.sparql.run(
+            f"""
             # DataBundle.get_data_table() request 2: outgoing count
             SELECT ?uri (COALESCE(COUNT(?outgoing), '0') as ?outgoing_count) 
             WHERE {{
                 {self.data.sparql_begin}
-                    VALUES ?uri {{ {' '.join(uris)} }}
+                    VALUES ?uri {{ {" ".join(uris)} }}
                     ?uri ?p ?outgoing .
                 {self.data.sparql_end}
             }} GROUP BY ?uri
-        """, self.prefixes)
+        """,
+            self.prefixes,
+        )
         outgoings = pd.DataFrame(outgoings)
 
         # For each class instance, count incoming triples number
-        incomings = self.data.sparql.run(f"""
+        incomings = self.data.sparql.run(
+            f"""
             # DataBundle.get_data_table() request 3: incoming count
             SELECT ?uri (COALESCE(COUNT(?incoming), '0') as ?incoming_count) 
             WHERE {{
                 {self.data.sparql_begin}
-                    VALUES ?uri {{ {' '.join(uris)} }}
+                    VALUES ?uri {{ {" ".join(uris)} }}
                     ?incoming ?p ?uri .
                 {self.data.sparql_end}
             }} GROUP BY ?uri
-        """, self.prefixes)
+        """,
+            self.prefixes,
+        )
         incomings = pd.DataFrame(incomings)
 
         # Final DataFrame
         df = pd.DataFrame(data=instances)
 
         # Append the outgoings counts
-        if len(outgoings): 
-            df = df.merge(outgoings, how='left').copy()
-            df['outgoing_count'] = df['outgoing_count'].fillna(0)
-        else: df['outgoing_count'] = "0"
+        if len(outgoings):
+            df = df.merge(outgoings, how="left").copy()
+            df["outgoing_count"] = df["outgoing_count"].fillna(0)
+        else:
+            df["outgoing_count"] = "0"
 
         # Append the incoming counts
-        if len(incomings): 
-            df = df.merge(incomings, how='left').copy()
-            df['incoming_count'] = df['incoming_count'].fillna(0)
-        else: df['incoming_count'] = "0"
+        if len(incomings):
+            df = df.merge(incomings, how="left").copy()
+            df["incoming_count"] = df["incoming_count"].fillna(0)
+        else:
+            df["incoming_count"] = "0"
 
-        prop_var_names = [self.__data_table_get_column_var_name(prop, i, class_uri) for i, prop in enumerate(needed_properties)]
-        display_names = [self.__data_table_get_display_name(prop, class_uri) for prop in needed_properties]
-        if len(df) != 0: 
-            ordered_columns = ['uri'] + prop_var_names + ['outgoing_count', 'incoming_count']
+        prop_var_names = [
+            self.__data_table_get_column_var_name(prop, i, class_uri)
+            for i, prop in enumerate(needed_properties)
+        ]
+        display_names = [
+            self.__data_table_get_display_name(prop, class_uri)
+            for prop in needed_properties
+        ]
+        if len(df) != 0:
+            ordered_columns = (
+                ["uri"] + prop_var_names + ["outgoing_count", "incoming_count"]
+            )
             df = df[ordered_columns]
-            df.columns = ['URI'] + display_names + ['Outgoing count', 'Incoming count']
+            df.columns = ["URI"] + display_names + ["Outgoing count", "Incoming count"]
 
         return df
-    
 
-    def get_class_instances_count(self, cls: Resource, filter_col_name: str = None, filter_content: str = None) -> int:    
+    def get_class_instances_count(
+        self, cls: Resource, filter_col_name: str = None, filter_content: str = None
+    ) -> int:
         """
         Count the number of instances of a given class, optionally applying a filter on a property.
 
@@ -906,15 +1121,21 @@ class DataBundle:
         filter_ = ""
         if filter_col_name and filter_content:
             # List all wanted properties for this class (according to ontology)
-            needed_properties = [prop for prop in self.model.properties if prop.card_of.uri == cls.uri]
+            needed_properties = [
+                prop for prop in self.model.properties if prop.card_of.uri == cls.uri
+            ]
             needed_properties.sort(key=lambda x: x.order)
 
             # Find the property to filter on
-            target_property = next(prop for prop in needed_properties if prop.label == filter_col_name.replace('(inc)', '').strip())
+            target_property = next(
+                prop
+                for prop in needed_properties
+                if prop.label == filter_col_name.replace("(inc)", "").strip()
+            )
 
-            if '(inc)' in filter_col_name: # i.e. property is incoming
+            if "(inc)" in filter_col_name:  # i.e. property is incoming
                 filter_ = f'?value {prepare(target_property.uri, self.prefixes.shorts())} ?uri . ?value {self.model.label_property} ?label . FILTER(CONTAINS(LCASE(STR(?label)), LCASE("{filter_content}")))'
-            else: # i.e. property is outgoing
+            else:  # i.e. property is outgoing
                 filter_ = f'?uri {prepare(target_property.uri, self.prefixes.shorts())} ?value . ?value {self.model.label_property} ?label . FILTER(CONTAINS(LCASE(STR(?label)), LCASE("{filter_content}")))'
 
         # Make sure the class URI is correctly formated
@@ -934,9 +1155,8 @@ class DataBundle:
 
         # Execute the query (count instances)
         counts = self.data.sparql.run(query)
-        
-        return int(counts[0]['count'])
 
+        return int(counts[0]["count"])
 
     def get_entity_basics(self, uri: str) -> Resource:
         """
@@ -974,10 +1194,9 @@ class DataBundle:
         infos = self.data.run(query)[0]
 
         # Build the resource
-        resource = Resource(uri, infos['label'], infos['comment'], infos['class_uri'])
+        resource = Resource(uri, infos["label"], infos["comment"], infos["class_uri"])
 
         return resource
-
 
     def dump_nq(self) -> str:
         """
@@ -993,11 +1212,14 @@ class DataBundle:
         # It means that all information are in actually one single file, with graph information in it.
         # Therefore, everything can be return as a single string.
         content = ""
-        content += self.graph_model.dump_nquad(self.prefixes) # Add the data bundle model
-        content += self.data.dump_nquad(self.prefixes) # Add the data bundle data
-        content += self.graph_metadata.dump_nquad(self.prefixes) # Add the data bundle metadata
+        content += self.graph_model.dump_nquad(
+            self.prefixes
+        )  # Add the data bundle model
+        content += self.data.dump_nquad(self.prefixes)  # Add the data bundle data
+        content += self.graph_metadata.dump_nquad(
+            self.prefixes
+        )  # Add the data bundle metadata
         return content
-
 
     def dump_ttl(self) -> Dict[str, str]:
         """
@@ -1015,11 +1237,12 @@ class DataBundle:
         # Therefore, there is the need to split information in 3 differents extractions (data, model, metadata)
         # Hence the returned thing is a dictionary of strings (data, model, metadata)
         return {
-            "data": self.data.dump_turtle(self.prefixes), # Data bundle data
-            "model": self.graph_model.dump_turtle(self.prefixes), # Data bundle model
-            "metadata": self.graph_metadata.dump_turtle(self.prefixes), # Data bundle metadata
+            "data": self.data.dump_turtle(self.prefixes),  # Data bundle data
+            "model": self.graph_model.dump_turtle(self.prefixes),  # Data bundle model
+            "metadata": self.graph_metadata.dump_turtle(
+                self.prefixes
+            ),  # Data bundle metadata
         }
-
 
     def dump_csv(self) -> Dict[str, pd.DataFrame]:
         """
@@ -1042,27 +1265,35 @@ class DataBundle:
 
         # Also, add 2 additional CSV which basically adds the model to the dump: one for classes, and one for properties (which needs to be flatten)
         to_return = {
-            'model-classes': pd.DataFrame(data=[cls.to_dict() for cls in self.model.classes]),
-            'model-properties': pd.DataFrame(data=[{
-                **(prop.card_of.to_dict('card_of_') if prop.card_of else {}),
-                **(prop.domain.to_dict('domain_') if prop.domain else {}),
-                'property_uri': prop.uri,
-                'property_label': prop.label,
-                'property_comment': prop.comment,
-                **(prop.range.to_dict() if prop.range else {}),
-                'property_order': prop.order,
-                'property_min_count': prop.min_count,
-                'property_max_count': prop.max_count,
-            } for prop in self.model.properties]),
+            "model-classes": pd.DataFrame(
+                data=[cls.to_dict() for cls in self.model.classes]
+            ),
+            "model-properties": pd.DataFrame(
+                data=[
+                    {
+                        **(prop.card_of.to_dict("card_of_") if prop.card_of else {}),
+                        **(prop.domain.to_dict("domain_") if prop.domain else {}),
+                        "property_uri": prop.uri,
+                        "property_label": prop.label,
+                        "property_comment": prop.comment,
+                        **(prop.range.to_dict() if prop.range else {}),
+                        "property_order": prop.order,
+                        "property_min_count": prop.min_count,
+                        "property_max_count": prop.max_count,
+                    }
+                    for prop in self.model.properties
+                ]
+            ),
         }
 
         # Build all the classes DataFrames (only for classes)
         for cls in self.model.classes:
             if cls.class_uri != "rdfs:Datatype":
-                to_return[to_snake_case(cls.get_text())] = self.download_class_instances(cls)
+                to_return[to_snake_case(cls.get_text())] = (
+                    self.download_class_instances(cls)
+                )
 
         return to_return
-
 
     def download_class_instances(self, cls: Resource) -> pd.DataFrame:
         """
@@ -1079,18 +1310,42 @@ class DataBundle:
                         outgoing property values.
         """
         # Get the ontology properties of this class (only outgoing)
-        properties_outgoing = [prop for prop in self.model.properties if prop.card_of.uri == cls.uri]
+        properties_outgoing = [
+            prop for prop in self.model.properties if prop.card_of.uri == cls.uri
+        ]
         properties_outgoing.sort(key=lambda x: x.order or 10**18)
 
         #  Compute the property name for the query
         def get_property_name(prop: Property) -> str:
-            return to_snake_case(prop.label).replace('-', '_').replace('(', '').replace(')', '').replace('\'', '_')
+            return (
+                to_snake_case(prop.label)
+                .replace("-", "_")
+                .replace("(", "")
+                .replace(")", "")
+                .replace("'", "_")
+            )
 
         # Prepare the query: make all lines from the query
-        properties_outgoing_names = list(set([f"(COALESCE(?{get_property_name(prop)}_, '') as ?{get_property_name(prop)})" for prop in properties_outgoing]))
-        properties_outgoing_names_str = '\n                '.join(properties_outgoing_names)
-        triples_outgoings = list(set([f"OPTIONAL {{ ?instance {prepare(prop.uri, self.prefixes.shorts())} ?{get_property_name(prop)}_ . }}" for prop in properties_outgoing]))
-        triples_outgoings_str = '\n                    '.join(triples_outgoings)
+        properties_outgoing_names = list(
+            set(
+                [
+                    f"(COALESCE(?{get_property_name(prop)}_, '') as ?{get_property_name(prop)})"
+                    for prop in properties_outgoing
+                ]
+            )
+        )
+        properties_outgoing_names_str = "\n                ".join(
+            properties_outgoing_names
+        )
+        triples_outgoings = list(
+            set(
+                [
+                    f"OPTIONAL {{ ?instance {prepare(prop.uri, self.prefixes.shorts())} ?{get_property_name(prop)}_ . }}"
+                    for prop in properties_outgoing
+                ]
+            )
+        )
+        triples_outgoings_str = "\n                    ".join(triples_outgoings)
 
         # Make sure the class URI is correctly formated
         class_uri = prepare(cls.uri, self.prefixes.shorts())
@@ -1115,7 +1370,6 @@ class DataBundle:
 
         return pd.DataFrame(data=instances)
 
-
     def get_model_as_turtle(self) -> str:
         query = f"""
             CONSTRUCT {{
@@ -1131,9 +1385,10 @@ class DataBundle:
 
         return response
 
-
     @staticmethod
-    def from_dict(obj: dict, prefixes: Prefixes, endpoints: List[Sparql]) -> 'DataBundle':
+    def from_dict(
+        obj: dict, prefixes: Prefixes, endpoints: List[Sparql]
+    ) -> "DataBundle":
         """
         Create a DataBundle instance from a dictionary.
 
@@ -1150,44 +1405,47 @@ class DataBundle:
         """
 
         # Find the right endpoint
-        endpoint = next((end for end in endpoints if end.name == obj.get('endpoint_name')), None)
+        endpoint = next(
+            (end for end in endpoints if end.name == obj.get("endpoint_name")), None
+        )
         if endpoint is None:
-            raise Exception(f"Endpoint \"{obj.get('endpoint_name')}\" not found when creating Data Bundle \"{obj.get('name')}\"")
+            raise Exception(
+                f'Endpoint "{obj.get("endpoint_name")}" not found when creating Data Bundle "{obj.get("name")}"'
+            )
 
         return DataBundle(
-            name = obj.get('name'),
-            base_uri = obj.get('base_uri'),
-            prefixes = prefixes,
-            endpoint = endpoint,
-            model_framework = obj.get('model_framework'),
-            prop_type_uri = obj.get('prop_type_uri'),
-            prop_label_uri = obj.get('prop_label_uri'),
-            prop_comment_uri = obj.get('prop_comment_uri'),
-            graph_data_uri = obj.get('graph_data_uri'),
-            graph_model_uri = obj.get('graph_model_uri'),
-            graph_metadata_uri = obj.get('graph_metadata_uri'),
+            name=obj.get("name"),
+            base_uri=obj.get("base_uri"),
+            prefixes=prefixes,
+            endpoint=endpoint,
+            model_framework=obj.get("model_framework"),
+            prop_type_uri=obj.get("prop_type_uri"),
+            prop_label_uri=obj.get("prop_label_uri"),
+            prop_comment_uri=obj.get("prop_comment_uri"),
+            graph_data_uri=obj.get("graph_data_uri"),
+            graph_model_uri=obj.get("graph_model_uri"),
+            graph_metadata_uri=obj.get("graph_metadata_uri"),
         )
-
 
     def to_dict(self) -> dict:
         """
         Convert the DataBundle instance into a dictionary.
 
-        This dictionary representation is suitable for serialization (e.g., YAML, JSON) 
+        This dictionary representation is suitable for serialization (e.g., YAML, JSON)
         or for saving configuration files.
 
         Returns:
             dict: Dictionary containing all relevant DataBundle attributes.
         """
         return {
-            'name': self.name,
-            'base_uri': self.base_uri,
-            'endpoint_name': self.endpoint.name,
-            'model_framework': self.model.framework_name,
-            'prop_type_uri': self.model.type_property,
-            'prop_label_uri': self.model.label_property,
-            'prop_comment_uri': self.model.comment_property,
-            'graph_data_uri': self.data.uri,
-            'graph_model_uri': self.model.uri,
-            'graph_metadata_uri': self.metadata.uri,
+            "name": self.name,
+            "base_uri": self.base_uri,
+            "endpoint_name": self.endpoint.name,
+            "model_framework": self.model.framework_name,
+            "prop_type_uri": self.model.type_property,
+            "prop_label_uri": self.model.label_property,
+            "prop_comment_uri": self.model.comment_property,
+            "graph_data_uri": self.data.uri,
+            "graph_model_uri": self.model.uri,
+            "graph_metadata_uri": self.metadata.uri,
         }

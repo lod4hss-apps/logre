@@ -21,6 +21,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . .
 
+RUN rm -f src/lib/shacl-maker.js && \
+    curl -sL https://raw.githubusercontent.com/gaetanmuck/shacl-maker/refs/heads/main/src/index.js | \
+    sed -n '\|// To not include|q;p' > src/lib/shacl-maker.js
+
 RUN chmod +x scripts/*.sh
 
 EXPOSE 8501
