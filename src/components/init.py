@@ -1,10 +1,18 @@
 from typing import Literal, List
+import logging
 import streamlit as st
 from lib import state
 from dotenv import load_dotenv
 from components.errors import error_text
 
-def init(layout: Literal['centered', 'wide'] = 'centered', required_query_params: List[str] = [], avoid_anchor_titles: bool = True) -> None:
+logger = logging.getLogger(__name__)
+
+
+def init(
+    layout: Literal["centered", "wide"] = "centered",
+    required_query_params: List[str] = [],
+    avoid_anchor_titles: bool = True,
+) -> None:
     """
     Initializes the page with configuration, query parameters, and UI settings.
 
@@ -28,21 +36,26 @@ def init(layout: Literal['centered', 'wide'] = 'centered', required_query_params
     try:
         state.load_config()
     except Exception as err:
+        logger.exception("Failed to load configuration")
         st.error(error_text("configuration.load", str(err)))
         st.stop()
-    
+
     # Put the needed query params in the page URL, if available
     state.handle_query_params(required_query_params)
 
     # Tab/page infos
-    st.set_page_config(page_title='Logre', page_icon='👹', layout=layout)
+    st.set_page_config(page_title="Logre", page_icon="👹", layout=layout)
 
     # Hide anchor link for titles
     if avoid_anchor_titles:
-        st.html("<style>[data-testid='stHeaderActionElements'] {display: none;}</style>")
+        st.html(
+            "<style>[data-testid='stHeaderActionElements'] {display: none;}</style>"
+        )
 
     # Handle toasts: if a toast is asked, display it, and clear the state, so that it does not appear next rerun
     text, icon = state.get_toast()
-    if text: 
-        st.toast(text, icon=icon if icon else ':material/info:') # By default, icon is "info"
+    if text:
+        st.toast(
+            text, icon=icon if icon else ":material/info:"
+        )  # By default, icon is "info"
         state.clear_toast()

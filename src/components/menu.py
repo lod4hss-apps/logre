@@ -51,8 +51,15 @@ def menu() -> None:
         st.sidebar.write("\n")
         # Data bundle commands
         if data_bundle:
-            data_bundle.load_model()
-            model_ready = data_bundle.has_usable_model()
+            model_ready = False
+            try:
+                data_bundle.load_model()
+                model_ready = data_bundle.has_usable_model()
+            except Exception:
+                st.sidebar.warning(
+                    "Model not available yet. Import SHACL or verify endpoint and graph settings.",
+                    icon=":material/warning:",
+                )
             with st.sidebar.container(
                 horizontal=False,
                 horizontal_alignment="center",

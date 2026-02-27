@@ -1,0 +1,56 @@
+endpoints:
+- technology: Allegrograph
+  url: https://ag1hs56c29chy4xs.allegrograph.cloud/repositories/actors/sparql
+  username: admin
+  password: M5lLXn0iH34XjfloZjjrRb
+  name: allegro
+prefixes:
+- short: rdf
+  long: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+- short: rdfs
+  long: http://www.w3.org/2000/01/rdf-schema#
+- short: xsd
+  long: http://www.w3.org/2001/XMLSchema#
+- short: owl
+  long: http://www.w3.org/2002/07/owl#
+- short: sh
+  long: http://www.w3.org/ns/shacl#
+- short: crm
+  long: http://www.cidoc-crm.org/cidoc-crm/
+- short: frbroo
+  long: https://www.iflastandards.info/fr/frbr/frbroo#
+- short: lrmoo
+  long: http://iflastandards.info/ns/lrm/lrmoo/
+- short: wd
+  long: http://www.wikidata.org/entity/
+- short: wdt
+  long: http://www.wikidata.org/prop/direct/
+- short: ontome
+  long: https://ontome.net/ontology/
+- short: sdh
+  long: https://sdhss.org/ontology/core/
+- short: crm-sup
+  long: https://sdhss.org/ontology/crm-supplement/
+- short: sdh-slc
+  long: https://sdhss.org/ontology/social-life-core/
+- short: sdh-shacl
+  long: https://sdhss.org/shacl/profiles/
+- short: sdh-shortcut
+  long: https://sdhss.org/ontology/shortcuts/
+- short: sdh-si
+  long: https://sdhss.org/ontology/sources-information/
+- short: sdh-sim
+  long: https://sdhss.org/ontology/sources-information-metadata/
+- short: sdh-ha
+  long: https://sdhss.org/ontology/human-activity/
+data_bundles: []
+default_data_bundle: test
+sparql_queries:
+- - Default
+  - "SELECT *\nWHERE {\n    ?s ?p ?o .\n}\nLIMIT 10"
+- - List graphs
+  - "SELECT ?graph_uri (COUNT(*) AS ?triples_count)\nWHERE {\n  GRAPH ?graph_uri {\n\
+    \    ?s ?p ?o\n  }\n}\nGROUP BY ?graph_uri\nORDER BY DESC(?triples_count)"
+- - Delete all data
+  - DROP ALL
+version: null

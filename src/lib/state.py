@@ -1,4 +1,5 @@
 from typing import List, Dict
+from datetime import datetime
 import os
 from os.path import exists as path_exists
 from pathlib import Path
@@ -16,6 +17,12 @@ BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 VERSION_FILE_PATH = BASE_DIR + "/version"
 VERSION_FALLBACK_PATH = BASE_DIR + "/VERSION"
 CONFIG_FILE_PATH = os.getenv("LOGRE_CONFIG_PATH", BASE_DIR + "/logre-config.yaml")
+DEFAULT_CONFIG_PATH = os.getenv("LOGRE_DEFAULT_CONFIG_PATH")
+if not DEFAULT_CONFIG_PATH:
+    fallback_config_path = BASE_DIR + "/docker/logre-config.yml"
+    DEFAULT_CONFIG_PATH = (
+        fallback_config_path if path_exists(fallback_config_path) else None
+    )
 DEFAULTS_PREFIXES = BASE_DIR + "/defaults/prefixes.yaml"
 DEFAULTS_DATA_BUNDLES = BASE_DIR + "/defaults/data-bundles.yaml"
 DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR + "/defaults/default-data-bundle.yaml"
@@ -150,61 +157,150 @@ def load_config() -> None:
     """
     # If the config is not yet loaded
     if "has_config" not in state:
-        # If the config file exists, load it
-        if path_exists(CONFIG_FILE_PATH):
-            with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as file:
-                # Use YAML to parse the file content
-                obj: dict = safe_load(file.read())
+        # Initialize state keys for local runs without a config file
+        if "prefixes" not in state:
+            set_prefixes(Prefixes())
+        if "endpoints" not in state:
+            set_endpoints([])
+        if "data_bundles" not in state:
+            set_data_bundles([])
 
-                # Extract SPARQL endpoints
-                loaded_endpoints = []
-                if "endpoints" in obj.keys():
-                    for sparql in obj["endpoints"]:
-                        endpoint = get_sparql(sparql)
-                        loaded_endpoints.append(endpoint)
-                set_endpoints(loaded_endpoints)
+        config_exists = path_exists(CONFIG_FILE_PATH)
+        config_raw = None
+        config_load_issue = False
+        repaired = False
+        obj: dict = {}
 
-                # Extract prefixes
-                if "prefixes" in obj.keys():
-                    loaded_prefixes = Prefixes(
-                        [Prefix(p.get("short"), p.get("long")) for p in obj["prefixes"]]
-                    )
+        if config_exists:
+            try:
+                config_raw = Path(CONFIG_FILE_PATH).read_text(encoding="utf-8")
+                obj = safe_load(config_raw) or {}
+            except Exception:
+                config_load_issue = True
+                obj = {}
+
+        if not isinstance(obj, dict):
+            config_load_issue = True
+            obj = {}
+
+        if (
+            (not config_exists or config_load_issue)
+            and DEFAULT_CONFIG_PATH
+            and path_exists(DEFAULT_CONFIG_PATH)
+        ):
+            try:
+                default_raw = Path(DEFAULT_CONFIG_PATH).read_text(encoding="utf-8")
+                default_obj = safe_load(default_raw) or {}
+                if isinstance(default_obj, dict):
+                    obj = default_obj
+                    if config_exists:
+                        repaired = True
+            except Exception:
+                pass
+
+        # Extract SPARQL endpoints
+        loaded_endpoints = []
+        endpoints_raw = obj.get("endpoints", [])
+        if not isinstance(endpoints_raw, list):
+            endpoints_raw = []
+            repaired = True
+        for sparql in endpoints_raw:
+            try:
+                endpoint = get_sparql(sparql)
+                loaded_endpoints.append(endpoint)
+            except Exception:
+                repaired = True
+                set_toast(
+                    "Skipped an invalid SPARQL endpoint configuration.",
+                    icon=":material/warning:",
+                )
+        set_endpoints(loaded_endpoints)
+
+        # Extract prefixes
+        loaded_prefixes = Prefixes()
+        seen_prefixes = set()
+        prefixes_raw = obj.get("prefixes", [])
+        if not isinstance(prefixes_raw, list):
+            prefixes_raw = []
+            repaired = True
+        for prefix in prefixes_raw:
+            if isinstance(prefix, dict):
+                short = prefix.get("short")
+                if short and short not in seen_prefixes:
+                    loaded_prefixes.add(Prefix(short, prefix.get("long")))
+                    seen_prefixes.add(short)
                 else:
-                    loaded_prefixes = Prefixes()
-                set_prefixes(loaded_prefixes)
+                    repaired = True
+            else:
+                repaired = True
+        set_prefixes(loaded_prefixes)
 
-                # Extract Data Bundles
-                if "data_bundles" in obj.keys():
-                    dbs = [
-                        DataBundle.from_dict(db, state["prefixes"], state["endpoints"])
-                        for db in obj["data_bundles"]
-                    ]
-                else:
-                    dbs = []
-                set_data_bundles(dbs)
+        # Extract Data Bundles
+        dbs = []
+        bundles_raw = obj.get("data_bundles", [])
+        if not isinstance(bundles_raw, list):
+            bundles_raw = []
+            repaired = True
+        for db in bundles_raw:
+            if not isinstance(db, dict):
+                repaired = True
+                continue
+            try:
+                dbs.append(
+                    DataBundle.from_dict(db, state["prefixes"], state["endpoints"])
+                )
+            except Exception:
+                repaired = True
+                bundle_name = db.get("name", "(unnamed)")
+                endpoint_name = db.get("endpoint_name", "(unknown)")
+                set_toast(
+                    f"Skipped data bundle '{bundle_name}' (endpoint '{endpoint_name}' not found).",
+                    icon=":material/warning:",
+                )
+        set_data_bundles(dbs)
 
-                # Extract default Data Bundle
-                if "default_data_bundle" in obj.keys() and obj["default_data_bundle"]:
-                    default_db = next(
-                        db
-                        for _, db in enumerate(get_data_bundles())
-                        if db.key == obj["default_data_bundle"]
-                    )
-                    if default_db:
-                        set_default_data_bundle(default_db)
+        # Extract default Data Bundle
+        default_db_key = obj.get("default_data_bundle")
+        if default_db_key:
+            default_db = next(
+                (
+                    db
+                    for _, db in enumerate(get_data_bundles())
+                    if db.key == default_db_key
+                ),
+                None,
+            )
+            if default_db:
+                set_default_data_bundle(default_db)
+            else:
+                repaired = True
+                set_toast(
+                    f"Default data bundle '{default_db_key}' not found. Please select another.",
+                    icon=":material/warning:",
+                )
 
-                # Extract saved SPARQL Queries
-                if "sparql_queries" in obj.keys():
-                    queries = obj["sparql_queries"]
-                else:
-                    queries = []
-                set_sparql_queries(queries)
+        # Extract saved SPARQL Queries
+        queries = obj.get("sparql_queries", [])
+        if not isinstance(queries, list):
+            queries = []
+            repaired = True
+        set_sparql_queries(queries)
 
-                # Load the config version
-                state["config_version"] = obj["version"]
+        # Load the config version
+        config_version = obj.get("version")
+        if isinstance(config_version, str) and config_version:
+            state["config_version"] = config_version
+        else:
+            state["config_version"] = "2.1"
+            repaired = True
 
-                # Flag to know that state has loaded the configuration file
-                state["has_config"] = True
+        def backup_config() -> None:
+            if not config_raw:
+                return
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            backup_path = f"{CONFIG_FILE_PATH}.bak-{timestamp}"
+            with open(backup_path, "w", encoding="utf-8") as file:
+                file.write(config_raw)
 
         # Flag to know if something has been added from defaults
         need_save = False
@@ -273,16 +369,22 @@ def load_config() -> None:
             if default_db_default:
                 # Find the DataBundle with the right key
                 default_db = next(
-                    db
-                    for _, db in enumerate(get_data_bundles())
-                    if db.key == default_db_default
+                    (
+                        db
+                        for _, db in enumerate(get_data_bundles())
+                        if db.key == default_db_default
+                    ),
+                    None,
                 )
                 if default_db:
                     set_default_data_bundle(default_db)
                     need_save = True
 
         # If the default configuration changed the state, then save the configuration
-        if need_save:
+        save_required = need_save or repaired or config_load_issue or not config_exists
+        if save_required:
+            if config_exists and (repaired or config_load_issue):
+                backup_config()
             save_config()
 
         # Flag to know that state has loaded the configuration file
@@ -295,10 +397,17 @@ def save_config() -> None:
     """
     default_db = get_default_data_bundle()
 
+    # Normalize prefixes (unique by short, skip base)
+    prefixes_by_short: Dict[str, Prefix] = {}
+    for prefix in get_prefixes():
+        if not prefix.short or prefix.short == "base":
+            continue
+        prefixes_by_short[prefix.short] = prefix
+
     # Gather config
     config = {
         "endpoints": [e.to_dict() for e in get_endpoints()],
-        "prefixes": [p.to_dict() for p in get_prefixes() if p.short != "base"],
+        "prefixes": [p.to_dict() for p in prefixes_by_short.values()],
         "data_bundles": [db.to_dict() for db in get_data_bundles()],
         "default_data_bundle": default_db.key if default_db else None,
         "sparql_queries": get_sparql_queries(),
@@ -552,6 +661,9 @@ def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> 
 
     # Remove a Data Bundle
     elif new_db is None:
+        default_db = get_default_data_bundle()
+        if default_db and default_db.key == old_db.key:
+            state["default_data_bundle"] = None
         state["data_bundles"] = [
             db for db in state["data_bundles"] if db.key != old_db.key
         ]
