@@ -18,8 +18,8 @@ init()
 menu()
 
 # Title
-st.markdown('# Configuration')
-st.markdown('')
+st.markdown("# Configuration")
+st.markdown("")
 
 
 # From state
@@ -30,7 +30,6 @@ data_bundles = state.get_data_bundles()
 ### Prefixes ###
 
 with st.expander("Prefixes"):
-
     # Flag to allow creation of a new prefix or not (every prefixes needs to be correcteclyt set in order to create another one)
     all_prefixes_are_set = True
 
@@ -41,113 +40,155 @@ with st.expander("Prefixes"):
 
         # The prefix itself
         with st.container(horizontal=True, vertical_alignment="bottom"):
-            new_short = st.text_input('Prefix short', value=prefix.short, width=100, key=f"prefix-short-{i}")
-            new_long = st.text_input('Prefix long', value=prefix.long, key=f"prefix-long-{i}")
+            new_short = st.text_input(
+                "Prefix short", value=prefix.short, width=100, key=f"prefix-short-{i}"
+            )
+            new_long = st.text_input(
+                "Prefix long", value=prefix.long, key=f"prefix-long-{i}"
+            )
 
             # Delete button
-            if st.button('', icon=':material/delete:', type='tertiary', key=f'config-prefix-{i}'):
+            if st.button(
+                "", icon=":material/delete:", type="tertiary", key=f"config-prefix-{i}"
+            ):
+
                 def callback_delete_prefix(prefix: Prefix) -> None:
                     state.update_prefix(prefix, None)
-                    state.set_toast('Prefix removed', icon=':material/delete:')
-                dialog_confirmation(f"You are about to delete the prefix *{prefix.short}:{prefix.long}*", callback_delete_prefix, prefix=prefix)
+                    state.set_toast("Prefix removed", icon=":material/delete:")
+
+                dialog_confirmation(
+                    f"You are about to delete the prefix *{prefix.short}:{prefix.long}*",
+                    callback_delete_prefix,
+                    prefix=prefix,
+                )
 
             # Update button
             if new_short != prefix.short or new_long != prefix.long:
                 state.update_prefix(prefix, Prefix(new_short, new_long))
-                state.set_toast('Prefix updated', icon=':material/edit:')
+                state.set_toast("Prefix updated", icon=":material/edit:")
                 st.rerun()
 
-    st.write('')
+    st.write("")
 
     # Add a new prefix if the flag is True
-    if all_prefixes_are_set and st.button('Add a new Prefix'):
-        state.update_prefix(None, Prefix('', ''))
-        state.set_toast('Prefix created', icon=':material/add:')
+    if all_prefixes_are_set and st.button("Add a new Prefix"):
+        state.update_prefix(None, Prefix("", ""))
+        state.set_toast("Prefix created", icon=":material/add:")
         st.rerun()
 
-with st.container(horizontal=True, horizontal_alignment='right'):
-    st.markdown("More on prefixes in the [Documentation FAQ](/documentation#what-are-prefixes)", width='content')
+with st.container(horizontal=True, horizontal_alignment="right"):
+    st.markdown(
+        "More on prefixes in the [Documentation FAQ](/documentation#what-are-prefixes)",
+        width="content",
+    )
 
 
 ### SPARQL endpoints ###
 
-with st.expander(f"SPARQL endpoints"):
+if st.button("Add an Endpoint"):
+    dialog_endpoint_form()
 
-    # Loop through all endpoints, and display a short version of them
-    for i, endpoint in enumerate(endpoints):
+if not endpoints:
+    st.info("No endpoint configured yet. Create one to get started.")
 
-        # The endpoint itself
-        with st.container(horizontal=True, vertical_alignment='center'):
-            st.markdown(f"**{endpoint.name}**")
+for endpoint_index, endpoint in enumerate(endpoints):
+    with st.expander(f"Endpoint *{endpoint.name}*"):
+        header_cols = st.columns([6, 1, 1], vertical_alignment="center")
+        header_cols[0].markdown(f"**{endpoint.name}**")
 
-            # Edit button
-            if st.button('', icon=':material/edit:', type='tertiary', key=f'config-endpoint-edit-{i}'):
-                dialog_endpoint_form(endpoint)
+        if header_cols[1].button(
+            "",
+            icon=":material/edit:",
+            type="tertiary",
+            key=f"config-endpoint-edit-{endpoint_index}",
+        ):
+            dialog_endpoint_form(endpoint)
 
-            # Delete button
-            if st.button('', icon=':material/delete:', type='tertiary', key=f'config-endpoint-delete-{i}'):
+        if header_cols[2].button(
+            "",
+            icon=":material/delete:",
+            type="tertiary",
+            key=f"config-endpoint-delete-{endpoint_index}",
+        ):
+            used_endpoint = list(map(lambda db: db.endpoint, data_bundles))
+            if endpoint in used_endpoint:
+                dialog_error_message(
+                    "You can not delete this SPARQL endpoint configuration: at least one data bundle relies on it."
+                )
+            else:
 
-                used_endpoint = list(map(lambda db: db.endpoint, data_bundles))
-                if endpoint in used_endpoint:
-                    dialog_error_message('You can not delete this SPARQL endpoint configuration: at least one data bundle relies on it.')
-                else:
-                    def callback_delete_sparql_endpoint(sparql: Sparql) -> None:
-                        state.update_endpoint(sparql, None)
-                        state.set_toast('SPARQL endpoint removed', icon=':material/delete:')
-                    dialog_confirmation(f"You are about to delete the SPARQL endpoint *{endpoint.name}*", callback_delete_sparql_endpoint, sparql=endpoint)
-        
-        
-    st.write('')
+                def callback_delete_sparql_endpoint(sparql: Sparql) -> None:
+                    state.update_endpoint(sparql, None)
+                    state.set_toast("SPARQL endpoint removed", icon=":material/delete:")
 
-    # Add button
-    if st.button('Add an Endpoint'):
-        dialog_endpoint_form()
-    
-with st.container(horizontal=True, horizontal_alignment='right'):
-    st.markdown("More on SPARQL endpoints in the [Documentation FAQ](/documentation#what-is-a-sparql-endpoint)", width='content')
+                dialog_confirmation(
+                    f"You are about to delete the SPARQL endpoint *{endpoint.name}*",
+                    callback_delete_sparql_endpoint,
+                    sparql=endpoint,
+                )
 
-### Data bundles ###
+        st.write("")
+        st.markdown("### Data Bundles")
 
-with st.expander(f"Data bundles"):
-    
-    # Loop through all data bundles and display a short version of them
-    # Group them by their endpoint
+        endpoint_data_bundles = list(
+            filter(lambda db: db.endpoint == endpoint, data_bundles)
+        )
+        if not endpoint_data_bundles:
+            st.info("No data bundle configured for this endpoint yet")
 
-    for endpoint in endpoints:
-        st.markdown(f"**{endpoint.name}**")
-
-        endpoint_data_bundles = list(filter(lambda db: db.endpoint == endpoint, data_bundles))
-        for i, db in enumerate(endpoint_data_bundles):
-            
-            # The data bundle itself
-            with st.container(horizontal=True, vertical_alignment='center'):
+        for bundle_index, db in enumerate(endpoint_data_bundles):
+            with st.container(horizontal=True, vertical_alignment="center"):
                 st.markdown(f"> **{db.name}**")
 
-                # Handle default options (set to default + label)
-                if state.get_default_data_bundle() == db: 
-                    st.markdown('*Default*', width='content')
-                else:  
-                    if st.button('Set as default', type='tertiary', key=f'config-data-bundle-default-{i}'):
+                if state.get_default_data_bundle() == db:
+                    st.markdown("*Default*", width="content")
+                else:
+                    if st.button(
+                        "Set as default",
+                        type="tertiary",
+                        key=f"config-data-bundle-default-{endpoint_index}-{bundle_index}",
+                    ):
                         state.set_default_data_bundle(db)
                         st.session_state.clear()
                         st.rerun()
 
-                # Edit button
-                if st.button('', icon=':material/edit:', type='tertiary', key=f'config-data-bundle-edit-{i}'):
+                if st.button(
+                    "",
+                    icon=":material/edit:",
+                    type="tertiary",
+                    key=f"config-data-bundle-edit-{endpoint_index}-{bundle_index}",
+                ):
                     dialog_data_bundle_form(db)
 
-                # Delete button
-                if st.button('', icon=':material/delete:', type='tertiary', key=f'config-data-bundle-delete-{i}'):
+                if st.button(
+                    "",
+                    icon=":material/delete:",
+                    type="tertiary",
+                    key=f"config-data-bundle-delete-{endpoint_index}-{bundle_index}",
+                ):
+
                     def callback_delete_data_bundle(db: DataBundle) -> None:
                         state.update_data_bundle(db, None)
-                        state.set_toast('Data Bundle removed', icon=':material/delete:')
-                    dialog_confirmation(f"You are about to delete the Data Bundle *{db.name}*", callback_delete_data_bundle, db=db)
-        
-    st.write('')
+                        state.set_toast("Data Bundle removed", icon=":material/delete:")
 
-    # Add button
-    if st.button('Add a Data Bundle'):
-        dialog_data_bundle_form()
-    
-with st.container(horizontal=True, horizontal_alignment='right'):
-    st.markdown("More on data bundles in the [Documentation FAQ](/documentation#what-are-data-bundles)", width='content')
+                    dialog_confirmation(
+                        f"You are about to delete the Data Bundle *{db.name}*",
+                        callback_delete_data_bundle,
+                        db=db,
+                    )
+
+        st.write("")
+        if st.button(
+            "Add a Data Bundle", key=f"config-data-bundle-add-{endpoint_index}"
+        ):
+            dialog_data_bundle_form()
+
+with st.container(horizontal=True, horizontal_alignment="right"):
+    st.markdown(
+        "More on SPARQL endpoints in the [Documentation FAQ](/documentation#what-is-a-sparql-endpoint)",
+        width="content",
+    )
+    st.markdown(
+        "More on data bundles in the [Documentation FAQ](/documentation#what-are-data-bundles)",
+        width="content",
+    )
