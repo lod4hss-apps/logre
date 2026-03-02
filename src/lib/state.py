@@ -126,33 +126,84 @@ def handle_query_params(required_keys: List[str]) -> None:
                                     Supported keys are "db", "uri".
     """
 
+    def _get_query_param_value(name: str) -> str | None:
+        if name not in query_params:
+            return None
+        value = query_params[name]
+        if isinstance(value, list):
+            return value[0] if value else None
+        return value
+
     # If the 'db' query param is required
     if "db" in required_keys:
         db = get_data_bundle()
+        current_db_param = _get_query_param_value("db")
+        pending_db_name = state.get("pending_db_name")
 
-        # If it is in state but not in the URL: add it to URL
-        if "db" not in query_params and db:
-            query_params["db"] = db.key
+        print(
+            f"[query] required db | state={db.key if db else None} url={current_db_param}"
+        )
 
-        # If it is in URL, but not in state: add to state
-        elif "db" in query_params and not db:
-            data_bundle = next(
-                (db2 for db2 in get_data_bundles() if db2.key == query_params["db"]),
+        if pending_db_name:
+            pending_db = next(
+                (db2 for db2 in get_data_bundles() if db2.name == pending_db_name),
                 None,
             )
-            set_data_bundle(data_bundle)
+            del state["pending_db_name"]
+            if pending_db:
+                print(f"[query] apply pending db change: {pending_db.key}")
+                set_data_bundle(pending_db)
+                query_params["db"] = pending_db.key
+                if "uri" in query_params:
+                    print(f"[query] purge uri due to db change: {query_params['uri']}")
+                    del query_params["uri"]
+                if "entity_uri" in state:
+                    del state["entity_uri"]
+                return
+
+        if current_db_param:
+            if not db or db.key != current_db_param:
+                data_bundle = next(
+                    (db2 for db2 in get_data_bundles() if db2.key == current_db_param),
+                    None,
+                )
+                if data_bundle:
+                    print(f"[query] set data bundle from url: {current_db_param}")
+                    set_data_bundle(data_bundle)
+                    if get_entity_uri() is not None:
+                        print("[query] clear entity uri due to db change")
+                        if "entity_uri" in state:
+                            del state["entity_uri"]
+                    if "uri" in query_params:
+                        print(
+                            f"[query] purge uri due to db change: {query_params['uri']}"
+                        )
+                        del query_params["uri"]
+                elif db:
+                    print(f"[query] db param not found, keep state -> {db.key}")
+                    query_params["db"] = db.key
+        elif db:
+            print(f"[query] set db param -> {db.key}")
+            query_params["db"] = db.key
 
     # If the 'uri' query param is required
     if "uri" in required_keys:
         uri = get_entity_uri()
+        current_uri_param = _get_query_param_value("uri")
+
+        print(
+            f"[query] required uri | state={uri if uri else None} url={current_uri_param}"
+        )
 
         # If it is in state but not in the URL: add it to URL
-        if "uri" not in query_params and uri is not None:
+        if current_uri_param is None and uri is not None:
+            print(f"[query] set uri param -> {uri}")
             query_params["uri"] = uri
 
         # If it is in URL, but not in state: add to state
-        elif "uri" in query_params and uri is None:
-            set_entity_uri(query_params["uri"])
+        elif current_uri_param is not None and uri is None:
+            print(f"[query] set entity uri from url: {current_uri_param}")
+            set_entity_uri(current_uri_param)
 
 
 ##### CONFIGURATION #####
@@ -734,7 +785,14 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
 
     # When a data bundle is chosen, load its model
     if data_bundle:
-        data_bundle.load_model()
+        try:
+            data_bundle.load_model()
+        except Exception as err:
+            set_toast(
+                f"Failed to load model for data bundle '{data_bundle.name}'.",
+                icon=":material/warning:",
+            )
+            print(f"[data_bundle] load_model failed: {err}")
 
 
 def update_data_bundle(old_db: DataBundle | None, new_db: DataBundle | None) -> None:

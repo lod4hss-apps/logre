@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit import query_params
 from lib import state
 from dialogs.find_entity import dialog_find_entity
 from dialogs.entity_creation import dialog_entity_creation
@@ -129,8 +130,15 @@ def menu() -> None:
         ):
             endpoint_selected_index = endpoints_names.index(endpoint_selected_name)
             endpoint_selected = endpoints[endpoint_selected_index]
+            print(
+                f"[menu] endpoint change: {endpoint.name if endpoint else None} -> {endpoint_selected.name}"
+            )
             state.set_endpoint(endpoint_selected)
-            st.rerun()
+
+        def _on_db_change() -> None:
+            selected = st.session_state.get("selected_db_name")
+            if selected:
+                st.session_state["pending_db_name"] = selected
 
         # When an endpoint is selected, allow to select all related data bundles
         if endpoint:
@@ -152,6 +160,8 @@ def menu() -> None:
                 index=db_index,
                 placeholder="None selected",
                 help="[What are data bundles?](/documentation#what-are-data-bundles)",
+                key="selected_db_name",
+                on_change=_on_db_change,
             )
 
             # Put Data Bundle in state only if not yet the case
@@ -161,8 +171,14 @@ def menu() -> None:
             ):
                 db_selected_index = db_names.index(db_selected_name)
                 db_selected = data_bundles[db_selected_index]
+                print(
+                    f"[menu] data bundle change: {data_bundle.name if data_bundle else None} -> {db_selected.name}"
+                )
                 state.set_data_bundle(db_selected)
-                st.rerun()
+                query_params["db"] = db_selected.key
+                if "uri" in query_params:
+                    print(f"[menu] removing uri param: {query_params['uri']}")
+                    del query_params["uri"]
                 data_bundle = db_selected
 
             st.sidebar.page_link(
