@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit import query_params
 from lib import state
 from dialogs.find_entity import dialog_find_entity
 from dialogs.entity_creation import dialog_entity_creation
@@ -135,11 +134,6 @@ def menu() -> None:
             )
             state.set_endpoint(endpoint_selected)
 
-        def _on_db_change() -> None:
-            selected = st.session_state.get("selected_db_name")
-            if selected:
-                st.session_state["pending_db_name"] = selected
-
         # When an endpoint is selected, allow to select all related data bundles
         if endpoint:
             # Filter data bundles only on those with the current endpoint
@@ -154,32 +148,19 @@ def menu() -> None:
                 if data_bundle and data_bundle.name in db_names
                 else None
             )
+            if (
+                "selected_db_name" in st.session_state
+                and st.session_state["selected_db_name"] not in db_names
+            ):
+                del st.session_state["selected_db_name"]
             db_selected_name = st.sidebar.selectbox(
                 label="Data Bundle",
                 options=db_names,
-                index=db_index,
+                index=db_index if "selected_db_name" not in st.session_state else None,
                 placeholder="None selected",
                 help="[What are data bundles?](/documentation#what-are-data-bundles)",
                 key="selected_db_name",
-                on_change=_on_db_change,
             )
-
-            # Put Data Bundle in state only if not yet the case
-            if db_selected_name and (
-                (data_bundle and db_selected_name != data_bundle.name)
-                or not data_bundle
-            ):
-                db_selected_index = db_names.index(db_selected_name)
-                db_selected = data_bundles[db_selected_index]
-                print(
-                    f"[menu] data bundle change: {data_bundle.name if data_bundle else None} -> {db_selected.name}"
-                )
-                state.set_data_bundle(db_selected)
-                query_params["db"] = db_selected.key
-                if "uri" in query_params:
-                    print(f"[menu] removing uri param: {query_params['uri']}")
-                    del query_params["uri"]
-                data_bundle = db_selected
 
             st.sidebar.page_link(
                 "pages/import-export.py",
