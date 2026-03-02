@@ -124,9 +124,8 @@ build-app-macos:
 		--add-data=.streamlit:.streamlit \
 		--add-data=defaults:defaults \
 		--add-data=documentation:documentation \
+		--add-data=docker/logre-config.yml:docker \
 		--add-data=src:src \
-		--add-data=.env:.env \
-		--add-data=logre-config.yaml:. \
 		--add-data=README.md:. \
 		--add-data=VERSION:. \
 		--collect-all streamlit \
@@ -147,9 +146,8 @@ build-app-linux:
 		--add-data=.streamlit:.streamlit \
 		--add-data=defaults:defaults \
 		--add-data=documentation:documentation \
+		--add-data=docker/logre-config.yml:docker \
 		--add-data=src:src \
-		--add-data=.env:.env \
-		--add-data=logre-config.yaml:. \
 		--add-data=README.md:. \
 		--add-data=VERSION:. \
 		--collect-all streamlit \
@@ -167,9 +165,8 @@ build-app-windows:
 		--add-data=.streamlit:.streamlit \
 		--add-data=defaults:defaults \
 		--add-data=documentation:documentation \
+		--add-data=docker/logre-config.yml:docker \
 		--add-data=src:src \
-		--add-data=.env:.env \
-		--add-data=logre-config.yaml:. \
 		--add-data=README.md:. \
 		--add-data=VERSION:. \
 		--collect-all streamlit \

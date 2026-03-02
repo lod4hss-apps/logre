@@ -56,10 +56,12 @@ def menu() -> None:
                 data_bundle.load_model()
                 model_ready = data_bundle.has_usable_model()
             except Exception:
-                st.sidebar.warning(
-                    "Model not available yet. Import SHACL or verify endpoint and graph settings.",
-                    icon=":material/warning:",
-                )
+                model_ready = data_bundle.has_usable_model()
+                if not model_ready:
+                    st.sidebar.warning(
+                        "Model not available yet. Import SHACL or verify endpoint and graph settings.",
+                        icon=":material/warning:",
+                    )
             with st.sidebar.container(
                 horizontal=False,
                 horizontal_alignment="center",

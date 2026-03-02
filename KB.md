@@ -15,7 +15,7 @@ Logre is a Streamlit-based client that connects to existing SPARQL endpoints (Je
 | `src/schema/` | Domain objects describing data bundles, model frameworks, SPARQL technology adapters, and error helpers. `data_bundle.py` defines how each bundle connects to a SPARQL backend and provides higher-level queries (find entities, fetch statements, run SPARQL). |
 | `docker/`, `docker-compose.yml`, `Dockerfile` | Containerized stack bundling Logre with RDF4J. The `dev` profile spins up both UI and RDF4J server with persistent volumes and optional auto-bootstrap of repositories/config. |
 | `scripts/` | Automation helpers (`bootstrap-rdf4j.sh`, `wait-for-http.sh`, `update.py`). |
-| `logre-config.yaml`, `.env` | User-editable configuration defining prefixes, data bundles, SPARQL queries, and runtime overrides (custom Python binary, endpoint credentials). |
+| `logre-config.yaml`, `.env` | User-editable configuration defining prefixes, data bundles, SPARQL queries, and runtime overrides. Secrets can be supplied via environment variables referenced in the YAML. |
 | `examples/` | Sample RDF datasets (N-Quads/Turtle) useful for testing import/export flows. |
 | `documentation/faq.md` | End-user FAQ surfaced inside the application documentation page. |
 
@@ -27,7 +27,9 @@ Logre is a Streamlit-based client that connects to existing SPARQL endpoints (Je
 - The sidebar is injected by `components.menu.menu()` on most pages. It exposes navigation, data bundle selection, and contextual actions (find/create entity dialogs) that rely on the global state module.
 
 ### State, configuration, and persistence
-- `lib/state.py` wraps Streamlit's `session_state`. It memoizes the application version (`VERSION` file), loads YAML configuration from `logre-config.yaml` (or `logre-config-default.txt`), and writes updates back to disk when prefixes, bundles, or saved queries change.
+- `lib/state.py` wraps Streamlit's `session_state`. It memoizes the application version (`VERSION` file), loads YAML configuration from `logre-config.yaml` (or the bundled template in `docker/logre-config.yml`), and writes updates back to disk when prefixes, bundles, or saved queries change.
+- The config location is resolved via `LOGRE_CONFIG_PATH` (highest priority), `LOGRE_CONFIG_HOME`, or OS-specific defaults (Linux `~/.config/logre/`, macOS `~/Library/Application Support/Logre/`, Windows `%APPDATA%\Logre\`).
+- Endpoint credentials and URLs may reference environment variables using `${VAR}` placeholders so secrets can live in `.env` or the environment.
 - Configuration drives:
   - Prefix registry (`graphly.schema.Prefixes`) used to shorten/expand URIs.
   - Saved SPARQL endpoints (`graphly.schema.Sparql`)

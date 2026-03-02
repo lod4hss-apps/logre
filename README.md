@@ -94,6 +94,52 @@ The Logre container waits for RDF4J to become reachable, creates the repository 
 
 ---
 
+## Configuration & secrets
+
+Logre stores its user configuration in a YAML file. If no config is present, Logre creates one from the bundled template.
+
+Default locations (by OS):
+
+* Linux: `~/.config/logre/logre-config.yaml`
+* macOS: `~/Library/Application Support/Logre/logre-config.yaml`
+* Windows: `%APPDATA%\Logre\logre-config.yaml`
+
+Overrides (highest priority wins):
+
+1. `LOGRE_CONFIG_PATH` (explicit file path)
+2. `LOGRE_CONFIG_HOME` (directory override)
+3. OS default locations above
+
+Secrets should live in environment variables (or `.env` locally) and be referenced from the config with placeholders:
+
+```yaml
+endpoints:
+  - name: my-endpoint
+    technology: RDF4J
+    url: ${LOGRE_SPARQL_URL}
+    username: ${LOGRE_SPARQL_USERNAME}
+    password: ${LOGRE_SPARQL_PASSWORD}
+```
+
+Example `.env` (local, not committed):
+
+```bash
+LOGRE_SPARQL_URL=https://example.org/rdf4j-server/repositories/myrepo
+LOGRE_SPARQL_USERNAME=admin
+LOGRE_SPARQL_PASSWORD=secret
+```
+
+Docker specifics:
+
+* `LOGRE_CONFIG_PATH` is set to `/data/logre-config.yaml` (persistent volume).
+* The config is templated from `docker/logre-config.yml` on first run (or when `LOGRE_FORCE_CONFIG=1`).
+* Data graph autoconfiguration runs automatically in Docker; in local runs it is opt-in via `LOGRE_AUTOCONFIGURE_GRAPH=1`.
+
+Configuration migrations run automatically when the format changes.
+
+
+---
+
 ## **Everyday commands**
 
 * Start (foreground): docker compose --profile dev up
@@ -109,4 +155,3 @@ The Logre container waits for RDF4J to become reachable, creates the repository 
 ## **License & documentation**
 
 Logre is released under the MIT License (see LICENSE). A built-in FAQ becomes available from within the Logre UI once the application is running.
-

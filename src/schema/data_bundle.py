@@ -68,9 +68,12 @@ class DataBundle:
             self.name.replace(" - ", "-")
         )  # To have a URL compatible name
         self.base_uri = base_uri
-        base_prefixes = [
-            prefix for prefix in prefixes.prefix_list if prefix.short != "base"
-        ]
+        unique_prefixes: Dict[str, Prefix] = {}
+        for prefix in prefixes.prefix_list:
+            if not prefix.short or prefix.short == "base":
+                continue
+            unique_prefixes[prefix.short] = prefix
+        base_prefixes = list(unique_prefixes.values())
         self.prefixes = Prefixes(base_prefixes + [Prefix("base", base_uri)])
         self.endpoint = endpoint
 

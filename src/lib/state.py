@@ -1,6 +1,8 @@
 from typing import List, Dict
 from datetime import datetime
 import os
+import re
+import shutil
 from os.path import exists as path_exists
 from pathlib import Path
 from yaml import safe_load, dump
@@ -8,6 +10,9 @@ from graphly.schema import Prefixes, Prefix, Resource, Property, Sparql
 from streamlit import session_state as state, query_params
 from schema.data_bundle import DataBundle
 from schema.sparql_technologies import get_sparql
+from lib.config_paths import get_config_path, get_default_config_path, ensure_parent_dir
+from lib.config_migrations import migrate_config_if_needed
+from lib.autoconfigure_data_graph import autoconfigure_config
 
 
 ##### PATHS #####
@@ -16,17 +21,28 @@ BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 
 VERSION_FILE_PATH = BASE_DIR + "/version"
 VERSION_FALLBACK_PATH = BASE_DIR + "/VERSION"
-CONFIG_FILE_PATH = os.getenv("LOGRE_CONFIG_PATH", BASE_DIR + "/logre-config.yaml")
-DEFAULT_CONFIG_PATH = os.getenv("LOGRE_DEFAULT_CONFIG_PATH")
-if not DEFAULT_CONFIG_PATH:
-    fallback_config_path = BASE_DIR + "/docker/logre-config.yml"
-    DEFAULT_CONFIG_PATH = (
-        fallback_config_path if path_exists(fallback_config_path) else None
-    )
+CONFIG_FILE_PATH = get_config_path()
+DEFAULT_CONFIG_PATH = get_default_config_path(BASE_DIR)
 DEFAULTS_PREFIXES = BASE_DIR + "/defaults/prefixes.yaml"
 DEFAULTS_DATA_BUNDLES = BASE_DIR + "/defaults/data-bundles.yaml"
 DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR + "/defaults/default-data-bundle.yaml"
 DEFAULTS_SPARQL_QUERIES = BASE_DIR + "/defaults/sparql-queries.yaml"
+
+ENV_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
+
+
+def expand_env_value(value: str) -> tuple[str, List[str]]:
+    missing: List[str] = []
+
+    def repl(match: re.Match) -> str:
+        var = match.group(1)
+        env_value = os.getenv(var)
+        if env_value is None:
+            missing.append(var)
+            return match.group(0)
+        return env_value
+
+    return ENV_PATTERN.sub(repl, value), missing
 
 
 ##### VERSION #####
@@ -165,15 +181,50 @@ def load_config() -> None:
         if "data_bundles" not in state:
             set_data_bundles([])
 
-        config_exists = path_exists(CONFIG_FILE_PATH)
+        config_path = (
+            CONFIG_FILE_PATH
+            if isinstance(CONFIG_FILE_PATH, Path)
+            else Path(CONFIG_FILE_PATH)
+        )
+        default_path = DEFAULT_CONFIG_PATH
+        ensure_parent_dir(config_path)
+
+        migrated = migrate_config_if_needed(config_path)
+        if migrated:
+            set_toast(
+                "Configuration migrated to the latest format.",
+                icon=":material/info:",
+            )
+
+        config_exists = path_exists(config_path)
         config_raw = None
         config_load_issue = False
         repaired = False
         obj: dict = {}
 
+        if not config_exists and default_path and path_exists(default_path):
+            try:
+                shutil.copyfile(default_path, config_path)
+                config_exists = True
+                set_toast(
+                    f"Configuration created at {config_path}",
+                    icon=":material/info:",
+                )
+            except Exception:
+                config_load_issue = True
+
+        if os.getenv("LOGRE_AUTOCONFIGURE_GRAPH") == "1" and config_exists:
+            try:
+                autoconfigure_config(config_path)
+            except Exception:
+                set_toast(
+                    "Failed to auto-configure data graph.",
+                    icon=":material/warning:",
+                )
+
         if config_exists:
             try:
-                config_raw = Path(CONFIG_FILE_PATH).read_text(encoding="utf-8")
+                config_raw = config_path.read_text(encoding="utf-8")
                 obj = safe_load(config_raw) or {}
             except Exception:
                 config_load_issue = True
@@ -185,11 +236,11 @@ def load_config() -> None:
 
         if (
             (not config_exists or config_load_issue)
-            and DEFAULT_CONFIG_PATH
-            and path_exists(DEFAULT_CONFIG_PATH)
+            and default_path
+            and path_exists(default_path)
         ):
             try:
-                default_raw = Path(DEFAULT_CONFIG_PATH).read_text(encoding="utf-8")
+                default_raw = default_path.read_text(encoding="utf-8")
                 default_obj = safe_load(default_raw) or {}
                 if isinstance(default_obj, dict):
                     obj = default_obj
@@ -198,14 +249,47 @@ def load_config() -> None:
             except Exception:
                 pass
 
+        missing_env_vars = set()
+        missing_endpoint_urls = []
+        endpoints_raw = obj.get("endpoints", [])
+        if isinstance(endpoints_raw, list):
+            for endpoint in endpoints_raw:
+                if not isinstance(endpoint, dict):
+                    continue
+                for key in ("username", "password", "url"):
+                    value = endpoint.get(key)
+                    if isinstance(value, str) and "${" in value:
+                        new_value, missing = expand_env_value(value)
+                        endpoint[key] = new_value
+                        missing_env_vars.update(missing)
+                url_value = endpoint.get("url")
+                if not isinstance(url_value, str) or not url_value.strip():
+                    missing_endpoint_urls.append(endpoint.get("name", "(unnamed)"))
+
+        if missing_env_vars:
+            missing_list = ", ".join(sorted(missing_env_vars))
+            set_toast(
+                f"Missing environment variables for endpoint config: {missing_list}",
+                icon=":material/warning:",
+            )
+        if missing_endpoint_urls:
+            names = ", ".join(sorted(set(missing_endpoint_urls)))
+            set_toast(
+                f"Skipping endpoints with missing URL: {names}",
+                icon=":material/warning:",
+            )
+
         # Extract SPARQL endpoints
         loaded_endpoints = []
-        endpoints_raw = obj.get("endpoints", [])
         if not isinstance(endpoints_raw, list):
             endpoints_raw = []
             repaired = True
         for sparql in endpoints_raw:
             try:
+                url = sparql.get("url") if isinstance(sparql, dict) else None
+                if not isinstance(url, str) or not url.strip():
+                    repaired = True
+                    continue
                 endpoint = get_sparql(sparql)
                 loaded_endpoints.append(endpoint)
             except Exception:
@@ -298,7 +382,7 @@ def load_config() -> None:
             if not config_raw:
                 return
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            backup_path = f"{CONFIG_FILE_PATH}.bak-{timestamp}"
+            backup_path = f"{config_path}.bak-{timestamp}"
             with open(backup_path, "w", encoding="utf-8") as file:
                 file.write(config_raw)
 
@@ -418,7 +502,13 @@ def save_config() -> None:
     content = dump(config, sort_keys=False)
 
     # Write the config to disk
-    with open(CONFIG_FILE_PATH, "w") as file:
+    config_path = (
+        CONFIG_FILE_PATH
+        if isinstance(CONFIG_FILE_PATH, Path)
+        else Path(CONFIG_FILE_PATH)
+    )
+    ensure_parent_dir(config_path)
+    with open(config_path, "w", encoding="utf-8") as file:
         file.write(content)
 
 
