@@ -16,6 +16,10 @@ BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 data_bundle = state.get_data_bundle()
 entity_uri = state.get_entity_uri()
 
+if not data_bundle:
+    st.warning("No data bundle selected.")
+    st.stop()
+
 # Title
 col1, col2 = st.columns([5, 1], vertical_alignment="center")
 col1.title("Data Bundle model")
@@ -53,22 +57,75 @@ except FileNotFoundError:
     )
     st.stop()
 
-properties_string = json.dumps(
-    [property.to_dict() for property in data_bundle.model.properties],
-    ensure_ascii=False,
-).replace("'", "")
+
+def _is_datatype_range(prop: dict) -> bool:
+    range_info = prop.get("range") or {}
+    range_uri = range_info.get("uri") if isinstance(range_info, dict) else None
+    if not isinstance(range_uri, str):
+        return False
+    return range_uri.startswith("xsd:") or range_uri in {
+        "rdfs:Datatype",
+        "rdf:langString",
+    }
+
+
+properties = [prop.to_dict() for prop in data_bundle.model.properties]
+properties = [prop for prop in properties if not _is_datatype_range(prop)]
+properties_string = json.dumps(properties, ensure_ascii=False).replace("'", "")
 
 st.html(
-    '<canvas id="canvas-shacl-maker" width="1450" height="800" tabindex="0"></canvas>'
+    """
+    <style>
+      #canvas-wrapper {
+        width: 100%;
+        min-height: 520px;
+      }
+      #canvas-shacl-maker {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <div id="canvas-wrapper">
+      <canvas id="canvas-shacl-maker" tabindex="0"></canvas>
+    </div>
+    """
 )
 st.html(f"<script>{js_code}</script>", unsafe_allow_javascript=True)
 st.html(
     f"""
   <script>
+    function setModelCanvasSize() {{
+      const wrapper = document.getElementById('canvas-wrapper');
+      const canvas = document.getElementById('canvas-shacl-maker');
+      if (!wrapper || !canvas) return;
+      const rect = wrapper.getBoundingClientRect();
+      const height = Math.max(520, window.innerHeight - rect.top - 24);
+      wrapper.style.height = height + 'px';
+      const width = wrapper.clientWidth;
+      if (width > 0 && height > 0) {{
+        canvas.width = width;
+        canvas.height = height;
+      }}
+    }}
+
+    function handleModelCanvasResize() {{
+      setModelCanvasSize();
+      if (typeof draw === 'function') draw();
+    }}
+
+    setModelCanvasSize();
     setCanvas(document.getElementById('canvas-shacl-maker'));
     var triples = JSON.parse('{properties_string}')
 
     addTriples(triples);
+    if (typeof draw === 'function') draw();
+
+    window.addEventListener('resize', handleModelCanvasResize);
+    if (window.ResizeObserver) {{
+      const wrapper = document.getElementById('canvas-wrapper');
+      if (wrapper) new ResizeObserver(handleModelCanvasResize).observe(wrapper);
+    }}
   </script>
 """,
     unsafe_allow_javascript=True,

@@ -156,8 +156,7 @@ def menu() -> None:
             db_selected_name = st.sidebar.selectbox(
                 label="Data Bundle",
                 options=db_names,
-                index=db_index if "selected_db_name" not in st.session_state else None,
-                placeholder="None selected",
+                index=db_index if db_index is not None else (0 if db_names else None),
                 help="[What are data bundles?](/documentation#what-are-data-bundles)",
                 key="selected_db_name",
             )
@@ -171,7 +170,7 @@ def menu() -> None:
                     not data_bundle or selected_db.key != data_bundle.key
                 ):
                     state.set_data_bundle(selected_db)
-                    if not endpoint or selected_db.endpoint.key != endpoint.key:
+                    if not endpoint or selected_db.endpoint.name != endpoint.name:
                         state.set_endpoint(selected_db.endpoint)
                     st.query_params["db"] = selected_db.key
                     st.session_state["last_db_param"] = selected_db.key
