@@ -150,86 +150,14 @@ def handle_query_params(required_keys: List[str]) -> None:
 
     # If the 'db' query param is required
     if "db" in required_keys:
-        db = get_data_bundle()
         current_db_param = _get_query_param_value("db")
-        selected_db_name = state.get("selected_db_name")
-        last_db_param = state.get("last_db_param")
+        selected_db_key = state.get("selected_db_key")
 
-        print(
-            f"[query] required db | state={db.key if db else None} url={current_db_param}"
-        )
+        print(f"[query] required db | state={selected_db_key} url={current_db_param}")
 
-        url_changed = current_db_param and current_db_param != last_db_param
-        if url_changed:
-            data_bundle = next(
-                (db2 for db2 in get_data_bundles() if db2.key == current_db_param),
-                None,
-            )
-            if data_bundle:
-                print(f"[query] set data bundle from url: {current_db_param}")
-                bundle_changed = not db or db.key != data_bundle.key
-                set_data_bundle(data_bundle)
-                state["selected_db_name"] = data_bundle.name
-                state["last_db_param"] = current_db_param
-                if bundle_changed:
-                    if "entity_uri" in state:
-                        del state["entity_uri"]
-                    if "uri" in query_params:
-                        print(
-                            f"[query] purge uri due to db change: {query_params['uri']}"
-                        )
-                        del query_params["uri"]
-                return
-
-        if selected_db_name:
-            selected_db = next(
-                (db2 for db2 in get_data_bundles() if db2.name == selected_db_name),
-                None,
-            )
-            if selected_db:
-                bundle_changed = not db or db.key != selected_db.key
-                if not db or db.key != selected_db.key:
-                    print(f"[query] set data bundle from selection: {selected_db.key}")
-                    set_data_bundle(selected_db)
-                if current_db_param != selected_db.key:
-                    print(f"[query] set db param -> {selected_db.key}")
-                    query_params["db"] = selected_db.key
-                state["last_db_param"] = selected_db.key
-                if bundle_changed:
-                    if "entity_uri" in state:
-                        del state["entity_uri"]
-                    if "uri" in query_params:
-                        print(
-                            f"[query] purge uri due to db change: {query_params['uri']}"
-                        )
-                        del query_params["uri"]
-                return
-
-        if current_db_param:
-            data_bundle = next(
-                (db2 for db2 in get_data_bundles() if db2.key == current_db_param),
-                None,
-            )
-            if data_bundle:
-                print(f"[query] set data bundle from url: {current_db_param}")
-                bundle_changed = not db or db.key != data_bundle.key
-                set_data_bundle(data_bundle)
-                state["last_db_param"] = current_db_param
-                if bundle_changed:
-                    if "entity_uri" in state:
-                        del state["entity_uri"]
-                    if "uri" in query_params:
-                        print(
-                            f"[query] purge uri due to db change: {query_params['uri']}"
-                        )
-                        del query_params["uri"]
-            elif db:
-                print(f"[query] db param not found, keep state -> {db.key}")
-                query_params["db"] = db.key
-        elif db:
-            print(f"[query] set db param -> {db.key}")
-            query_params["db"] = db.key
-            state["last_db_param"] = db.key
+        if selected_db_key and current_db_param != selected_db_key:
+            print(f"[query] set db param -> {selected_db_key}")
+            query_params["db"] = selected_db_key
 
     # If the 'uri' query param is required
     if "uri" in required_keys:
@@ -249,6 +177,71 @@ def handle_query_params(required_keys: List[str]) -> None:
         elif current_uri_param is not None and uri is None:
             print(f"[query] set entity uri from url: {current_uri_param}")
             set_entity_uri(current_uri_param)
+
+
+##### QUERY PARAMS #######
+
+
+def __get_query_param_value(key: str) -> str | None:
+    if key not in query_params:
+        return None
+
+    value = query_params[key]
+    if value is None:
+        return None
+    if isinstance(value, (list, tuple)):
+        return value[0] if value else None
+    return value
+
+
+def set_query_params(query_param_keys: List[str]) -> None:
+    # Endpoint key: from state to query param
+    if "endpoint" in query_param_keys:
+        endpoint_key = get_endpoint_key()
+        if endpoint_key:
+            query_params["endpoint"] = endpoint_key
+        elif "endpoint" in query_params:
+            del query_params["endpoint"]
+
+    # Data bundle: from state to query param
+    if "db" in query_param_keys:
+        db = get_data_bundle()
+        if db:
+            query_params["db"] = db.key
+        elif "db" in query_params:
+            del query_params["db"]
+
+    # Entity URI: from state to query param
+    if "uri" in query_param_keys:
+        uri = get_entity_uri()
+        if uri:
+            query_params["uri"] = uri
+        elif "uri" in query_params:
+            del query_params["uri"]
+
+
+def parse_query_params() -> None:
+    # Endpoint: from query param to state
+    endpoint_key = __get_query_param_value("endpoint")
+    if endpoint_key:
+        available_endpoints = [group["key"] for group in get_endpoint_groups()]
+        if endpoint_key in available_endpoints:
+            set_endpoint_key(endpoint_key)
+
+    # Data bundle: from query param to state
+    bundle_key = __get_query_param_value("db")
+    if bundle_key:
+        data_bundle = next(
+            (db for db in get_data_bundles() if db.key == bundle_key),
+            None,
+        )
+        if data_bundle:
+            set_data_bundle(data_bundle)
+
+    # Entity URI: from query param to state
+    uri = __get_query_param_value("uri")
+    if uri:
+        set_entity_uri(uri)
 
 
 ##### CONFIGURATION #####
@@ -718,6 +711,32 @@ def set_endpoint(endpoint: Sparql) -> None:
         invalidate_caches("endpoint_change")
 
 
+def get_endpoint_identifier(endpoint: Sparql | None) -> str | None:
+    if not endpoint:
+        return None
+    if hasattr(endpoint, "key"):
+        return getattr(endpoint, "key")
+    if hasattr(endpoint, "name"):
+        return getattr(endpoint, "name")
+    return None
+
+
+def get_endpoint_key() -> str | None:
+    endpoint = get_endpoint()
+    return get_endpoint_identifier(endpoint)
+
+
+def set_endpoint_key(endpoint_key: str) -> None:
+    if not endpoint_key:
+        return
+    endpoint = next(
+        (ep for ep in get_endpoints() if get_endpoint_identifier(ep) == endpoint_key),
+        None,
+    )
+    if endpoint:
+        set_endpoint(endpoint)
+
+
 def update_endpoint(old_endpoint: Sparql | None, new_endpoint: Sparql | None) -> None:
     """
     Add, remove, or update an endpoint in the session state and save the configuration.
@@ -761,10 +780,15 @@ def get_endpoint_groups() -> List[Dict[str, object]]:
     groups: List[Dict[str, object]] = []
     endpoints = get_endpoints()
     for endpoint in endpoints:
-        bundles = [db for db in get_data_bundles() if db.endpoint.key == endpoint.key]
+        endpoint_id = get_endpoint_identifier(endpoint)
+        bundles = [
+            db
+            for db in get_data_bundles()
+            if get_endpoint_identifier(db.endpoint) == endpoint_id
+        ]
         groups.append(
             {
-                "key": endpoint.key,
+                "key": endpoint_id,
                 "label": endpoint.name,
                 "endpoint": endpoint,
                 "data_bundles": bundles,
@@ -835,6 +859,10 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
     previous_key = previous.key if previous else None
     new_key = data_bundle.key if data_bundle else None
     state["data_bundle"] = data_bundle
+    if data_bundle:
+        state["selected_db_name"] = data_bundle.name
+        state["last_used_db_key"] = data_bundle.key
+        set_endpoint(data_bundle.endpoint)
     if previous_key is not None and previous_key != new_key:
         invalidate_caches("data_bundle_change")
 

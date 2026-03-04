@@ -40,8 +40,11 @@ def init(
         st.error(error_text("configuration.load", str(err)))
         st.stop()
 
-    # Put the needed query params in the page URL, if available
-    state.handle_query_params(required_query_params)
+    # Parse the query params first (handles direct links/new tabs)
+    state.parse_query_params()
+
+    # Then reflect the current state back into the URL if needed
+    state.set_query_params(required_query_params)
 
     # Tab/page infos
     st.set_page_config(page_title="Logre", page_icon="👹", layout=layout)

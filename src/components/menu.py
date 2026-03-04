@@ -134,56 +134,44 @@ def menu() -> None:
             )
             state.set_endpoint(endpoint_selected)
 
-        # When an endpoint is selected, allow to select all related data bundles
+        # Data bundle selection
         if endpoint:
-            # Filter data bundles only on those with the current endpoint
-            data_bundles = list(
-                filter(lambda db: db.endpoint.name == endpoint.name, data_bundles)
-            )
-
-            # Data bundle selection
-            db_names = [db.name for db in data_bundles]
-            db_index = (
-                db_names.index(data_bundle.name)
-                if data_bundle and data_bundle.name in db_names
-                else None
-            )
-            if (
-                "selected_db_name" in st.session_state
-                and st.session_state["selected_db_name"] not in db_names
-            ):
-                del st.session_state["selected_db_name"]
-            db_selected_name = st.sidebar.selectbox(
-                label="Data Bundle",
-                options=db_names,
-                index=db_index if db_index is not None else (0 if db_names else None),
-                help="[What are data bundles?](/documentation#what-are-data-bundles)",
-                key="selected_db_name",
-            )
-
-            if db_selected_name:
-                selected_db = next(
-                    (db for db in data_bundles if db.name == db_selected_name),
-                    None,
+            endpoint_id = state.get_endpoint_key()
+            endpoint_bundles = [
+                db
+                for db in data_bundles
+                if state.get_endpoint_identifier(db.endpoint) == endpoint_id
+            ]
+            if endpoint_bundles:
+                bundle_labels = [db.name for db in endpoint_bundles]
+                bundle_index = (
+                    bundle_labels.index(data_bundle.name)
+                    if data_bundle and data_bundle.name in bundle_labels
+                    else 0
                 )
-                if selected_db and (
-                    not data_bundle or selected_db.key != data_bundle.key
-                ):
-                    state.set_data_bundle(selected_db)
-                    if not endpoint or selected_db.endpoint.name != endpoint.name:
-                        state.set_endpoint(selected_db.endpoint)
-                    st.query_params["db"] = selected_db.key
-                    st.session_state["last_db_param"] = selected_db.key
-                    if "entity_uri" in st.session_state:
-                        del st.session_state["entity_uri"]
-                    if "uri" in st.query_params:
-                        del st.query_params["uri"]
+                selected_label = st.sidebar.selectbox(
+                    label="Data Bundle",
+                    options=bundle_labels,
+                    index=bundle_index,
+                    key="sidebar-data-bundle",
+                    help="[What are data bundles?](/documentation#what-are-data-bundles)",
+                )
+                selected_bundle = endpoint_bundles[bundle_labels.index(selected_label)]
+                if not data_bundle or data_bundle.key != selected_bundle.key:
+                    state.set_data_bundle(selected_bundle)
+                    state.set_query_params(["endpoint", "db", "uri"])
+                    st.rerun()
+            else:
+                st.sidebar.warning(
+                    "No Data Bundle configured for this endpoint.",
+                    icon=":material/info:",
+                )
 
-            st.sidebar.page_link(
-                "pages/import-export.py",
-                label="Import, Export",
-                disabled=not data_bundle,
-            )
+        st.sidebar.page_link(
+            "pages/import-export.py",
+            label="Import, Export",
+            disabled=not data_bundle,
+        )
 
         st.sidebar.page_link("pages/configuration.py", label="Configuration")
         st.sidebar.page_link("pages/documentation.py", label="Documentation (FAQ)")

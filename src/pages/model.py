@@ -7,7 +7,7 @@ from lib import state
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize
-init("wide")
+init("wide", required_query_params=["db"])
 menu()
 
 BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
