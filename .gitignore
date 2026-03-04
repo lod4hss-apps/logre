@@ -6,8 +6,10 @@
 .env.staging
 __pycache__
 pipenv_logre
+.venv311
 graphly
 /*.yaml
 *.nq
+logre-config-test-*.bak-*
 src/lib/shacl-maker.js
 dist

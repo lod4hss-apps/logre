@@ -98,6 +98,8 @@ The Logre container waits for RDF4J to become reachable, creates the repository 
 
 Logre stores its user configuration in a YAML file. If no config is present, Logre creates one from the bundled template.
 
+In the current version, the sidebar **Data Bundle** selector only lists bundles attached to the currently selected SPARQL endpoint. This behavior will change in a later release.
+
 Default locations (by OS):
 
 * Linux: `~/.config/logre/logre-config.yaml`

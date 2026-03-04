@@ -184,6 +184,8 @@ A data bundle is made of 3 majors things: data, a model, metadata. Each one of t
 
 In the end, a data bundle is just a way **for you** to represent your data, it is nothing concretely materialized, it is more a way of saying something like "My dataset has data stored at this place, the model is here, and metadata are placed here".
 
+In the current version, the **Data Bundle** selector in the sidebar only lists bundles that belong to the currently selected SPARQL endpoint. This behavior will evolve in a future release.
+
 ---
 
 ### How to create or edit a Data Bundle?

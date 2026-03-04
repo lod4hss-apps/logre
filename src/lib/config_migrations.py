@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
 from yaml import safe_dump, safe_load
+
+from lib.config_paths import get_config_home
 
 
 logger = logging.getLogger(__name__)
@@ -86,8 +89,22 @@ def migrate_config_if_needed(config_path: Path) -> bool:
 
     new_config["version"] = "2.1"
 
-    backup_path = config_path.with_suffix(
-        config_path.suffix + ".bak-" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup_dir_override = os.getenv("LOGRE_CONFIG_BACKUP_DIR")
+    if backup_dir_override:
+        backup_dir = Path(backup_dir_override)
+    else:
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        try:
+            is_repo_path = config_path.resolve().is_relative_to(base_dir)
+        except Exception:
+            is_repo_path = str(config_path.resolve()).startswith(str(base_dir))
+        backup_dir = (
+            get_config_home() / "backups" if is_repo_path else config_path.parent
+        )
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_path = (
+        backup_dir
+        / f"{config_path.name}.bak-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     )
     try:
         backup_path.write_text(raw, encoding="utf-8")

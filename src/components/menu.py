@@ -59,7 +59,7 @@ def menu() -> None:
                 model_ready = data_bundle.has_usable_model()
                 if not model_ready:
                     st.sidebar.warning(
-                        "Model not available yet. Import SHACL or verify endpoint and graph settings.",
+                        "Model not available yet. Import a model or verify endpoint and graph settings.",
                         icon=":material/warning:",
                     )
             with st.sidebar.container(
@@ -161,6 +161,24 @@ def menu() -> None:
                 help="[What are data bundles?](/documentation#what-are-data-bundles)",
                 key="selected_db_name",
             )
+
+            if db_selected_name:
+                selected_db = next(
+                    (db for db in data_bundles if db.name == db_selected_name),
+                    None,
+                )
+                if selected_db and (
+                    not data_bundle or selected_db.key != data_bundle.key
+                ):
+                    state.set_data_bundle(selected_db)
+                    if not endpoint or selected_db.endpoint.key != endpoint.key:
+                        state.set_endpoint(selected_db.endpoint)
+                    st.query_params["db"] = selected_db.key
+                    st.session_state["last_db_param"] = selected_db.key
+                    if "entity_uri" in st.session_state:
+                        del st.session_state["entity_uri"]
+                    if "uri" in st.query_params:
+                        del st.query_params["uri"]
 
             st.sidebar.page_link(
                 "pages/import-export.py",

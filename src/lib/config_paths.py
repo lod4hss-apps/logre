@@ -36,9 +36,6 @@ def get_default_config_path(base_dir: str) -> Path | None:
     override = os.getenv("LOGRE_DEFAULT_CONFIG_PATH")
     if override:
         return Path(override)
-    fallback = Path(base_dir) / "docker" / "logre-config.yml"
-    if fallback.exists():
-        return fallback
     return None
 
 
