@@ -11,7 +11,8 @@ from components.help import help_text
 ENDPOINT_TECHNOLOGIES_STR = [e.value for e in list(SPARQLTechnology)]
 MODEL_FRAMEWORKS_STR = [e.value for e in list(ModelFramework)]
 
-@st.dialog("Data Bundle", width='medium')
+
+@st.dialog("Data Bundle", width="medium")
 def dialog_data_bundle_form(db: DataBundle = None) -> None:
     """
     Displays a dialog form for creating or editing a Data Bundle.
@@ -35,10 +36,10 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
     """
     # Data Bundle name, alone on its line
     col_name, _ = st.columns([1, 1])
-    new_name = col_name.text_input('Name ❗️', value=db.name if db else '')
+    new_name = col_name.text_input("Name ❗️", value=db.name if db else "")
 
-    st.write('')
-    st.write('')
+    st.write("")
+    st.write("")
 
     # SPARQL endpoint
     endpoints = state.get_endpoints()
@@ -47,108 +48,183 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
         endpoint_index = endpoints_names.index(db.endpoint.name) if db else None
     else:
         endpoint_index = None
-    new_endpoint_name = st.selectbox("SPARQL endpoint ❗️", options=endpoints_names, index=endpoint_index)
+    new_endpoint_name = st.selectbox(
+        "SPARQL endpoint ❗️", options=endpoints_names, index=endpoint_index
+    )
     if new_endpoint_name:
         new_endpoint = endpoints[endpoints_names.index(new_endpoint_name)]
     else:
         new_endpoint = None
 
-    st.write('')
-    st.write('')
+    st.write("")
+    st.write("")
 
     # Data Bundle base URI
-    new_base_uri = st.text_input('Base URI ❗️', value=db.base_uri if db else 'http://www.example.org/resource/', help=help_text("data_bundle_form.base_uri"))
+    new_base_uri = st.text_input(
+        "Base URI ❗️",
+        value=db.base_uri if db else "http://www.example.org/resource/",
+        help=help_text("data_bundle_form.base_uri"),
+    )
 
-    st.write('')
-    st.write('')
+    st.write("")
+    st.write("")
 
     # List current named graph
-    if st.button('List existing graphs on selected endpoint', disabled=not new_endpoint):
+    if st.button(
+        "List existing graphs on selected endpoint", disabled=not new_endpoint
+    ):
         try:
-            graphs = __get_graph_list(new_endpoint.technology_name, new_endpoint.url, new_endpoint.username, new_endpoint.password, new_base_uri)
+            graphs = __get_graph_list(
+                new_endpoint.technology_name,
+                new_endpoint.url,
+                new_endpoint.username,
+                new_endpoint.password,
+                new_base_uri,
+            )
         except HTTPError as err:
             status_code = err.response.status_code
             reason = err.response.reason
             message = f"There was an error while loading the data bundle {new_name}'s graph list.\n\n"
             message += f"[HTTP Error {status_code}]: {reason}\n\n{err.args[0]}"
             if err.response.status_code == 400:
-                message += f'\n\n{err.response.text}'
+                message += f"\n\n{err.response.text}"
             raise Exception(message)
-        
+
         st.markdown(f"> *Default graph*")
         for graph in graphs:
             st.markdown(f"> {graph}")
 
-    st.write('')
+    st.write("")
 
     # Data Bundle graphs
     col_data, col_model, col_metadata = st.columns([1, 1, 1])
-    new_graph_data_uri = col_data.text_input('Data graph URI', value=db.data.uri if db else 'base:data', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
-    new_graph_model_uri = col_model.text_input('Model graph URI', value=db.model.uri if db else 'base:model', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
-    new_graph_metadata_uri = col_metadata.text_input('Metadata graph URI', value=db.metadata.uri if db else 'base:metadata', disabled=not new_endpoint, help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation#in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)")
+    new_graph_data_uri = col_data.text_input(
+        "Data graph URI",
+        value=db.data.uri if db else "base:data",
+        disabled=not new_endpoint,
+        help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)",
+    )
+    new_graph_model_uri = col_model.text_input(
+        "Model graph URI",
+        value=db.model.uri if db else "base:model",
+        disabled=not new_endpoint,
+        help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)",
+    )
+    new_graph_metadata_uri = col_metadata.text_input(
+        "Metadata graph URI",
+        value=db.metadata.uri if db else "base:metadata",
+        disabled=not new_endpoint,
+        help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)",
+    )
 
-    st.write('')
-    st.write('')
+    st.write("")
+    st.write("")
 
     # Data Bundle framework used for model
     col_framework, _ = st.columns([1, 2])
-    new_framework = col_framework.selectbox('Model framework ❗️', options=MODEL_FRAMEWORKS_STR, index=MODEL_FRAMEWORKS_STR.index(db.model.framework_name) if db else None, disabled=not new_endpoint, help="[What are the supported model framework supported?](/documentation#what-are-the-supported-model-framework-supported)")
+    new_framework = col_framework.selectbox(
+        "Model framework ❗️",
+        options=MODEL_FRAMEWORKS_STR,
+        index=MODEL_FRAMEWORKS_STR.index(db.model.framework_name) if db else None,
+        disabled=not new_endpoint,
+        help="[What are the supported model framework supported?](/documentation?section=what-are-the-supported-model-framework-supported)",
+    )
 
     # Data Bundle basic properties (type, label, comment)
     col_type, col_label, col_comment = st.columns([1, 1, 1])
-    new_type_prop_uri = col_type.text_input('Type property ❗️', value=db.model.type_property if db else 'rdf:type', disabled=not new_endpoint, help="[Why should I provide type, label and comment properties URIs?](documentation#in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)")
-    new_label_prop_uri = col_label.text_input('Label property ❗️', value=db.model.label_property if db else 'rdfs:label', disabled=not new_endpoint, help="[Why should I provide type, label and comment properties URIs?](documentation#in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)")
-    new_comment_prop_uri = col_comment.text_input('Comment property ❗️', value=db.model.comment_property if db else 'rdfs:comment', disabled=not new_endpoint, help="[Why should I provide type, label and comment properties URIs?](documentation#in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)")
+    new_type_prop_uri = col_type.text_input(
+        "Type property ❗️",
+        value=db.model.type_property if db else "rdf:type",
+        disabled=not new_endpoint,
+        help="[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)",
+    )
+    new_label_prop_uri = col_label.text_input(
+        "Label property ❗️",
+        value=db.model.label_property if db else "rdfs:label",
+        disabled=not new_endpoint,
+        help="[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)",
+    )
+    new_comment_prop_uri = col_comment.text_input(
+        "Comment property ❗️",
+        value=db.model.comment_property if db else "rdfs:comment",
+        disabled=not new_endpoint,
+        help="[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)",
+    )
 
-    st.write('')
-    st.write('')
+    st.write("")
+    st.write("")
 
-    with st.container(horizontal=True, horizontal_alignment='center'):
+    with st.container(horizontal=True, horizontal_alignment="center"):
         # Disabled if some required fields are missing
-        disabled = not(new_name and new_endpoint and new_base_uri and new_framework and new_type_prop_uri and new_label_prop_uri and new_comment_prop_uri)
-        if st.button('Save' if db else 'Create', type='primary', width=200, disabled=disabled):
-
+        disabled = not (
+            new_name
+            and new_endpoint
+            and new_base_uri
+            and new_framework
+            and new_type_prop_uri
+            and new_label_prop_uri
+            and new_comment_prop_uri
+        )
+        if st.button(
+            "Save" if db else "Create", type="primary", width=200, disabled=disabled
+        ):
             # Create the Data Bundle
-            new_db = DataBundle.from_dict({
-                'name': new_name,
-                'base_uri': new_base_uri,
-                'endpoint_name': new_endpoint.name,
-                'endpoint_url': new_endpoint.url,
-                'username': new_endpoint.username,
-                'password': new_endpoint.password,
-                'endpoint_technology': new_endpoint.technology_name,
-                'model_framework': new_framework,
-                'prop_type_uri': new_type_prop_uri,
-                'prop_label_uri': new_label_prop_uri,
-                'prop_comment_uri': new_comment_prop_uri,
-                'graph_data_uri': new_graph_data_uri,
-                'graph_model_uri': new_graph_model_uri,
-                'graph_metadata_uri': new_graph_metadata_uri,
-            }, prefixes=state.get_prefixes(), endpoints=endpoints)
+            new_db = DataBundle.from_dict(
+                {
+                    "name": new_name,
+                    "base_uri": new_base_uri,
+                    "endpoint_name": new_endpoint.name,
+                    "endpoint_url": new_endpoint.url,
+                    "username": new_endpoint.username,
+                    "password": new_endpoint.password,
+                    "endpoint_technology": new_endpoint.technology_name,
+                    "model_framework": new_framework,
+                    "prop_type_uri": new_type_prop_uri,
+                    "prop_label_uri": new_label_prop_uri,
+                    "prop_comment_uri": new_comment_prop_uri,
+                    "graph_data_uri": new_graph_data_uri,
+                    "graph_model_uri": new_graph_model_uri,
+                    "graph_metadata_uri": new_graph_metadata_uri,
+                },
+                prefixes=state.get_prefixes(),
+                endpoints=endpoints,
+            )
 
             # And add it to state
             state.update_data_bundle(db, new_db)
 
-            state.set_data_bundle(None) # To make sure new things are loaded
+            state.set_data_bundle(None)  # To make sure new things are loaded
             st.rerun()
 
 
 @st.cache_data(ttl=120, show_spinner=False)
-def __get_graph_list(technology: str | None, url: str | None, username: str | None, password: str | None, base_uri: str | None) -> None:
-
+def __get_graph_list(
+    technology: str | None,
+    url: str | None,
+    username: str | None,
+    password: str | None,
+    base_uri: str | None,
+) -> None:
     if technology and url and username and password and base_uri:
-
         # First there is the need to set the endpoint, prefixes etc locally, based on things above
         endpoint = get_sparql_technology(technology)(url, username, password)
 
         # Retrieve prefixes but skip the configured 'base' one
-        prefixes = Prefixes([prefix for prefix in state.get_prefixes().prefix_list if prefix.short != 'base'])
-        prefixes.add(Prefix('base', base_uri))
+        prefixes = Prefixes(
+            [
+                prefix
+                for prefix in state.get_prefixes().prefix_list
+                if prefix.short != "base"
+            ]
+        )
+        prefixes.add(Prefix("base", base_uri))
 
         # Make the query
-        with st.spinner('Fetching existing named graph'):
-            graphs = endpoint.run("SELECT DISTINCT ?g WHERE { GRAPH ?g { } }", prefixes=prefixes)
-        
-        return [g['g'] for g in graphs]
-    else: 
+        with st.spinner("Fetching existing named graph"):
+            graphs = endpoint.run(
+                "SELECT DISTINCT ?g WHERE { GRAPH ?g { } }", prefixes=prefixes
+            )
+
+        return [g["g"] for g in graphs]
+    else:
         return []

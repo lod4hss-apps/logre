@@ -12,7 +12,7 @@ from lib.stats import summarize_classes, summarize_properties
 
 
 # Initialize application context
-init(layout='wide', required_query_params=['endpoint', 'db'])
+init(layout="wide", required_query_params=["endpoint", "db"])
 menu()
 
 
@@ -22,26 +22,26 @@ def show_metrics(overview: dict) -> None:
 
     col_title_model, col_title_data = st.columns(2)
     with col_title_model.container(horizontal=True, horizontal_alignment="center"):
-        st.markdown('### Model', width="content")
+        st.markdown("### Model", width="content")
     with col_title_data.container(horizontal=True, horizontal_alignment="center"):
-        st.markdown('### Data', width="content")
+        st.markdown("### Data", width="content")
 
     col_classes, col_props, col_entities, col_triples = st.columns(4)
     metrics_model = [
-        (col_classes, "Classes", counts['classes']),
-        (col_props, "Properties", counts['properties']),
+        (col_classes, "Classes", counts["classes"]),
+        (col_props, "Properties", counts["properties"]),
     ]
     metrics_data = [
-        (col_entities, "Entities", counts['entities']),
-        (col_triples, "Triples", counts['triples']),
+        (col_entities, "Entities", counts["entities"]),
+        (col_triples, "Triples", counts["triples"]),
     ]
 
     for col, label, value in metrics_model:
-        with col.container(horizontal=True, horizontal_alignment='center'):
+        with col.container(horizontal=True, horizontal_alignment="center"):
             st.metric(label, format_short(value), width="content")
 
     for col, label, value in metrics_data:
-        with col.container(horizontal=True, horizontal_alignment='center'):
+        with col.container(horizontal=True, horizontal_alignment="center"):
             st.metric(label, format_short(value), width="content")
 
 
@@ -63,6 +63,7 @@ def show_top_classes(overview: dict) -> None:
         },
     )
 
+
 def show_top_properties(overview: dict) -> None:
     """Display a table with the most used properties in the data bundle."""
     top_props = overview.get("top_properties")
@@ -80,6 +81,7 @@ def show_top_properties(overview: dict) -> None:
             "Share": st.column_config.NumberColumn("Share (%)", format="%.1f %%"),
         },
     )
+
 
 def show_pie_charts(data_bundle) -> None:
     """Display the class/property distributions previously exposed in the Statistics page."""
@@ -113,7 +115,17 @@ def render_pie_chart(values, labels, title: str) -> None:
         hole=0.5,
         textposition="inside",
         textinfo="percent+label",
-        marker_colors=['rgb(255, 230, 204)', 'rgb(255, 216, 179)', 'rgb(255, 204, 153)', 'rgb(255, 191, 128)', 'rgb(255, 179, 102)', 'rgb(255, 165, 77)', 'rgb(255, 153, 51)', 'rgb(255, 140, 26)', 'rgb(255, 127, 0)']
+        marker_colors=[
+            "rgb(255, 230, 204)",
+            "rgb(255, 216, 179)",
+            "rgb(255, 204, 153)",
+            "rgb(255, 191, 128)",
+            "rgb(255, 179, 102)",
+            "rgb(255, 165, 77)",
+            "rgb(255, 153, 51)",
+            "rgb(255, 140, 26)",
+            "rgb(255, 127, 0)",
+        ],
     )
     fig = go.Figure()
     fig.add_trace(chart)
@@ -130,7 +142,12 @@ def get_dashboard_overview(data_bundle: DataBundle) -> dict:
     top_classes = get_top_classes(data_bundle, counts["entities"])
     top_properties = get_top_properties(data_bundle, counts["triples"])
     warnings = []
-    return {"counts": counts, "top_classes": top_classes, "top_properties": top_properties, "warnings": warnings}
+    return {
+        "counts": counts,
+        "top_classes": top_classes,
+        "top_properties": top_properties,
+        "warnings": warnings,
+    }
 
 
 def get_counts(data_bundle: DataBundle) -> dict:
@@ -181,7 +198,9 @@ def get_counts(data_bundle: DataBundle) -> dict:
     return counts
 
 
-def get_top_classes(data_bundle: DataBundle, total_entities: int, limit: int = 5) -> list[dict]:
+def get_top_classes(
+    data_bundle: DataBundle, total_entities: int, limit: int = 5
+) -> list[dict]:
     """
     Retrieve the most populated classes in the bundle.
     """
@@ -210,7 +229,9 @@ def get_top_classes(data_bundle: DataBundle, total_entities: int, limit: int = 5
     return rows
 
 
-def get_top_properties(data_bundle: DataBundle, total_triples: int, limit: int = 5) -> list[dict]:
+def get_top_properties(
+    data_bundle: DataBundle, total_triples: int, limit: int = 5
+) -> list[dict]:
     query = f"""
         SELECT ?property (COUNT(*) AS ?count)
         WHERE {{
@@ -229,7 +250,11 @@ def get_top_properties(data_bundle: DataBundle, total_triples: int, limit: int =
     rows = []
     for row in response:
         props = data_bundle.model.find_properties(row["property"])
-        label = props[0].label if props and props[0].label else data_bundle.prefixes.shorten(row["property"])
+        label = (
+            props[0].label
+            if props and props[0].label
+            else data_bundle.prefixes.shorten(row["property"])
+        )
         count = _to_int(row["count"])
         share = (count / total_triples * 100) if total_triples else 0
         rows.append({"Property": label, "Triples": count, "Share": share})
@@ -268,15 +293,15 @@ def show_configuration_panel() -> None:
 
     if endpoint:
         st.markdown(f"**Endpoint**: {endpoint.name}")
-    
+
     if data_bundle:
         st.markdown(f"**Data bundle**: {data_bundle.name}")
         st.caption(f"Base URI: {data_bundle.base_uri}")
         st.markdown(
             f"""
-            - **Data graph**: `{data_bundle.data.uri or '*Default Graph*'}`
-            - **Model graph**: `{data_bundle.model.uri or '*Default Graph*'}`
-            - **Metadata graph**: `{data_bundle.metadata.uri or '*Default Graph*'}`
+            - **Data graph**: `{data_bundle.data.uri or "*Default Graph*"}`
+            - **Model graph**: `{data_bundle.model.uri or "*Default Graph*"}`
+            - **Metadata graph**: `{data_bundle.metadata.uri or "*Default Graph*"}`
             """
         )
         # try:
@@ -289,18 +314,22 @@ def show_configuration_panel() -> None:
             }}
         """
         model_count_resp = data_bundle.model.run(model_count_query) or []
-        model_count = _to_int(model_count_resp[0]['count']) if model_count_resp else 0
+        model_count = _to_int(model_count_resp[0]["count"]) if model_count_resp else 0
         # except Exception:
         #     model_count = 0
         if model_count == 0:
-            st.warning("You do not have any model yet. Import one from the Import/export page to enable entity creation.")
-        st.caption("See [How to configure data bundles](/documentation#how-to-create-a-data-bundle) for details.")
+            st.warning(
+                "You do not have any model yet. Import one from the Import/export page to enable entity creation."
+            )
+        st.caption(
+            "See [How to configure data bundles](/documentation?section=how-to-create-or-edit-a-data-bundle) for details."
+        )
 
 
 def show_data_insights(overview, data_bundle):
     """Grouped visualisation for metrics, charts and tables."""
     show_metrics(overview)
-    
+
     chart_section = st.container()
     with chart_section:
         show_pie_charts(data_bundle)
@@ -318,9 +347,9 @@ try:
     data_bundles = state.get_data_bundles()
 
     if not data_bundle:
-        st.switch_page('server.py')
+        st.switch_page("server.py")
     else:
-        with st.spinner('Loading statistics...'):
+        with st.spinner("Loading statistics..."):
             overview = get_dashboard_overview(data_bundle)
 
             if overview["warnings"]:
@@ -335,8 +364,10 @@ try:
 except HTTPError as err:
     message = get_HTTP_ERROR_message(err)
     st.error(message)
-    print(message.replace('\n\n', '\n'))
+    print(message.replace("\n\n", "\n"))
 
 except ConnectionError:
-    st.error('Failed to connect to server: check your internet connection and/or server status.')
-    print('[CONNECTION ERROR]')
+    st.error(
+        "Failed to connect to server: check your internet connection and/or server status."
+    )
+    print("[CONNECTION ERROR]")

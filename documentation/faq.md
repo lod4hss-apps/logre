@@ -6,7 +6,7 @@
 
 ### What is Logre?
 
-Logre stands for LOcal GRaph Editor, an open source tool to seemlessly interact with [RDF graphs](/documentation#what-are-rdf-graphs).
+Logre stands for LOcal GRaph Editor, an open source tool to seemlessly interact with [RDF graphs](/documentation?section=what-are-rdf-graphs).
 It has been developed to help researchers and data enthusiasts to work with such graphs with a simple and intuitive interface, allowing to explore, create and manage linked data.
 
 ---
@@ -105,7 +105,7 @@ It is an extension of the RDF graph model. As explained, in the RDF Graph model,
 
 It stands for [SHape Constraint Language](https://www.w3.org/TR/shacl/).
 
-If is a W3C standard to check quality and validity in [RDF Graphs](/documentation#what-are-rdf-graphs). Concretely, it is a set of rules (in RDF graph format) describing how your data should or should not be (e.g. a Person should have a mandatory name, can only have one birth date, ...). It ensures that your data is consistent, and trustworthy, something important when dealing with Linked Open Data.
+If is a W3C standard to check quality and validity in [RDF Graphs](/documentation?section=what-are-rdf-graphs). Concretely, it is a set of rules (in RDF graph format) describing how your data should or should not be (e.g. a Person should have a mandatory name, can only have one birth date, ...). It ensures that your data is consistent, and trustworthy, something important when dealing with Linked Open Data.
 
 Here is a small example of a SHACL file content of the following rule: "All person can have maximum 2 parents" 
 
@@ -133,7 +133,7 @@ It is true that, written like that, it is not so simple to grasp. But no worries
 
 On [OntoMe](https://ontome.net/) there are a lots of different profiles on which you can download the corresponding SHACL.
 
-You can then [import](/documentation#how-to-import-data-into-the-sparql-endpoint) them into your SPARQL endpoint.
+You can then [import](/documentation?section=how-to-import-data-into-the-sparql-endpoint) them into your SPARQL endpoint.
 
 Congratulation, you have configured your classes properties - model - , and Logre will now provide you with personalized formulars, fitting your project needs.
 
@@ -180,7 +180,7 @@ You can understand "data bundles" as the common word "dataset". It has not been 
 
 In fact, in some SPARQL technologies, the "dataset" word is used to describe what other technologies called "repository", so to avoid confusion, instead of "dataset", in Logre we work with "data bundles".
 
-A data bundle is made of 3 majors things: data, a model, metadata. Each one of those things can either be in the same [Named Graph](/documentation#what-is-a-named-graph) (we DO NOT advise to do so) or in different ones (we DO advise to do so).
+A data bundle is made of 3 majors things: data, a model, metadata. Each one of those things can either be in the same [Named Graph](/documentation?section=what-is-a-named-graph) (we DO NOT advise to do so) or in different ones (we DO advise to do so).
 
 In the end, a data bundle is just a way **for you** to represent your data, it is nothing concretely materialized, it is more a way of saying something like "My dataset has data stored at this place, the model is here, and metadata are placed here".
 
@@ -190,7 +190,7 @@ In the current version, the **Data Bundle** selector in the sidebar only lists b
 
 ### How to create or edit a Data Bundle?
 
-First, before creating a data bundle, a [SPARQL endpoint](http://localhost:8501/documentation#what-is-a-sparql-endpoint) is needed.
+First, before creating a data bundle, a [SPARQL endpoint](/documentation?section=what-is-a-sparql-endpoint) is needed.
 
 In the Configuration page, locate the **Data Bundles** section. You can add or edit bundles from there: the dialog only asks for bundle-specific values (which endpoint, name, base URI, graphs, SHACL/model information).
 
@@ -201,7 +201,7 @@ No worries, everything is editable, even if you make a mistake in the configurat
 ### Where do I find my SPARQL username and password?
 
 This depends on your SPARQL endpoint:
-If it is a local one (i.e. on your computer) you have to find credentials yourself. If you followed the tutorial [here](/documentation#how-to-install-a-sparql-endpoint-locally), then you already have them.
+If it is a local one (i.e. on your computer) you have to find credentials yourself. If you followed the tutorial [here](/documentation?section=how-to-install-a-sparql-endpoint-locally), then you already have them.
 
 Otherwise, ask the endpoint maintainer for credentials.
 
@@ -223,7 +223,7 @@ Example: If you set the base URI as "http://www.example.org/entity/", and Logre 
 
 ### In the Data Bundle creation, why should I provide 3 graphs URIs (data, model, metadata)?
 
-As explained [here](http://localhost:8501/documentation#what-are-data-bundles), a data bundle is made of 3 cores things, the data, the model and metadata. So, in the data bundle creation form you need to tell Logre where to look for those things.
+As explained [here](/documentation?section=what-are-data-bundles), a data bundle is made of 3 cores things, the data, the model and metadata. So, in the data bundle creation form you need to tell Logre where to look for those things.
 By default, data will be in the named graph "base:data", model in "base:model", and metadata in "base:metadata".
 
 These are juste defaults, your are free to put anything there.

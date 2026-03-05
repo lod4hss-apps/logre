@@ -78,7 +78,7 @@ with st.expander("Prefixes"):
 
 with st.container(horizontal=True, horizontal_alignment="right"):
     st.markdown(
-        "More on prefixes in the [Documentation FAQ](/documentation#what-are-prefixes)",
+        "More on prefixes in the [Documentation FAQ](/documentation?section=what-are-prefixes)",
         width="content",
     )
 
@@ -185,10 +185,10 @@ for endpoint_index, endpoint in enumerate(endpoints):
 
 with st.container(horizontal=True, horizontal_alignment="right"):
     st.markdown(
-        "More on SPARQL endpoints in the [Documentation FAQ](/documentation#what-is-a-sparql-endpoint)",
+        "More on SPARQL endpoints in the [Documentation FAQ](/documentation?section=what-is-a-sparql-endpoint)",
         width="content",
     )
     st.markdown(
-        "More on data bundles in the [Documentation FAQ](/documentation#what-are-data-bundles)",
+        "More on data bundles in the [Documentation FAQ](/documentation?section=what-are-data-bundles)",
         width="content",
     )

@@ -120,7 +120,7 @@ def menu() -> None:
             options=endpoints_names,
             index=endpoint_index,
             placeholder="None selected",
-            help="[What are SPARQL endpoints?](/documentation#what-is-a-sparql-endpoint)",
+            help="[What are SPARQL endpoints?](/documentation?section=what-is-a-sparql-endpoint)",
         )
 
         # Set the endpoint only if not yet the case
@@ -154,7 +154,7 @@ def menu() -> None:
                     options=bundle_labels,
                     index=bundle_index,
                     key="sidebar-data-bundle",
-                    help="[What are data bundles?](/documentation#what-are-data-bundles)",
+                    help="[What are data bundles?](/documentation?section=what-are-data-bundles)",
                 )
                 selected_bundle = endpoint_bundles[bundle_labels.index(selected_label)]
                 if not data_bundle or data_bundle.key != selected_bundle.key:
