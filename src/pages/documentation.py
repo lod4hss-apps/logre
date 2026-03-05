@@ -1,6 +1,7 @@
 from pathlib import Path
 import streamlit as st
 import re
+from components.doc_links import decorate_doc_links
 from components.init import init
 from components.menu import menu
 
@@ -68,7 +69,7 @@ for title, body in sections:
     anchor = _slugify(title, anchors_seen)
     sections_with_anchors.append((anchor, title, body))
 
-st.markdown(intro_md)
+st.markdown(decorate_doc_links(intro_md))
 
 selected_section = None
 if section_param:
@@ -81,7 +82,7 @@ if selected_section:
     anchor, title, body = selected_section
     st.markdown(f"<div id='{anchor}' data-doc-anchor></div>", unsafe_allow_html=True)
     with st.expander(title, expanded=True):
-        st.markdown(body)
+        st.markdown(decorate_doc_links(body))
     st.divider()
 
 for anchor, title, body in sections_with_anchors:
@@ -89,4 +90,4 @@ for anchor, title, body in sections_with_anchors:
         continue
     st.markdown(f"<div id='{anchor}' data-doc-anchor></div>", unsafe_allow_html=True)
     with st.expander(title):
-        st.markdown(body)
+        st.markdown(decorate_doc_links(body))

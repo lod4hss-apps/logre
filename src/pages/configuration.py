@@ -1,6 +1,7 @@
 import streamlit as st
 from graphly.schema import Prefix, Sparql
 from components.init import init
+from components.doc_links import decorate_doc_links
 from components.menu import menu
 from lib import state
 from dialogs.confirmation import dialog_confirmation
@@ -78,7 +79,9 @@ with st.expander("Prefixes"):
 
 with st.container(horizontal=True, horizontal_alignment="right"):
     st.markdown(
-        "More on prefixes in the [Documentation FAQ](/documentation?section=what-are-prefixes)",
+        decorate_doc_links(
+            "More on prefixes in the [Documentation FAQ](/documentation?section=what-are-prefixes)"
+        ),
         width="content",
     )
 
@@ -185,10 +188,14 @@ for endpoint_index, endpoint in enumerate(endpoints):
 
 with st.container(horizontal=True, horizontal_alignment="right"):
     st.markdown(
-        "More on SPARQL endpoints in the [Documentation FAQ](/documentation?section=what-is-a-sparql-endpoint)",
+        decorate_doc_links(
+            "More on SPARQL endpoints in the [Documentation FAQ](/documentation?section=what-is-a-sparql-endpoint)"
+        ),
         width="content",
     )
     st.markdown(
-        "More on data bundles in the [Documentation FAQ](/documentation?section=what-are-data-bundles)",
+        decorate_doc_links(
+            "More on data bundles in the [Documentation FAQ](/documentation?section=what-are-data-bundles)"
+        ),
         width="content",
     )

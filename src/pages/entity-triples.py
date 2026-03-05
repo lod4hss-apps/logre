@@ -1,5 +1,6 @@
 import streamlit as st
 from graphly.schema import Statement, Resource, Property
+from components.doc_links import decorate_doc_links
 from components.init import init
 from components.menu import menu
 from lib import state
@@ -75,13 +76,17 @@ else:
         with col_actions.container(horizontal=True, horizontal_alignment="right"):
             if st.button(
                 "Entity Card",
-                help="[What is an entity card?](/documentation?section=what-is-an-entity-card)",
+                help=decorate_doc_links(
+                    "[What is an entity card?](/documentation?section=what-is-an-entity-card)"
+                ),
             ):
                 st.switch_page("pages/entity-card.py")
             # Button to switch to visualization
             if st.button(
                 "Visualize",
-                help="[What is the visualization?](/documentation?section=what-is-shown-on-page-visualization)",
+                help=decorate_doc_links(
+                    "[What is the visualization?](/documentation?section=what-is-shown-on-page-visualization)"
+                ),
             ):
                 st.switch_page("pages/entity-chart.py")
         st.write("")

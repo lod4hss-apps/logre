@@ -1,4 +1,6 @@
 import streamlit as st
+
+from components.doc_links import decorate_doc_links
 from lib import state
 from dialogs.find_entity import dialog_find_entity
 from dialogs.entity_creation import dialog_entity_creation
@@ -120,7 +122,9 @@ def menu() -> None:
             options=endpoints_names,
             index=endpoint_index,
             placeholder="None selected",
-            help="[What are SPARQL endpoints?](/documentation?section=what-is-a-sparql-endpoint)",
+            help=decorate_doc_links(
+                "[What are SPARQL endpoints?](/documentation?section=what-is-a-sparql-endpoint)"
+            ),
         )
 
         # Set the endpoint only if not yet the case
@@ -154,7 +158,9 @@ def menu() -> None:
                     options=bundle_labels,
                     index=bundle_index,
                     key="sidebar-data-bundle",
-                    help="[What are data bundles?](/documentation?section=what-are-data-bundles)",
+                    help=decorate_doc_links(
+                        "[What are data bundles?](/documentation?section=what-are-data-bundles)"
+                    ),
                 )
                 selected_bundle = endpoint_bundles[bundle_labels.index(selected_label)]
                 if not data_bundle or data_bundle.key != selected_bundle.key:

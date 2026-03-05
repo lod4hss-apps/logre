@@ -1,6 +1,7 @@
 import streamlit as st
 from graphly.tools import prepare
 from components.init import init
+from components.doc_links import decorate_doc_links
 from components.menu import menu
 from lib import state
 from dialogs.confirmation import dialog_confirmation
@@ -117,7 +118,9 @@ with st.expander("Import"):
 
 with st.container(horizontal=True, horizontal_alignment="right"):
     st.markdown(
-        "More on data import in the [Documentation FAQ](/documentation?section=how-to-import-data-into-the-sparql-endpoint)",
+        decorate_doc_links(
+            "More on data import in the [Documentation FAQ](/documentation?section=how-to-import-data-into-the-sparql-endpoint)"
+        ),
         width="content",
     )
 
@@ -204,7 +207,9 @@ with st.expander("Export"):
 
 with st.container(horizontal=True, horizontal_alignment="right"):
     st.markdown(
-        "More on data export in the [Documentation FAQ](/documentation?section=how-to-export-my-data)",
+        decorate_doc_links(
+            "More on data export in the [Documentation FAQ](/documentation?section=how-to-export-my-data)"
+        ),
         width="content",
     )
 
@@ -259,6 +264,8 @@ with st.expander("Update model"):
 
 with st.container(horizontal=True, horizontal_alignment="right"):
     st.markdown(
-        "More on models and SHACL files in the [Documentation FAQ](/documentation?section=what-is-shacl)",
+        decorate_doc_links(
+            "More on models and SHACL files in the [Documentation FAQ](/documentation?section=what-is-shacl)"
+        ),
         width="content",
     )

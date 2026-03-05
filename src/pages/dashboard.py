@@ -4,6 +4,7 @@ import streamlit as st
 from requests.exceptions import HTTPError, ConnectionError
 
 from components.init import init
+from components.doc_links import decorate_doc_links
 from components.menu import menu
 from schema.data_bundle import DataBundle
 from lib import state
@@ -322,7 +323,9 @@ def show_configuration_panel() -> None:
                 "You do not have any model yet. Import one from the Import/export page to enable entity creation."
             )
         st.caption(
-            "See [How to configure data bundles](/documentation?section=how-to-create-or-edit-a-data-bundle) for details."
+            decorate_doc_links(
+                "See [How to configure data bundles](/documentation?section=how-to-create-or-edit-a-data-bundle) for details."
+            )
         )
 
 

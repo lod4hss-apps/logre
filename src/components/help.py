@@ -2,6 +2,8 @@
 
 from typing import Optional
 
+from components.doc_links import decorate_doc_links
+
 HELP_TEXTS = {
     "configuration.prefixes": (
         "Prefixes are shortcuts for long URIs. Configure them once so every page displays readable identifiers."
@@ -127,4 +129,7 @@ HELP_TEXTS = {
 
 def help_text(key: str, fallback: Optional[str] = None) -> Optional[str]:
     """Return the textual hint associated with `key`, falling back when not existing."""
-    return HELP_TEXTS.get(key, fallback)
+    text = HELP_TEXTS.get(key, fallback)
+    if text is None:
+        return None
+    return decorate_doc_links(text)

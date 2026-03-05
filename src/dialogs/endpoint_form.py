@@ -1,5 +1,6 @@
 import streamlit as st
 from graphly.schema import Sparql
+from components.doc_links import decorate_doc_links
 from lib import state
 from schema.sparql_technologies import SPARQLTechnology, get_sparql_technology
 
@@ -40,14 +41,18 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
         index=ENDPOINT_TECHNOLOGIES_STR.index(endpoint.technology_name)
         if endpoint
         else None,
-        help="[What are the supported SPARQL endpoint technologies?](/documentation?section=what-are-the-supported-sparql-endpoint-technologies)",
+        help=decorate_doc_links(
+            "[What are the supported SPARQL endpoint technologies?](/documentation?section=what-are-the-supported-sparql-endpoint-technologies)"
+        ),
     )
 
     # SPARQL endpoint URL
     new_url = st.text_input(
         "Endpoint URL ❗️",
         value=endpoint.url if endpoint else "",
-        help="[What is a SPARQL endpoint?](/documentation?section=what-is-a-sparql-endpoint)",
+        help=decorate_doc_links(
+            "[What is a SPARQL endpoint?](/documentation?section=what-is-a-sparql-endpoint)"
+        ),
     )
 
     st.write("")
@@ -56,7 +61,9 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
     new_username = st.text_input(
         "Endpoint username",
         value=endpoint.username if endpoint else "",
-        help="[Where do I find my SPARQL endpoint username and password?](/documentation?section=in-the-data-bundle-creation-where-do-i-find-my-sparql-endpoint-username-and-password)",
+        help=decorate_doc_links(
+            "[Where do I find my SPARQL endpoint username and password?](/documentation?section=in-the-data-bundle-creation-where-do-i-find-my-sparql-endpoint-username-and-password)"
+        ),
     )
 
     # SPRAQL endpoint password
@@ -64,7 +71,9 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
         "Endpoint password",
         value=endpoint.password if endpoint else "",
         type="password",
-        help="[Where do I find my SPARQL endpoint username and password?](/documentation?section=in-the-data-bundle-creation-where-do-i-find-my-sparql-endpoint-username-and-password)",
+        help=decorate_doc_links(
+            "[Where do I find my SPARQL endpoint username and password?](/documentation?section=in-the-data-bundle-creation-where-do-i-find-my-sparql-endpoint-username-and-password)"
+        ),
     )
 
     st.write("")

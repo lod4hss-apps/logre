@@ -3,6 +3,7 @@ import pandas as pd
 from requests.exceptions import HTTPError, ConnectionError
 from code_editor import code_editor
 from components.init import init
+from components.doc_links import decorate_doc_links
 from components.menu import menu
 from components.help import help_text
 from lib import state
@@ -32,7 +33,9 @@ try:
         # Title
         st.markdown("# SPARQL Editor")
         st.markdown(
-            "[More about the edior in the Documentation FAQ](/documentation?section=what-type-of-queries-can-i-write-in-the-sparql-editor)"
+            decorate_doc_links(
+                "[More about the edior in the Documentation FAQ](/documentation?section=what-type-of-queries-can-i-write-in-the-sparql-editor)"
+            )
         )
 
         st.markdown("")

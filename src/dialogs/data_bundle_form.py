@@ -1,6 +1,7 @@
 import streamlit as st
 from requests.exceptions import HTTPError
 from graphly.schema import Prefixes, Prefix
+from components.doc_links import decorate_doc_links
 from lib import state
 from schema.data_bundle import DataBundle
 from schema.model_framework import ModelFramework
@@ -102,19 +103,25 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
         "Data graph URI",
         value=db.data.uri if db else "base:data",
         disabled=not new_endpoint,
-        help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)",
+        help=decorate_doc_links(
+            "[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)"
+        ),
     )
     new_graph_model_uri = col_model.text_input(
         "Model graph URI",
         value=db.model.uri if db else "base:model",
         disabled=not new_endpoint,
-        help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)",
+        help=decorate_doc_links(
+            "[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)"
+        ),
     )
     new_graph_metadata_uri = col_metadata.text_input(
         "Metadata graph URI",
         value=db.metadata.uri if db else "base:metadata",
         disabled=not new_endpoint,
-        help="[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)",
+        help=decorate_doc_links(
+            "[Why should I provide 3 graphs URIs (data, model, metadata)?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-3-graphs-uris-data-model-metadata)"
+        ),
     )
 
     st.write("")
@@ -127,7 +134,9 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
         options=MODEL_FRAMEWORKS_STR,
         index=MODEL_FRAMEWORKS_STR.index(db.model.framework_name) if db else None,
         disabled=not new_endpoint,
-        help="[What are the supported model framework supported?](/documentation?section=what-are-the-supported-model-framework-supported)",
+        help=decorate_doc_links(
+            "[What are the supported model framework supported?](/documentation?section=what-are-the-supported-model-framework-supported)"
+        ),
     )
 
     # Data Bundle basic properties (type, label, comment)
@@ -136,19 +145,25 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
         "Type property ❗️",
         value=db.model.type_property if db else "rdf:type",
         disabled=not new_endpoint,
-        help="[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)",
+        help=decorate_doc_links(
+            "[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)"
+        ),
     )
     new_label_prop_uri = col_label.text_input(
         "Label property ❗️",
         value=db.model.label_property if db else "rdfs:label",
         disabled=not new_endpoint,
-        help="[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)",
+        help=decorate_doc_links(
+            "[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)"
+        ),
     )
     new_comment_prop_uri = col_comment.text_input(
         "Comment property ❗️",
         value=db.model.comment_property if db else "rdfs:comment",
         disabled=not new_endpoint,
-        help="[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)",
+        help=decorate_doc_links(
+            "[Why should I provide type, label and comment properties URIs?](/documentation?section=in-the-data-bundle-creation-why-should-i-provide-type-label-and-comment-properties-uris)"
+        ),
     )
 
     st.write("")

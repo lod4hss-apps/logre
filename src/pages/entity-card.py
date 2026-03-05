@@ -1,4 +1,5 @@
 import streamlit as st
+from components.doc_links import decorate_doc_links
 from components.init import init
 from components.menu import menu
 from lib import state
@@ -42,13 +43,17 @@ else:
         # Button to switch to raw triples
         if st.button(
             "Raw triples",
-            help="[What are raw triples?](/documentation?section=what-is-the-page-raw-triples-for)",
+            help=decorate_doc_links(
+                "[What are raw triples?](/documentation?section=what-is-the-page-raw-triples-for)"
+            ),
         ):
             st.switch_page("pages/entity-triples.py")
         # Button to switch to visualization
         if st.button(
             "Visualize",
-            help="[What is the visualization?](/documentation?section=what-is-shown-on-page-visualization)",
+            help=decorate_doc_links(
+                "[What is the visualization?](/documentation?section=what-is-shown-on-page-visualization)"
+            ),
         ):
             st.switch_page("pages/entity-chart.py")
         # Button to edit the entity (open edit dialog)
