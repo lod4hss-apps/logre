@@ -79,9 +79,13 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
     st.write("")
     st.write("")
 
+    new_name_clean = new_name.strip()
+    new_url_clean = new_url.strip()
+    new_username_clean = new_username.strip()
+
     with st.container(horizontal=True, horizontal_alignment="center"):
         # Disabled if some required fields are missing
-        disabled = not (new_name and new_technology and new_url)
+        disabled = not (new_name_clean and new_technology and new_url_clean)
         if st.button(
             "Save" if endpoint else "Create",
             type="primary",
@@ -90,7 +94,12 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
         ):
             # Create the Endpoint
             SparqlClass = get_sparql_technology(new_technology)
-            new_endpoint = SparqlClass(new_url, new_username, new_password, new_name)
+            new_endpoint = SparqlClass(
+                new_url_clean,
+                new_username_clean,
+                new_password,
+                new_name_clean,
+            )
 
             # Loop through all Data Bundles, and also update their endpoint
             for db in state.get_data_bundles():

@@ -21,14 +21,14 @@ def show_metrics(overview: dict) -> None:
     """Display aggregated metrics for the data bundle."""
     counts = overview["counts"]
 
-    col_title_model, col_title_data = st.columns(2)
-    with col_title_model.container(horizontal=True, horizontal_alignment="center"):
-        st.markdown("### Model", width="content")
-    with col_title_data.container(horizontal=True, horizontal_alignment="center"):
-        st.markdown("### Data", width="content")
+    col_title_profile, col_title_volume = st.columns(2)
+    with col_title_profile.container(horizontal=True, horizontal_alignment="center"):
+        st.markdown("### Data Profile", width="content")
+    with col_title_volume.container(horizontal=True, horizontal_alignment="center"):
+        st.markdown("### Data Volume", width="content")
 
     col_classes, col_props, col_entities, col_triples = st.columns(4)
-    metrics_model = [
+    metrics_profile = [
         (col_classes, "Classes", counts["classes"]),
         (col_props, "Properties", counts["properties"]),
     ]
@@ -37,7 +37,7 @@ def show_metrics(overview: dict) -> None:
         (col_triples, "Triples", counts["triples"]),
     ]
 
-    for col, label, value in metrics_model:
+    for col, label, value in metrics_profile:
         with col.container(horizontal=True, horizontal_alignment="center"):
             st.metric(label, format_short(value), width="content")
 

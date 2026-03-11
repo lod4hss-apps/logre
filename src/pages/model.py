@@ -25,6 +25,30 @@ col1, col2 = st.columns([5, 1], vertical_alignment="center")
 col1.title("Data Bundle model")
 col1.text("")
 
+with col2.container(horizontal=True, horizontal_alignment="right"):
+    if st.button(
+        "Clear model",
+        icon=":material/delete:",
+        type="tertiary",
+        help="Delete all SHACL triples from the model graph.",
+    ):
+
+        def clear_model_graph() -> None:
+            data_bundle.model.delete([("?s", "?p", "?o")])
+            state.invalidate_caches("clear_model")
+            state.set_toast("Model cleared", icon=":material/delete:")
+
+        dialog_confirmation(
+            "You are about to clear the current model graph. This cannot be undone.",
+            callback=clear_model_graph,
+        )
+
+st.info(
+    "- This model view focuses on class-to-class structure and hides datatype properties (e.g. xsd:*).\n"
+    "- To append SHACL profile(s), use the Import, Export page.",
+    icon=":material/info:",
+)
+
 # with col2.container(horizontal=True, horizontal_alignment='right'):
 # if st.button('Save'):
 #   def replace_model() -> None:
@@ -130,7 +154,6 @@ st.html(
 """,
     unsafe_allow_javascript=True,
 )
-
 
 # st.title('How to...')
 

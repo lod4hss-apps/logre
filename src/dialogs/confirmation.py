@@ -1,9 +1,12 @@
 from typing import Callable
 import streamlit as st
+from lib import state
 
 
 @st.dialog("Confirmation")
-def dialog_confirmation(text: str, callback: Callable, rerun: bool = True, **kwargs) -> None:
+def dialog_confirmation(
+    text: str, callback: Callable, rerun: bool = True, **kwargs
+) -> None:
     """
     Displays a confirmation dialog with "Yes" and "No" options, executing a callback if confirmed.
 
@@ -23,30 +26,28 @@ def dialog_confirmation(text: str, callback: Callable, rerun: bool = True, **kwa
     """
     # Display information
     st.markdown(text, unsafe_allow_html=True)
-    st.markdown('Do you confirm?')
+    st.markdown("Do you confirm?")
 
     # Line with user commands: "Yes" and "No" buttons
     col1, col2 = st.columns([1, 1])
 
     # Button "No": do nothing
-    if col1.button('No'):
+    if col1.button("No"):
         # Do nothing
         st.rerun()
 
     # Button "Yes": exewcute callback
-    if col2.button('Yes', type='primary'):
-
+    if col2.button("Yes", type="primary"):
         # Callback should handle errors, but in case it does not, handle it here
         try:
             # Call the callback with given keywords args
-            with st.spinner('Executing...'):
-                result = callback(**kwargs)
+            with st.spinner("Executing..."):
+                callback(**kwargs)
 
             # Only rerun when there was no errors in the callback execution
-            if rerun: 
-                st.session_state.clear()
+            if rerun:
+                state.invalidate_caches("confirmation_action")
                 st.rerun()
-
 
         # Forward the error upwards
         except BaseException as error:

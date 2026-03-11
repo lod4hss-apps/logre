@@ -7,7 +7,7 @@ from lib import state
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize
-init()
+init(required_query_params=["endpoint", "db"])
 menu()
 
 # From state
@@ -66,7 +66,7 @@ with st.expander("Import"):
                     def upload_nquads(nquad_content) -> None:
                         data_bundle.endpoint.upload_nquads(nquad_content)
                         state.set_toast("n-Quad file uploaded", icon=":material/done:")
-                        st.session_state.clear()
+                        state.invalidate_caches("import_nquads")
                         st.rerun()
 
                     dialog_confirmation(
@@ -104,7 +104,7 @@ with st.expander("Import"):
                             graph = data_bundle.metadata
                         graph.upload_turtle(turtle_content)
                         state.set_toast("Turtle file uploaded", icon=":material/done:")
-                        st.session_state.clear()
+                        state.invalidate_caches("import_turtle")
                         st.rerun()
 
                     confirmation_text = f"You are about to upload the file *{file.name}* into the {data_type} named graph."
@@ -235,30 +235,33 @@ with st.expander("Update model"):
         # Message for the user
         with st.container(horizontal=True, horizontal_alignment="center"):
             st.markdown(
-                f"Your SHACL files will be imported into the model graph.",
+                "Your SHACL files will be appended to the model graph.",
                 width="content",
             )
-            st.warning(
-                f"Warning! If you model is in the same Named Graph as your data and/or metadata, this will delete everything. Only go ahead if you are sure your model is in a dedicated graph (check on the databundle configuration)."
+            st.info(
+                "Need to reset the model first? Use the clear action in the Model page.",
+                icon=":material/info:",
             )
 
         st.divider()
 
-        # Upload button: cleanse model and insert new one
+        # Upload button: append model profiles
         with st.container(horizontal=True, horizontal_alignment="center"):
             if st.button(
-                f"Replace current model", type="primary", icon=":material/upload:"
+                "Append SHACL profile(s)", type="primary", icon=":material/upload:"
             ):
 
-                def replace_model(turtle_content: str) -> None:
-                    data_bundle.model.delete([("?s", "?p", "?o")])
+                def append_model(turtle_content: str) -> None:
                     data_bundle.model.upload_turtle(turtle_content)
-                    state.set_toast("Model replaced", icon=":material/done:")
+                    state.invalidate_caches("append_model")
+                    state.set_toast("Model updated", icon=":material/done:")
 
-                confirmation_text = f"You are about to replace the existing model by what you specified."
+                confirmation_text = (
+                    "You are about to append SHACL profile(s) to the current model."
+                )
                 dialog_confirmation(
                     confirmation_text,
-                    callback=replace_model,
+                    callback=append_model,
                     turtle_content=files_content,
                 )
 

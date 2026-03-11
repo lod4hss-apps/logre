@@ -810,7 +810,7 @@ class DataBundle:
 
         Creates a GROUP_CONCAT expression to aggregate values for the property, handling
         outgoing and incoming properties differently. The resulting variable name is
-        made unique using the property label and index.
+        made unique using an internal index-based alias.
 
         Args:
             property (Property): The property for which the SELECT expression is generated.
@@ -820,11 +820,8 @@ class DataBundle:
         Returns:
             str: The SPARQL SELECT expression for the property.
         """
-        # Get the SPARQL label of the column (label to snake case)
-        # Prepend an index, to make sure that it will work even with same labelled properties (eg "is participation of")
-        base_label = f"{to_snake_case(property.label)}_{index}".replace(
-            "-", "_"
-        ).replace("'", "_")
+        # Use safe internal variable names (independent from RDF labels/content)
+        base_label = self.__data_table_get_internal_var_name(index)
         column_alias = self.__data_table_get_column_var_name(property, index, class_uri)
         if property.domain and class_uri == property.domain.uri:  # i.e. is outgoing
             return f"(GROUP_CONCAT(DISTINCT COALESCE(?{base_label}_, ''); separator=\" - \") as ?{column_alias})"
@@ -851,10 +848,8 @@ class DataBundle:
         """
         # Get the property URI
         property_uri = prepare(property.uri, self.prefixes.shorts())
-        # Get the SPARQL label of the column (label to snake case)
-        # Prepend an index, to make sure that it will work even with same labelled properties (eg "is participation of")
-        property_label = f"{to_snake_case(property.label)}_{index}"
-        property_label = property_label.replace("-", "_").replace("'", "_")
+        # Use safe internal variable names (independent from RDF labels/content)
+        property_label = self.__data_table_get_internal_var_name(index)
         if property.domain and class_uri == property.domain.uri:  # i.e. is outgoing
             # When the property is already a "value property" (label, comment, or other values), directly retrieve the value
             if (
@@ -886,11 +881,15 @@ class DataBundle:
                 + " . } }"
             )
 
+    @staticmethod
+    def __data_table_get_internal_var_name(index: int) -> str:
+        """Return a safe internal variable stem for data-table SPARQL queries."""
+        return f"col_{index}"
+
     def __data_table_get_column_var_name(
         self, property: Property, index: int, class_uri: str
     ) -> str:
-        property_label = f"{to_snake_case(property.label)}_{index}"
-        property_label = property_label.replace("-", "_").replace("'", "_")
+        property_label = self.__data_table_get_internal_var_name(index)
         if property.domain and property.domain.uri == class_uri:
             return property_label
         return f"{property_label}_inc"
@@ -907,6 +906,22 @@ class DataBundle:
         if not (property.domain and property.domain.uri == class_uri):
             label = f"{label} (incoming)"
         return label
+
+    @staticmethod
+    def __as_sparql_uri_term(uri: str) -> str | None:
+        """
+        Convert a raw URI/bnode string to a safe SPARQL term for VALUES.
+        """
+        if not uri:
+            return None
+        text = str(uri).strip()
+        if not text:
+            return None
+        if text.startswith("_:"):
+            return text
+        if text.startswith("<") and text.endswith(">"):
+            return text
+        return f"<{text}>"
 
     def get_data_table_columns_names(self, cls: Resource) -> List[str]:
         """
@@ -1031,42 +1046,66 @@ class DataBundle:
         # Execute the query (fetch instances with labels etc)
         instances = self.data.sparql.run(query, self.prefixes)
 
-        # For each class instance, count outgoings triples number
-        uris = list(
-            map(
-                lambda record: prepare(record["uri"], self.prefixes.shorts()), instances
-            )
-        )
-        outgoings = self.data.sparql.run(
-            f"""
-            # DataBundle.get_data_table() request 2: outgoing count
-            SELECT ?uri (COALESCE(COUNT(?outgoing), '0') as ?outgoing_count) 
-            WHERE {{
-                {self.data.sparql_begin}
-                    VALUES ?uri {{ {" ".join(uris)} }}
-                    ?uri ?p ?outgoing .
-                {self.data.sparql_end}
-            }} GROUP BY ?uri
-        """,
-            self.prefixes,
-        )
-        outgoings = pd.DataFrame(outgoings)
+        # If there is no row at all, avoid count queries with empty VALUES
+        if not instances:
+            return pd.DataFrame()
 
-        # For each class instance, count incoming triples number
-        incomings = self.data.sparql.run(
-            f"""
-            # DataBundle.get_data_table() request 3: incoming count
-            SELECT ?uri (COALESCE(COUNT(?incoming), '0') as ?incoming_count) 
-            WHERE {{
-                {self.data.sparql_begin}
-                    VALUES ?uri {{ {" ".join(uris)} }}
-                    ?incoming ?p ?uri .
-                {self.data.sparql_end}
-            }} GROUP BY ?uri
-        """,
-            self.prefixes,
-        )
-        incomings = pd.DataFrame(incomings)
+        # For each class instance, count outgoings/incomings triples number
+        uris = []
+        for record in instances:
+            raw_uri = record.get("uri")
+            prepared_uri = self.__as_sparql_uri_term(raw_uri)
+            if prepared_uri:
+                uris.append(prepared_uri)
+
+        # Keep unique URIs while preserving order
+        uris = list(dict.fromkeys(uris))
+
+        if uris:
+            try:
+                outgoings = self.data.sparql.run(
+                    f"""
+                    # DataBundle.get_data_table() request 2: outgoing count
+                    SELECT ?uri (COALESCE(COUNT(?outgoing), '0') as ?outgoing_count) 
+                    WHERE {{
+                        {self.data.sparql_begin}
+                            VALUES ?uri {{ {" ".join(uris)} }}
+                            ?uri ?p ?outgoing .
+                        {self.data.sparql_end}
+                    }} GROUP BY ?uri
+                """,
+                    self.prefixes,
+                )
+                outgoings = pd.DataFrame(outgoings)
+            except HTTPError as err:
+                print(
+                    f"[DATA TABLE WARNING] Outgoing count query failed ({err.response.status_code}): {err.response.reason}"
+                )
+                outgoings = pd.DataFrame()
+
+            try:
+                incomings = self.data.sparql.run(
+                    f"""
+                    # DataBundle.get_data_table() request 3: incoming count
+                    SELECT ?uri (COALESCE(COUNT(?incoming), '0') as ?incoming_count) 
+                    WHERE {{
+                        {self.data.sparql_begin}
+                            VALUES ?uri {{ {" ".join(uris)} }}
+                            ?incoming ?p ?uri .
+                        {self.data.sparql_end}
+                    }} GROUP BY ?uri
+                """,
+                    self.prefixes,
+                )
+                incomings = pd.DataFrame(incomings)
+            except HTTPError as err:
+                print(
+                    f"[DATA TABLE WARNING] Incoming count query failed ({err.response.status_code}): {err.response.reason}"
+                )
+                incomings = pd.DataFrame()
+        else:
+            outgoings = pd.DataFrame()
+            incomings = pd.DataFrame()
 
         # Final DataFrame
         df = pd.DataFrame(data=instances)

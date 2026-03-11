@@ -47,6 +47,8 @@ with st.expander("Prefixes"):
             new_long = st.text_input(
                 "Prefix long", value=prefix.long, key=f"prefix-long-{i}"
             )
+            new_short_clean = new_short.strip()
+            new_long_clean = new_long.strip()
 
             # Delete button
             if st.button(
@@ -64,8 +66,8 @@ with st.expander("Prefixes"):
                 )
 
             # Update button
-            if new_short != prefix.short or new_long != prefix.long:
-                state.update_prefix(prefix, Prefix(new_short, new_long))
+            if new_short_clean != prefix.short or new_long_clean != prefix.long:
+                state.update_prefix(prefix, Prefix(new_short_clean, new_long_clean))
                 state.set_toast("Prefix updated", icon=":material/edit:")
                 st.rerun()
 
@@ -152,7 +154,7 @@ for endpoint_index, endpoint in enumerate(endpoints):
                         key=f"config-data-bundle-default-{endpoint_index}-{bundle_index}",
                     ):
                         state.set_default_data_bundle(db)
-                        st.session_state.clear()
+                        state.invalidate_caches("set_default_data_bundle")
                         st.rerun()
 
                 if st.button(

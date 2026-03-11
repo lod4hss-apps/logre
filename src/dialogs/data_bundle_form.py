@@ -80,7 +80,7 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
                 new_endpoint.url,
                 new_endpoint.username,
                 new_endpoint.password,
-                new_base_uri,
+                new_base_uri.strip(),
             )
         except HTTPError as err:
             status_code = err.response.status_code
@@ -169,16 +169,25 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
     st.write("")
     st.write("")
 
+    new_name_clean = new_name.strip()
+    new_base_uri_clean = new_base_uri.strip()
+    new_graph_data_uri_clean = new_graph_data_uri.strip()
+    new_graph_model_uri_clean = new_graph_model_uri.strip()
+    new_graph_metadata_uri_clean = new_graph_metadata_uri.strip()
+    new_type_prop_uri_clean = new_type_prop_uri.strip()
+    new_label_prop_uri_clean = new_label_prop_uri.strip()
+    new_comment_prop_uri_clean = new_comment_prop_uri.strip()
+
     with st.container(horizontal=True, horizontal_alignment="center"):
         # Disabled if some required fields are missing
         disabled = not (
-            new_name
+            new_name_clean
             and new_endpoint
-            and new_base_uri
+            and new_base_uri_clean
             and new_framework
-            and new_type_prop_uri
-            and new_label_prop_uri
-            and new_comment_prop_uri
+            and new_type_prop_uri_clean
+            and new_label_prop_uri_clean
+            and new_comment_prop_uri_clean
         )
         if st.button(
             "Save" if db else "Create", type="primary", width=200, disabled=disabled
@@ -186,20 +195,20 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
             # Create the Data Bundle
             new_db = DataBundle.from_dict(
                 {
-                    "name": new_name,
-                    "base_uri": new_base_uri,
+                    "name": new_name_clean,
+                    "base_uri": new_base_uri_clean,
                     "endpoint_name": new_endpoint.name,
                     "endpoint_url": new_endpoint.url,
                     "username": new_endpoint.username,
                     "password": new_endpoint.password,
                     "endpoint_technology": new_endpoint.technology_name,
                     "model_framework": new_framework,
-                    "prop_type_uri": new_type_prop_uri,
-                    "prop_label_uri": new_label_prop_uri,
-                    "prop_comment_uri": new_comment_prop_uri,
-                    "graph_data_uri": new_graph_data_uri,
-                    "graph_model_uri": new_graph_model_uri,
-                    "graph_metadata_uri": new_graph_metadata_uri,
+                    "prop_type_uri": new_type_prop_uri_clean,
+                    "prop_label_uri": new_label_prop_uri_clean,
+                    "prop_comment_uri": new_comment_prop_uri_clean,
+                    "graph_data_uri": new_graph_data_uri_clean,
+                    "graph_model_uri": new_graph_model_uri_clean,
+                    "graph_metadata_uri": new_graph_metadata_uri_clean,
                 },
                 prefixes=state.get_prefixes(),
                 endpoints=endpoints,
