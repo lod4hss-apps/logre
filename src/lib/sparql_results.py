@@ -1,9 +1,9 @@
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from graphly.schema import Prefixes
 
 
-def _parse_binding_value(binding: dict, prefixes: Prefixes):
+def _parse_binding_value(binding: dict[str, Any], prefixes: Prefixes) -> Any:
     value_type = binding.get("type")
     datatype = binding.get("datatype")
     value = binding.get("value")
@@ -14,11 +14,19 @@ def _parse_binding_value(binding: dict, prefixes: Prefixes):
         value_type == "literal"
         and datatype == "http://www.w3.org/2001/XMLSchema#integer"
     ):
-        return int(value)
+        if value is None:
+            return None
+        try:
+            return int(str(value))
+        except (TypeError, ValueError):
+            return value
     return value
 
 
-def parse_sparql_json_response(response_json: object, prefixes: Prefixes) -> List[Dict]:
+def parse_sparql_json_response(
+    response_json: object,
+    prefixes: Prefixes,
+) -> List[Dict[str, Any]]:
     """
     Parse SPARQL JSON results while preserving SELECT projection columns.
 
@@ -44,12 +52,12 @@ def parse_sparql_json_response(response_json: object, prefixes: Prefixes) -> Lis
         if isinstance(vars_, list):
             columns = [str(column) for column in vars_]
 
-    rows: List[Dict] = []
+    rows: List[Dict[str, Any]] = []
     for binding_row in bindings:
         if not isinstance(binding_row, dict):
             continue
 
-        row = {column: None for column in columns}
+        row: Dict[str, Any] = {}
         for key, value_obj in binding_row.items():
             if isinstance(value_obj, dict):
                 row[key] = _parse_binding_value(value_obj, prefixes)
@@ -57,5 +65,17 @@ def parse_sparql_json_response(response_json: object, prefixes: Prefixes) -> Lis
                 row[key] = value_obj
 
         rows.append(row)
+
+    # Preserve SELECT projection columns without forcing every row to carry
+    # explicit None values (which floods table cells with blanks).
+    if rows and columns:
+        first_row = rows[0]
+        ordered_first_row: Dict[str, Any] = {
+            column: first_row.get(column) for column in columns
+        }
+        for key, value in first_row.items():
+            if key not in ordered_first_row:
+                ordered_first_row[key] = value
+        rows[0] = ordered_first_row
 
     return rows

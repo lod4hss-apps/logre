@@ -217,9 +217,8 @@ try:
             if result_kind == "table":
                 rows = st.session_state.get(RESULT_TABLE_KEY, [])
                 df = pd.DataFrame(rows)
-                df = df.apply(
-                    lambda col: col.map(lambda value: "" if value is None else value)
-                )
+                if not df.empty:
+                    df = df.where(pd.notna(df), "")
 
                 comment_place.markdown(
                     f"Shape: {df.shape[0]}x{df.shape[1]}", width="content"

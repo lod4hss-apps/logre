@@ -96,6 +96,29 @@ class TestSparqlResultsParser(unittest.TestCase):
         self.assertEqual(["a", "valeur_num", "b"], list(df.columns))
         self.assertTrue(csv.startswith("a,valeur_num,b\n"))
 
+    def test_only_first_row_is_seeded_with_missing_columns(self):
+        response_json = {
+            "head": {"vars": ["a", "valeur_num", "b"]},
+            "results": {
+                "bindings": [
+                    {
+                        "a": {"type": "literal", "value": "x"},
+                        "b": {"type": "literal", "value": "y"},
+                    },
+                    {
+                        "a": {"type": "literal", "value": "x2"},
+                        "b": {"type": "literal", "value": "y2"},
+                    },
+                ]
+            },
+        }
+
+        rows = parse_sparql_json_response(response_json, Prefixes())
+
+        self.assertIn("valeur_num", rows[0])
+        self.assertIsNone(rows[0]["valeur_num"])
+        self.assertNotIn("valeur_num", rows[1])
+
 
 if __name__ == "__main__":
     unittest.main()
