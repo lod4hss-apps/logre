@@ -65,6 +65,7 @@ with st.expander("Import"):
 
                     def upload_nquads(nquad_content) -> None:
                         data_bundle.endpoint.upload_nquads(nquad_content)
+                        data_bundle.load_model()
                         state.set_toast("n-Quad file uploaded", icon=":material/done:")
                         state.invalidate_caches("import_nquads")
                         st.rerun()
@@ -103,6 +104,8 @@ with st.expander("Import"):
                         if data_type == "Metadata":
                             graph = data_bundle.metadata
                         graph.upload_turtle(turtle_content)
+                        if data_type == "Model":
+                            data_bundle.load_model()
                         state.set_toast("Turtle file uploaded", icon=":material/done:")
                         state.invalidate_caches("import_turtle")
                         st.rerun()
@@ -253,6 +256,7 @@ with st.expander("Update model"):
 
                 def append_model(turtle_content: str) -> None:
                     data_bundle.model.upload_turtle(turtle_content)
+                    data_bundle.load_model()
                     state.invalidate_caches("append_model")
                     state.set_toast("Model updated", icon=":material/done:")
 

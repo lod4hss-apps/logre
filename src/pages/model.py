@@ -35,6 +35,7 @@ with col2.container(horizontal=True, horizontal_alignment="right"):
 
         def clear_model_graph() -> None:
             data_bundle.model.delete([("?s", "?p", "?o")])
+            data_bundle.load_model()
             state.invalidate_caches("clear_model")
             state.set_toast("Model cleared", icon=":material/delete:")
 
