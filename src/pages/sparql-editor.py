@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from requests.exceptions import HTTPError, ConnectionError
+from requests.exceptions import HTTPError, ConnectionError, Timeout
 from code_editor import code_editor
 from components.init import init
 from components.doc_links import decorate_doc_links
@@ -87,10 +87,9 @@ try:
                 options=sparql_queries_names,
                 index=index,
                 width=300,
-                on_change=state.set_sparql_query,
-                args=(sparql_query_name,),
                 help=help_text("sparql_editor.saved_query"),
             )
+            state.set_sparql_query(sparql_query_name)
 
             # And have a delete button for this query
             if st.button("", icon=":material/delete:", type="tertiary"):
@@ -232,7 +231,7 @@ try:
                 )
 
                 table_place = st.empty()
-                table_place.dataframe(df, hide_index=True, use_container_width=True)
+                table_place.dataframe(df, hide_index=True, width="stretch")
 
             elif result_kind == "code":
                 st.code(st.session_state.get(RESULT_TEXT_KEY, ""), "turtle")
@@ -242,8 +241,6 @@ except HTTPError as err:
     st.error(message)
     print(message.replace("\n\n", "\n"))
 
-except ConnectionError as err:
-    st.error(
-        "Failed to connect to server: check your internet connection and/or server status."
-    )
-    print("[CONNECTION ERROR]")
+except (ConnectionError, Timeout):
+    state.deselect_bundle_after_endpoint_failure()
+    st.rerun()

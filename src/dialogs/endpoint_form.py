@@ -101,13 +101,6 @@ def dialog_endpoint_form(endpoint: Sparql = None) -> None:
                 new_name_clean,
             )
 
-            # Loop through all Data Bundles, and also update their endpoint
-            for db in state.get_data_bundles():
-                if db.endpoint == endpoint:
-                    db.endpoint = new_endpoint
-
-            # And add it to state (has to be done after updating data_bundles, because of configuration saving)
+            # Persist endpoint changes (also rebinds related data bundles).
             state.update_endpoint(endpoint, new_endpoint)
-
-            state.set_endpoint(None)  # To make sure new things are loaded
             st.rerun()

@@ -4,6 +4,7 @@ from lib import state
 
 init()
 
+state.resolve_startup_context()
 data_bundle = state.get_data_bundle()
 
 if data_bundle:

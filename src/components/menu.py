@@ -28,15 +28,39 @@ def menu() -> None:
         endpoint = state.get_endpoint()
         data_bundles = state.get_data_bundles()
         data_bundle = state.get_data_bundle()
+        default_data_bundle = state.get_default_data_bundle()
 
-        # If there is a data bundle set as default one
-        # But if the default DB has a unexisting endpoint, do nothing
-        if (
-            data_bundle
-            and not endpoint
-            and data_bundle.endpoint.name in list(map(lambda e: e.name, endpoints))
-        ):
-            endpoint = data_bundle.endpoint
+        def _endpoint_id(ep):
+            return state.get_endpoint_identifier(ep) if ep else None
+
+        def _same_bundle(a, b) -> bool:
+            if not a and not b:
+                return True
+            if not a or not b:
+                return False
+            return a.key == b.key and _endpoint_id(a.endpoint) == _endpoint_id(
+                b.endpoint
+            )
+
+        def _clear_bundle_widget_state() -> None:
+            stale_keys = [
+                key
+                for key in st.session_state.keys()
+                if key == "sidebar-data-bundle"
+                or key.startswith("sidebar-data-bundle-")
+            ]
+            for key in stale_keys:
+                del st.session_state[key]
+
+        # Keep endpoint/data bundle coherent even when URL params or page transitions
+        # restore a stale bundle from another endpoint.
+        if endpoint:
+            endpoint_id = _endpoint_id(endpoint)
+            if data_bundle and _endpoint_id(data_bundle.endpoint) != endpoint_id:
+                state.set_data_bundle(None)
+                _clear_bundle_widget_state()
+                state.set_query_params(["endpoint", "db", "uri"])
+                st.rerun()
 
         # Sidebar title
         with st.sidebar.container(horizontal=True, vertical_alignment="bottom"):
@@ -44,6 +68,25 @@ def menu() -> None:
             st.markdown(
                 f"<small>v{version}</small>", unsafe_allow_html=True, width="content"
             )
+
+        if not data_bundle and default_data_bundle:
+            default_label = default_data_bundle.name
+            default_endpoint_name = default_data_bundle.endpoint.name
+            if st.sidebar.button(
+                "Use default Data Bundle",
+                type="secondary",
+                width="stretch",
+                help=f"Select '{default_label}' on endpoint '{default_endpoint_name}'.",
+            ):
+                if state.select_default_data_bundle():
+                    _clear_bundle_widget_state()
+                    state.set_query_params(["endpoint", "db", "uri"])
+                else:
+                    state.set_toast(
+                        "Default Data Bundle is no longer available.",
+                        icon=":material/warning:",
+                    )
+                st.rerun()
 
         # Page links
         st.sidebar.write("\n")
@@ -53,17 +96,12 @@ def menu() -> None:
         st.sidebar.write("\n")
         # Data bundle commands
         if data_bundle:
-            model_ready = False
-            try:
-                data_bundle.load_model()
-                model_ready = data_bundle.has_usable_model()
-            except Exception:
-                model_ready = data_bundle.has_usable_model()
-                if not model_ready:
-                    st.sidebar.warning(
-                        "Model not available yet. Import a model or verify endpoint and graph settings.",
-                        icon=":material/warning:",
-                    )
+            model_ready = data_bundle.has_usable_model()
+            if not model_ready:
+                st.sidebar.warning(
+                    "Model not available yet. Import a model or verify endpoint and graph settings.",
+                    icon=":material/warning:",
+                )
             with st.sidebar.container(
                 horizontal=False,
                 horizontal_alignment="center",
@@ -116,7 +154,11 @@ def menu() -> None:
 
         # SPARQL endpoint selection
         endpoints_names = [e.name for e in endpoints]
-        endpoint_index = endpoints_names.index(endpoint.name) if endpoint else None
+        endpoint_index = (
+            endpoints_names.index(endpoint.name)
+            if endpoint and endpoint.name in endpoints_names
+            else None
+        )
         endpoint_selected_name = st.sidebar.selectbox(
             label="SPARQL endpoint",
             options=endpoints_names,
@@ -133,10 +175,30 @@ def menu() -> None:
         ):
             endpoint_selected_index = endpoints_names.index(endpoint_selected_name)
             endpoint_selected = endpoints[endpoint_selected_index]
+            state.clear_endpoint_temporarily_unreachable(endpoint_selected)
             print(
                 f"[menu] endpoint change: {endpoint.name if endpoint else None} -> {endpoint_selected.name}"
             )
             state.set_endpoint(endpoint_selected)
+
+            # Keep endpoint and data bundle consistent to avoid URL/state loops.
+            endpoint_id = state.get_endpoint_identifier(endpoint_selected)
+
+            if (
+                data_bundle
+                and state.get_endpoint_identifier(data_bundle.endpoint) == endpoint_id
+            ):
+                target_bundle = data_bundle
+            else:
+                target_bundle = None
+
+            if not _same_bundle(data_bundle, target_bundle):
+                state.set_data_bundle(target_bundle)
+
+            _clear_bundle_widget_state()
+
+            state.set_query_params(["endpoint", "db", "uri"])
+            st.rerun()
 
         # Data bundle selection
         if endpoint:
@@ -151,22 +213,26 @@ def menu() -> None:
                 bundle_index = (
                     bundle_labels.index(data_bundle.name)
                     if data_bundle and data_bundle.name in bundle_labels
-                    else 0
+                    else None
                 )
                 selected_label = st.sidebar.selectbox(
                     label="Data Bundle",
                     options=bundle_labels,
                     index=bundle_index,
-                    key="sidebar-data-bundle",
+                    key=f"sidebar-data-bundle-{endpoint_id}",
+                    placeholder="None selected",
                     help=decorate_doc_links(
                         "[What are data bundles?](/documentation?section=what-are-data-bundles)"
                     ),
                 )
-                selected_bundle = endpoint_bundles[bundle_labels.index(selected_label)]
-                if not data_bundle or data_bundle.key != selected_bundle.key:
-                    state.set_data_bundle(selected_bundle)
-                    state.set_query_params(["endpoint", "db", "uri"])
-                    st.rerun()
+                if selected_label:
+                    selected_bundle = endpoint_bundles[
+                        bundle_labels.index(selected_label)
+                    ]
+                    if not _same_bundle(data_bundle, selected_bundle):
+                        state.set_data_bundle(selected_bundle)
+                        state.set_query_params(["endpoint", "db", "uri"])
+                        st.rerun()
             else:
                 st.sidebar.warning(
                     "No Data Bundle configured for this endpoint.",

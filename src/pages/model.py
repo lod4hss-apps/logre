@@ -7,7 +7,7 @@ from lib import state
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize
-init("wide", required_query_params=["db"])
+init("wide", required_query_params=["endpoint", "db"])
 menu()
 
 BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
@@ -95,64 +95,120 @@ def _is_datatype_range(prop: dict) -> bool:
 
 properties = [prop.to_dict() for prop in data_bundle.model.properties]
 properties = [prop for prop in properties if not _is_datatype_range(prop)]
-properties_string = json.dumps(properties, ensure_ascii=False).replace("'", "")
+properties_string = json.dumps(properties, ensure_ascii=False)
 
-st.html(
-    """
+st.components.v1.html(
+    f"""
     <style>
-      #canvas-wrapper {
+      html, body {{
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }}
+      #canvas-wrapper {{
         width: 100%;
+        height: 100%;
         min-height: 520px;
-      }
-      #canvas-shacl-maker {
+      }}
+      #canvas-shacl-maker {{
         display: block;
         width: 100%;
         height: 100%;
-      }
+      }}
     </style>
+
     <div id="canvas-wrapper">
       <canvas id="canvas-shacl-maker" tabindex="0"></canvas>
     </div>
-    """
-)
-st.html(f"<script>{js_code}</script>", unsafe_allow_javascript=True)
-st.html(
-    f"""
-  <script>
-    function setModelCanvasSize() {{
-      const wrapper = document.getElementById('canvas-wrapper');
-      const canvas = document.getElementById('canvas-shacl-maker');
-      if (!wrapper || !canvas) return;
-      const rect = wrapper.getBoundingClientRect();
-      const height = Math.max(520, window.innerHeight - rect.top - 24);
-      wrapper.style.height = height + 'px';
-      const width = wrapper.clientWidth;
-      if (width > 0 && height > 0) {{
-        canvas.width = width;
-        canvas.height = height;
-      }}
-    }}
 
-    function handleModelCanvasResize() {{
-      setModelCanvasSize();
-      if (typeof draw === 'function') draw();
-    }}
+    <script>{js_code}</script>
+    <script>
+      (function () {{
+        const triples = {properties_string};
+        let initialized = false;
 
-    setModelCanvasSize();
-    setCanvas(document.getElementById('canvas-shacl-maker'));
-    var triples = JSON.parse('{properties_string}')
+        function setModelCanvasSize() {{
+          const wrapper = document.getElementById("canvas-wrapper");
+          const canvas = document.getElementById("canvas-shacl-maker");
+          if (!wrapper || !canvas) return false;
 
-    addTriples(triples);
-    if (typeof draw === 'function') draw();
+          const rect = wrapper.getBoundingClientRect();
+          const height = Math.max(520, window.innerHeight - rect.top - 24);
+          const width = wrapper.clientWidth;
+          if (width <= 0 || height <= 0) return false;
 
-    window.addEventListener('resize', handleModelCanvasResize);
-    if (window.ResizeObserver) {{
-      const wrapper = document.getElementById('canvas-wrapper');
-      if (wrapper) new ResizeObserver(handleModelCanvasResize).observe(wrapper);
-    }}
-  </script>
+          wrapper.style.height = height + "px";
+          canvas.width = width;
+          canvas.height = height;
+          return true;
+        }}
+
+        function layoutAndDraw() {{
+          if (!setModelCanvasSize()) return;
+          if (typeof draw === "function") draw();
+        }}
+
+        function initCanvas() {{
+          const canvas = document.getElementById("canvas-shacl-maker");
+          if (!canvas || typeof setCanvas !== "function") return false;
+          if (!setModelCanvasSize()) return false;
+          if (!initialized) {{
+            setCanvas(canvas);
+            addTriples(triples);
+            initialized = true;
+          }}
+          layoutAndDraw();
+          return true;
+        }}
+
+        function bindListeners() {{
+          if (window.__logreModelListenersBound) return;
+          window.addEventListener("resize", layoutAndDraw);
+          document.addEventListener("visibilitychange", function () {{
+            if (!document.hidden) setTimeout(layoutAndDraw, 0);
+          }});
+
+          if (window.ResizeObserver) {{
+            const wrapper = document.getElementById("canvas-wrapper");
+            if (wrapper) {{
+              window.__logreModelResizeObserver = new ResizeObserver(layoutAndDraw);
+              window.__logreModelResizeObserver.observe(wrapper);
+            }}
+          }}
+
+          window.__logreModelListenersBound = true;
+        }}
+
+        function boot(attempt) {{
+          const currentAttempt = attempt || 0;
+          if (initCanvas()) {{
+            bindListeners();
+            requestAnimationFrame(layoutAndDraw);
+            setTimeout(layoutAndDraw, 120);
+            return;
+          }}
+          if (currentAttempt < 60) {{
+            setTimeout(function () {{
+              boot(currentAttempt + 1);
+            }}, 50);
+          }}
+        }}
+
+        if (document.readyState === "loading") {{
+          document.addEventListener("DOMContentLoaded", function () {{
+            boot(0);
+          }}, {{ once: true }});
+        }} else {{
+          boot(0);
+        }}
+
+        window.addEventListener("load", function () {{
+          setTimeout(layoutAndDraw, 0);
+        }}, {{ once: true }});
+      }})();
+    </script>
 """,
-    unsafe_allow_javascript=True,
+    height=760,
 )
 
 # st.title('How to...')

@@ -1,7 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from requests.exceptions import HTTPError, ConnectionError
+from requests.exceptions import HTTPError, ConnectionError, Timeout
 
 from components.init import init
 from components.doc_links import decorate_doc_links
@@ -56,7 +56,7 @@ def show_top_classes(overview: dict) -> None:
     st.dataframe(
         df,
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "Class": st.column_config.TextColumn("Class"),
             "Instances": st.column_config.NumberColumn("Instances"),
@@ -75,7 +75,7 @@ def show_top_properties(overview: dict) -> None:
     st.dataframe(
         df,
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "Property": st.column_config.TextColumn("Property"),
             "Triples": st.column_config.NumberColumn("Triples"),
@@ -131,7 +131,7 @@ def render_pie_chart(values, labels, title: str) -> None:
     fig = go.Figure()
     fig.add_trace(chart)
     fig.update_layout(showlegend=False, title=title, title_x=0.0)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 @st.cache_data(ttl=60, hash_funcs={DataBundle: lambda db: db.key}, show_spinner=False)
@@ -369,8 +369,6 @@ except HTTPError as err:
     st.error(message)
     print(message.replace("\n\n", "\n"))
 
-except ConnectionError:
-    st.error(
-        "Failed to connect to server: check your internet connection and/or server status."
-    )
-    print("[CONNECTION ERROR]")
+except (ConnectionError, Timeout):
+    state.deselect_bundle_after_endpoint_failure()
+    st.rerun()

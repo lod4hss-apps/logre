@@ -1196,7 +1196,7 @@ class DataBundle:
         """
 
         # Execute the query (count instances)
-        counts = self.data.sparql.run(query)
+        counts = self.data.sparql.run(query, self.prefixes)
 
         return int(counts[0]["count"])
 
@@ -1408,7 +1408,7 @@ class DataBundle:
         """
 
         # Execute the query
-        instances = self.data.sparql.run(query)
+        instances = self.data.sparql.run(query, self.prefixes)
 
         return pd.DataFrame(data=instances)
 

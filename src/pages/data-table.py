@@ -1,5 +1,5 @@
 import streamlit as st
-from requests.exceptions import HTTPError, ConnectionError
+from requests.exceptions import HTTPError, ConnectionError, Timeout
 from components.init import init
 from components.menu import menu
 from lib import state
@@ -10,7 +10,7 @@ PAGINATION_LENGTH = 5
 MAX_STRING_LENGTH = 80
 
 # Initialize
-init(layout="wide", required_query_params=["db"])
+init(layout="wide", required_query_params=["endpoint", "db"])
 menu()
 
 try:
@@ -96,8 +96,10 @@ try:
                 1 * (limit * (current_page - 1)) + 1
             )  # So that indexes appears to start at 1
             if len(df_instances):
+                endpoint_key = state.get_endpoint_key()
+                endpoint_qs = f"&endpoint={endpoint_key}" if endpoint_key else ""
                 df_instances["Link"] = [
-                    f"/entity?db={data_bundle.key}&uri={uri}"
+                    f"/entity?db={data_bundle.key}{endpoint_qs}&uri={uri}"
                     for uri in df_instances["URI"]
                 ]
 
@@ -121,12 +123,9 @@ except HTTPError as err:
     st.toast("Unable to load this entity table", icon=":material/error:")
     print(message.replace("\n\n", "\n"))
 
-except ConnectionError:
-    st.toast(
-        "Failed to connect to server. Check connection or endpoint status.",
-        icon=":material/error:",
-    )
-    print("[CONNECTION ERROR]")
+except (ConnectionError, Timeout):
+    state.deselect_bundle_after_endpoint_failure()
+    st.rerun()
 
 except Exception as err:
     st.toast("Unexpected error while loading table", icon=":material/error:")

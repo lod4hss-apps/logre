@@ -1,12 +1,12 @@
 import streamlit as st
-from requests.exceptions import HTTPError, ConnectionError
+from requests.exceptions import HTTPError, ConnectionError, Timeout
 from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from lib.utils import get_max_length_text
 from components.help import help_text
 
 
-@st.dialog('Find an entity', width='medium')
+@st.dialog("Find an entity", width="medium")
 def dialog_find_entity() -> None:
     """
     Displays a dialog for searching and selecting an entity within the selected Data Bundle.
@@ -22,7 +22,6 @@ def dialog_find_entity() -> None:
     """
 
     try:
-
         # From state
         data_bundle = state.get_data_bundle()
         if not data_bundle or not data_bundle.has_usable_model():
@@ -31,14 +30,28 @@ def dialog_find_entity() -> None:
 
         with st.container(horizontal=True):
             # Class filter
-            classes_labels = [c.get_text() for c in data_bundle.model.classes if c.class_uri != 'rdfs:Datatype']
-            class_label = st.selectbox('Find instance of class:', options=classes_labels, index=None, width=220)
+            classes_labels = [
+                c.get_text()
+                for c in data_bundle.model.classes
+                if c.class_uri != "rdfs:Datatype"
+            ]
+            class_label = st.selectbox(
+                "Find instance of class:", options=classes_labels, index=None, width=220
+            )
 
             # Label filter
-            entity_label = st.text_input('Entity label contains:', help=help_text("find_entity.label", 'Write the entity label (or a part of it) and hit "Enter"'))
+            entity_label = st.text_input(
+                "Entity label contains:",
+                help=help_text(
+                    "find_entity.label",
+                    'Write the entity label (or a part of it) and hit "Enter"',
+                ),
+            )
 
             # Retrieved entities
-            limit = st.selectbox('Number to retrieve:', options=[10, 20, 50, 100], width=120)
+            limit = st.selectbox(
+                "Number to retrieve:", options=[10, 20, 50, 100], width=120
+            )
 
             # Find the selected entity from the selected label
             if class_label:
@@ -47,24 +60,26 @@ def dialog_find_entity() -> None:
             else:
                 selected_class_uri = None
 
-        st.divider()    
+        st.divider()
 
         # Fetch the entities
-        label = entity_label if entity_label else ''
-        entities = data_bundle.find_entities(label=label, class_uri=selected_class_uri, limit=limit)
+        label = entity_label if entity_label else ""
+        entities = data_bundle.find_entities(
+            label=label, class_uri=selected_class_uri, limit=limit
+        )
 
         # Set the state selected entity as being the one chosen
         for i, entity in enumerate(entities):
             entity_text = get_max_length_text(entity.get_text(comment=True), 90)
-            if st.button(entity_text, type='tertiary', key=f'dlg-find-entity-{i}'):
+            if st.button(entity_text, type="tertiary", key=f"dlg-find-entity-{i}"):
                 state.set_entity_uri(entity.uri)
                 st.switch_page("pages/entity-card.py")
-    
+
     except HTTPError as err:
         message = get_HTTP_ERROR_message(err)
         st.error(message)
-        print(message.replace('\n\n', '\n'))
+        print(message.replace("\n\n", "\n"))
 
-    except ConnectionError as err:
-        st.error('Failed to connect to server: check your internet connection and/or server status.')
-        print('[CONNECTION ERROR]')
+    except (ConnectionError, Timeout):
+        state.deselect_bundle_after_endpoint_failure()
+        st.rerun()

@@ -11,7 +11,7 @@ from dialogs.triple_info import dialog_triple_info
 INCOMING_TRIPLES_FETCHED = 5
 
 # Initialize
-init(layout="wide", required_query_params=["db", "uri"])
+init(layout="wide", required_query_params=["endpoint", "db", "uri"])
 menu()
 
 # From state

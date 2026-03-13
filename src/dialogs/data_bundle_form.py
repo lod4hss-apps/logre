@@ -1,5 +1,5 @@
 import streamlit as st
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError, Timeout
 from graphly.schema import Prefixes, Prefix
 from components.doc_links import decorate_doc_links
 from lib import state
@@ -90,6 +90,9 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
             if err.response.status_code == 400:
                 message += f"\n\n{err.response.text}"
             raise Exception(message)
+        except (ConnectionError, Timeout):
+            state.deselect_bundle_after_endpoint_failure()
+            st.rerun()
 
         st.markdown(f"> *Default graph*")
         for graph in graphs:
@@ -214,10 +217,22 @@ def dialog_data_bundle_form(db: DataBundle = None) -> None:
                 endpoints=endpoints,
             )
 
+            current_bundle = state.get_data_bundle()
+            was_selected_bundle = (
+                db is not None
+                and current_bundle is not None
+                and current_bundle.key == db.key
+                and state.get_endpoint_identifier(current_bundle.endpoint)
+                == state.get_endpoint_identifier(db.endpoint)
+            )
+
             # And add it to state
             state.update_data_bundle(db, new_db)
 
-            state.set_data_bundle(None)  # To make sure new things are loaded
+            # Keep current selection when editing the selected bundle so model/data
+            # are reloaded with the updated bundle settings.
+            if was_selected_bundle:
+                state.set_data_bundle(new_db)
             st.rerun()
 
 
@@ -233,14 +248,14 @@ def __get_graph_list(
         # First there is the need to set the endpoint, prefixes etc locally, based on things above
         endpoint = get_sparql_technology(technology)(url, username, password)
 
-        # Retrieve prefixes but skip the configured 'base' one
-        prefixes = Prefixes(
-            [
-                prefix
-                for prefix in state.get_prefixes().prefix_list
-                if prefix.short != "base"
-            ]
-        )
+        # Retrieve prefixes while keeping only one declaration per short name
+        prefixes_by_short: dict[str, Prefix] = {}
+        for prefix in state.get_prefixes().prefix_list:
+            if not prefix.short or prefix.short == "base":
+                continue
+            prefixes_by_short[prefix.short] = prefix
+
+        prefixes = Prefixes(list(prefixes_by_short.values()))
         prefixes.add(Prefix("base", base_uri))
 
         # Make the query

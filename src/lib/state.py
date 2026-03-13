@@ -6,6 +6,7 @@ import shutil
 from os.path import exists as path_exists
 from pathlib import Path
 from yaml import safe_load, dump
+from requests.exceptions import ConnectionError, Timeout
 from graphly.schema import Prefixes, Prefix, Resource, Property, Sparql
 import streamlit as st
 from streamlit import session_state as state, query_params
@@ -30,6 +31,7 @@ DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR + "/defaults/default-data-bundle.yaml"
 DEFAULTS_SPARQL_QUERIES = BASE_DIR + "/defaults/sparql-queries.yaml"
 
 ENV_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
+UNREACHABLE_ENDPOINT_KEYS = "unreachable_endpoint_keys"
 
 
 def expand_env_value(value: str) -> tuple[str, List[str]]:
@@ -195,8 +197,12 @@ def __get_query_param_value(key: str) -> str | None:
 
 
 def set_query_params(query_param_keys: List[str]) -> None:
+    # Keep endpoint in URL whenever endpoint or db are managed,
+    # so links/new tabs keep the right backend context.
+    sync_endpoint = "endpoint" in query_param_keys or "db" in query_param_keys
+
     # Endpoint key: from state to query param
-    if "endpoint" in query_param_keys:
+    if sync_endpoint:
         endpoint_key = get_endpoint_key()
         if endpoint_key:
             query_params["endpoint"] = endpoint_key
@@ -221,27 +227,100 @@ def set_query_params(query_param_keys: List[str]) -> None:
 
 
 def parse_query_params() -> None:
-    # Endpoint: from query param to state
-    endpoint_key = __get_query_param_value("endpoint")
-    if endpoint_key:
-        available_endpoints = [group["key"] for group in get_endpoint_groups()]
-        if endpoint_key in available_endpoints:
-            set_endpoint_key(endpoint_key)
+    # Query params may bootstrap a new browser tab/session.
+    # Once endpoint/bundle are already selected in state, state stays authoritative.
 
-    # Data bundle: from query param to state
-    bundle_key = __get_query_param_value("db")
-    if bundle_key:
-        data_bundle = next(
-            (db for db in get_data_bundles() if db.key == bundle_key),
+    current_endpoint_key = get_endpoint_key()
+
+    # Endpoint: from query param to state only when endpoint is not already set.
+    if not current_endpoint_key:
+        endpoint_key = __get_query_param_value("endpoint")
+        if endpoint_key:
+            available_endpoints = [group["key"] for group in get_endpoint_groups()]
+            if endpoint_key in available_endpoints:
+                set_endpoint_key(endpoint_key)
+                current_endpoint_key = endpoint_key
+
+    # Data bundle: from query param to state only when no bundle is selected yet.
+    if get_data_bundle() is None:
+        bundle_key = __get_query_param_value("db")
+        if bundle_key:
+            matching_bundles = [db for db in get_data_bundles() if db.key == bundle_key]
+            data_bundle = None
+
+            # If endpoint is constrained (state or URL bootstrap), only accept matching bundles.
+            if current_endpoint_key:
+                data_bundle = next(
+                    (
+                        db
+                        for db in matching_bundles
+                        if get_endpoint_identifier(db.endpoint) == current_endpoint_key
+                    ),
+                    None,
+                )
+            # Without endpoint constraint, avoid ambiguous picks.
+            elif len(matching_bundles) == 1:
+                data_bundle = matching_bundles[0]
+
+            if data_bundle:
+                set_data_bundle(data_bundle)
+
+    # Entity URI: from query param to state only when it is currently unset.
+    uri = __get_query_param_value("uri")
+    if uri and get_entity_uri() is None:
+        set_entity_uri(uri)
+
+
+def resolve_startup_context() -> bool:
+    """
+    Resolve an initial working context when the app lands on server.py.
+
+    Priority order:
+    1. Existing selected data bundle in state
+    2. Last used data bundle from persisted config
+    3. Configured default data bundle
+
+    Returns:
+        bool: True when a bundle is selected, False otherwise.
+    """
+    current = get_data_bundle()
+    if current is not None:
+        return True
+
+    # If endpoint is already constrained (e.g. URL bootstrap), keep it coherent.
+    constrained_endpoint_key = get_endpoint_key()
+
+    last_used_key = get_last_used_data_bundle_key()
+    if last_used_key:
+        last_used_bundle = next(
+            (db for db in get_data_bundles() if db.key == last_used_key),
             None,
         )
-        if data_bundle:
-            set_data_bundle(data_bundle)
+        if (
+            last_used_bundle
+            and (
+                not constrained_endpoint_key
+                or get_endpoint_identifier(last_used_bundle.endpoint)
+                == constrained_endpoint_key
+            )
+            and not is_endpoint_temporarily_unreachable(last_used_bundle.endpoint)
+        ):
+            set_data_bundle(last_used_bundle)
+            return True
 
-    # Entity URI: from query param to state
-    uri = __get_query_param_value("uri")
-    if uri:
-        set_entity_uri(uri)
+    default_bundle = get_default_data_bundle()
+    if (
+        default_bundle
+        and (
+            not constrained_endpoint_key
+            or get_endpoint_identifier(default_bundle.endpoint)
+            == constrained_endpoint_key
+        )
+        and not is_endpoint_temporarily_unreachable(default_bundle.endpoint)
+    ):
+        return select_default_data_bundle()
+
+    return False
 
 
 ##### CONFIGURATION #####
@@ -289,6 +368,7 @@ def load_config() -> None:
         config_raw = None
         config_load_issue = False
         repaired = False
+        need_save = False
         obj: dict = {}
 
         if not config_exists and default_path and path_exists(default_path):
@@ -406,6 +486,21 @@ def load_config() -> None:
                     repaired = True
             else:
                 repaired = True
+
+        # Add all prefixes from defaults before creating Data Bundles
+        with open(DEFAULTS_PREFIXES, "r", encoding="utf-8") as file:
+            default_prefixes_raw = safe_load(file.read())
+            if isinstance(default_prefixes_raw, list):
+                for default_prefix in default_prefixes_raw:
+                    if not isinstance(default_prefix, dict):
+                        continue
+                    short = default_prefix.get("short")
+                    long_uri = default_prefix.get("long")
+                    if short and short not in seen_prefixes:
+                        loaded_prefixes.add(Prefix(short, long_uri))
+                        seen_prefixes.add(short)
+                        need_save = True
+
         set_prefixes(loaded_prefixes)
 
         # Extract Data Bundles
@@ -452,6 +547,14 @@ def load_config() -> None:
                     icon=":material/warning:",
                 )
 
+        # Extract last used Data Bundle (optional)
+        last_used_db_key = obj.get("last_used_data_bundle")
+        if isinstance(last_used_db_key, str) and last_used_db_key:
+            if any(db.key == last_used_db_key for db in get_data_bundles()):
+                state["last_used_data_bundle"] = last_used_db_key
+            else:
+                repaired = True
+
         # Extract saved SPARQL Queries
         queries = obj.get("sparql_queries", [])
         if not isinstance(queries, list):
@@ -474,28 +577,6 @@ def load_config() -> None:
             backup_path = f"{config_path}.bak-{timestamp}"
             with open(backup_path, "w", encoding="utf-8") as file:
                 file.write(config_raw)
-
-        # Flag to know if something has been added from defaults
-        need_save = False
-
-        # Add all prefixes that are in the default, but not in (loaded or not) configuration
-        with open(DEFAULTS_PREFIXES, "r", encoding="utf-8") as file:
-            # Use YAML to parse the file content
-            default_prefixes_raw = safe_load(file.read())
-
-            # Parse Prefixes
-            default_prefixes = Prefixes(
-                [Prefix(p.get("short"), p.get("long")) for p in default_prefixes_raw]
-            )
-
-            # Check if all from default are in state
-            loaded_prefixes = get_prefixes()
-            have_prefixes = set([p.short for p in loaded_prefixes])
-            for prefix in default_prefixes:
-                if prefix.short not in have_prefixes:
-                    loaded_prefixes.add(prefix)
-                    set_prefixes(loaded_prefixes)
-                    need_save = True
 
         # Add all sparql queries that are in the default, but not in (loaded or not) configuration
         with open(DEFAULTS_SPARQL_QUERIES, "r", encoding="utf-8") as file:
@@ -583,6 +664,7 @@ def save_config() -> None:
         "prefixes": [p.to_dict() for p in prefixes_by_short.values()],
         "data_bundles": [db.to_dict() for db in get_data_bundles()],
         "default_data_bundle": default_db.key if default_db else None,
+        "last_used_data_bundle": get_last_used_data_bundle_key(),
         "sparql_queries": get_sparql_queries(),
         "version": state["config_version"] if "config_version" in state else None,
     }
@@ -650,6 +732,53 @@ def update_prefix(old_prefix: Prefix | None, new_prefix: Prefix | None) -> None:
                 prefix.short = new_prefix.short
                 prefix.long = new_prefix.long
 
+    # Rebuild data bundles so graph/model/metadata prefixes stay in sync.
+    current_prefixes = get_prefixes()
+    current_endpoints = get_endpoints()
+    rebuilt_bundles: List[DataBundle] = []
+    previous_selected = state.get("data_bundle")
+    previous_default = state.get("default_data_bundle")
+
+    for bundle in get_data_bundles():
+        try:
+            rebuilt_bundles.append(
+                DataBundle.from_dict(
+                    bundle.to_dict(), current_prefixes, current_endpoints
+                )
+            )
+        except Exception:
+            rebuilt_bundles.append(bundle)
+
+    set_data_bundles(rebuilt_bundles)
+
+    if previous_selected:
+        selected_endpoint = get_endpoint_identifier(previous_selected.endpoint)
+        selected_bundle = next(
+            (
+                bundle
+                for bundle in rebuilt_bundles
+                if bundle.key == previous_selected.key
+                and get_endpoint_identifier(bundle.endpoint) == selected_endpoint
+            ),
+            None,
+        )
+        state["data_bundle"] = selected_bundle
+
+    if previous_default:
+        default_endpoint = get_endpoint_identifier(previous_default.endpoint)
+        default_bundle = next(
+            (
+                bundle
+                for bundle in rebuilt_bundles
+                if bundle.key == previous_default.key
+                and get_endpoint_identifier(bundle.endpoint) == default_endpoint
+            ),
+            None,
+        )
+        state["default_data_bundle"] = default_bundle
+
+    invalidate_caches("prefix_change")
+
     # Write to disk
     save_config()
 
@@ -711,6 +840,53 @@ def set_endpoint(endpoint: Sparql) -> None:
         invalidate_caches("endpoint_change")
 
 
+def mark_endpoint_temporarily_unreachable(endpoint: Sparql | None) -> None:
+    endpoint_key = get_endpoint_identifier(endpoint)
+    if not endpoint_key:
+        return
+    keys = set(state.get(UNREACHABLE_ENDPOINT_KEYS, []))
+    keys.add(endpoint_key)
+    state[UNREACHABLE_ENDPOINT_KEYS] = sorted(keys)
+
+
+def clear_endpoint_temporarily_unreachable(endpoint: Sparql | None) -> None:
+    endpoint_key = get_endpoint_identifier(endpoint)
+    if not endpoint_key:
+        return
+    keys = set(state.get(UNREACHABLE_ENDPOINT_KEYS, []))
+    if endpoint_key in keys:
+        keys.remove(endpoint_key)
+        state[UNREACHABLE_ENDPOINT_KEYS] = sorted(keys)
+
+
+def is_endpoint_temporarily_unreachable(endpoint: Sparql | None) -> bool:
+    endpoint_key = get_endpoint_identifier(endpoint)
+    if not endpoint_key:
+        return False
+    keys = set(state.get(UNREACHABLE_ENDPOINT_KEYS, []))
+    return endpoint_key in keys
+
+
+def deselect_bundle_after_endpoint_failure() -> None:
+    endpoint = get_endpoint()
+    endpoint_name = endpoint.name if endpoint else "(unknown)"
+
+    mark_endpoint_temporarily_unreachable(endpoint)
+
+    if get_data_bundle() is not None:
+        set_data_bundle(None)
+
+    state["last_used_data_bundle"] = None
+    if "has_config" in state:
+        save_config()
+
+    timeout_seconds = os.getenv("LOGRE_SPARQL_TIMEOUT", "12")
+    set_toast(
+        f"Endpoint '{endpoint_name}' is unreachable (timeout {timeout_seconds}s). Data Bundle deselected.",
+        icon=":material/warning:",
+    )
+
+
 def get_endpoint_identifier(endpoint: Sparql | None) -> str | None:
     if not endpoint:
         return None
@@ -745,26 +921,42 @@ def update_endpoint(old_endpoint: Sparql | None, new_endpoint: Sparql | None) ->
         old_db (Sparql | None): The existing endpoint to update or remove. If None, a new endpoint is added.
         new_db (Sparql | None): The new endpoint to add or replace the old one. If None, the old endpoint is removed.
     """
-    # Create a new Data Bundle
+    # Create a new endpoint
     if old_endpoint is None:
         state["endpoints"].append(new_endpoint)
 
-    # Remove a Data Bundle
+    # Remove an endpoint
     elif new_endpoint is None:
+        old_endpoint_id = get_endpoint_identifier(old_endpoint)
         state["endpoints"] = [
             endpoint
             for endpoint in state["endpoints"]
             if endpoint.name != old_endpoint.name
         ]
 
-    # Update a Data Bundle
+        # Clear current endpoint selection if it points to the deleted endpoint.
+        if get_endpoint_identifier(state.get("endpoint")) == old_endpoint_id:
+            state["endpoint"] = None
+
+    # Update an endpoint
     else:
+        old_endpoint_id = get_endpoint_identifier(old_endpoint)
         db_index = next(
             i
             for i, endpoint in enumerate(state["endpoints"])
             if endpoint.name == old_endpoint.name
         )
         state["endpoints"][db_index] = new_endpoint
+
+        # Rebind every data bundle that points to the edited endpoint so that
+        # data/model/metadata graphs all use the refreshed SPARQL client.
+        for data_bundle in state.get("data_bundles", []):
+            if get_endpoint_identifier(data_bundle.endpoint) == old_endpoint_id:
+                data_bundle.attach_endpoint(new_endpoint)
+
+        # Preserve endpoint selection when editing the currently selected one.
+        if get_endpoint_identifier(state.get("endpoint")) == old_endpoint_id:
+            state["endpoint"] = new_endpoint
 
     # Write to disk
     save_config()
@@ -827,28 +1019,15 @@ def get_data_bundle() -> DataBundle | None:
     """
     Retrieve the currently selected data bundle from the session state.
 
-    If no data bundle is selected, the default data bundle is returned if available.
-    Returns None if no selection or default exists.
+    Returns None if no bundle has been explicitly selected.
 
     Returns:
         DataBundle | None: The selected data bundle, or None if not found.
     """
-    # If there is none in state
-    if "data_bundle" not in state:
-        # Return the default one, only if it exists
-        db = get_default_data_bundle()
-        if db:
-            # If the default data bundle is accessed, it is possible that no endpoint is selected
-            # (most probably), so set it if it is the case
-            if not get_endpoint():
-                set_endpoint(db.endpoint)
-
-            return db
-    else:
-        return state["data_bundle"]
+    return state.get("data_bundle")
 
 
-def set_data_bundle(data_bundle: DataBundle) -> None:
+def set_data_bundle(data_bundle: DataBundle | None) -> None:
     """
     Set the active data bundle in the session state and load its associated model.
 
@@ -857,19 +1036,52 @@ def set_data_bundle(data_bundle: DataBundle) -> None:
     """
     previous = state.get("data_bundle")
     previous_key = previous.key if previous else None
+    previous_endpoint_key = (
+        get_endpoint_identifier(previous.endpoint) if previous else None
+    )
     new_key = data_bundle.key if data_bundle else None
+    new_endpoint_key = (
+        get_endpoint_identifier(data_bundle.endpoint) if data_bundle else None
+    )
+    previous_last_used_key = get_last_used_data_bundle_key()
     state["data_bundle"] = data_bundle
     if data_bundle:
         state["selected_db_name"] = data_bundle.name
+        state["selected_db_key"] = data_bundle.key
         state["last_used_db_key"] = data_bundle.key
+        state["last_used_data_bundle"] = data_bundle.key
         set_endpoint(data_bundle.endpoint)
-    if previous_key is not None and previous_key != new_key:
+        state["last_used_db_endpoint_key"] = get_endpoint_identifier(
+            data_bundle.endpoint
+        )
+    else:
+        if "selected_db_name" in state:
+            del state["selected_db_name"]
+        if "selected_db_key" in state:
+            del state["selected_db_key"]
+    bundle_changed = previous_key is not None and (
+        previous_key != new_key or previous_endpoint_key != new_endpoint_key
+    )
+    if bundle_changed:
         invalidate_caches("data_bundle_change")
+        # Avoid keeping an entity URI that may not exist in the new bundle.
+        if get_entity_uri() is not None:
+            set_entity_uri(None)
+
+    # Persist last used bundle only when it actually changes and config is loaded.
+    if (
+        data_bundle
+        and previous_last_used_key != data_bundle.key
+        and "has_config" in state
+    ):
+        save_config()
 
     # When a data bundle is chosen, load its model
     if data_bundle:
         try:
             data_bundle.load_model()
+        except (ConnectionError, Timeout):
+            deselect_bundle_after_endpoint_failure()
         except Exception as err:
             set_toast(
                 f"Failed to load model for data bundle '{data_bundle.name}'.",
@@ -932,6 +1144,47 @@ def set_default_data_bundle(db: DataBundle) -> None:
     """
     state["default_data_bundle"] = db
     save_config()
+
+
+def get_last_used_data_bundle_key() -> str | None:
+    """
+    Retrieve the persisted key of the last used data bundle.
+
+    Returns:
+        str | None: Data bundle key if available, otherwise None.
+    """
+    value = state.get("last_used_data_bundle")
+    if isinstance(value, str) and value:
+        return value
+    return None
+
+
+def select_default_data_bundle() -> bool:
+    """
+    Select the configured default data bundle explicitly.
+
+    Returns:
+        bool: True when a default bundle exists and has been selected, False otherwise.
+    """
+    default_db = get_default_data_bundle()
+    if not default_db:
+        return False
+
+    resolved_default = next(
+        (
+            db
+            for db in get_data_bundles()
+            if db.key == default_db.key
+            and get_endpoint_identifier(db.endpoint)
+            == get_endpoint_identifier(default_db.endpoint)
+        ),
+        None,
+    )
+    if not resolved_default:
+        return False
+
+    set_data_bundle(resolved_default)
+    return True
 
 
 ##### SPARQL QUERIES #####
@@ -1075,7 +1328,7 @@ def get_last_executed_sparql_id() -> str:
 ##### SELECTED ENTITY #####
 
 
-def get_entity_uri() -> str:
+def get_entity_uri() -> str | None:
     """
     Retrieve the currently selected entity URI from the session state.
 
@@ -1087,7 +1340,7 @@ def get_entity_uri() -> str:
     return state["entity_uri"]
 
 
-def set_entity_uri(uri: str) -> None:
+def set_entity_uri(uri: str | None) -> None:
     """
     Set the current entity URI in the session state.
 

@@ -3,31 +3,16 @@ from __future__ import annotations
 import re
 from urllib.parse import urlencode
 
-import streamlit as st
-
 from lib import state
 
 _DOC_LINK_RE = re.compile(r"/documentation\?section=([a-z0-9-]+)")
 
 
-def _first_param(value: str | list[str] | tuple[str, ...] | None) -> str | None:
-    if isinstance(value, (list, tuple)):
-        return value[0] if value else None
-    return value
-
-
-def _current_param(name: str) -> str | None:
-    return _first_param(st.query_params.get(name))
-
-
 def _current_endpoint_key() -> str | None:
-    return _current_param("endpoint") or state.get_endpoint_key()
+    return state.get_endpoint_key()
 
 
 def _current_db_key() -> str | None:
-    db_param = _current_param("db")
-    if db_param:
-        return db_param
     db = state.get_data_bundle()
     return db.key if db else None
 

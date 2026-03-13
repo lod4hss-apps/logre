@@ -35,6 +35,7 @@ def migrate_config_if_needed(config_path: Path) -> bool:
         "endpoints": [],
         "data_bundles": [],
         "default_data_bundle": None,
+        "last_used_data_bundle": None,
         "sparql_queries": [],
     }
 
