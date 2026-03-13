@@ -652,6 +652,56 @@ def save_config() -> None:
     """
     Save the current session state configuration to the config file.
     """
+
+    def normalize_sparql_queries(queries: object) -> List[List[str]]:
+        normalized: List[List[str]] = []
+        if not isinstance(queries, list):
+            return normalized
+
+        for query in queries:
+            if not isinstance(query, list) or len(query) < 2:
+                continue
+
+            name, text = query[0], query[1]
+            if not isinstance(name, str) or not name.strip():
+                continue
+
+            if text is None:
+                text = ""
+            if not isinstance(text, str):
+                text = str(text)
+
+            normalized.append([name, text])
+
+        return normalized
+
+    def merge_sparql_queries_with_disk(config_path: Path) -> List[List[str]]:
+        # Keep disk queries so a stale in-memory state cannot drop them,
+        # while allowing current in-memory edits to override same-name queries.
+        merged_by_name: Dict[str, str] = {}
+        deleted_query_names = set(state.get("deleted_sparql_queries", []))
+
+        if path_exists(config_path):
+            try:
+                disk_obj = safe_load(config_path.read_text(encoding="utf-8")) or {}
+                if isinstance(disk_obj, dict):
+                    for query_name, query_text in normalize_sparql_queries(
+                        disk_obj.get("sparql_queries", [])
+                    ):
+                        if query_name in deleted_query_names:
+                            continue
+                        merged_by_name[query_name] = query_text
+            except Exception as err:
+                print(f"[config] failed to read existing SPARQL queries: {err}")
+
+        for query_name, query_text in normalize_sparql_queries(get_sparql_queries()):
+            merged_by_name[query_name] = query_text
+
+        return [
+            [query_name, query_text]
+            for query_name, query_text in merged_by_name.items()
+        ]
+
     default_db = get_default_data_bundle()
 
     # Normalize prefixes (unique by short, skip base)
@@ -662,13 +712,15 @@ def save_config() -> None:
         prefixes_by_short[prefix.short] = prefix
 
     # Gather config
+    config_path = _resolve_config_path()
+    merged_sparql_queries = merge_sparql_queries_with_disk(config_path)
     config = {
         "endpoints": [e.to_dict() for e in get_endpoints()],
         "prefixes": [p.to_dict() for p in prefixes_by_short.values()],
         "data_bundles": [db.to_dict() for db in get_data_bundles()],
         "default_data_bundle": default_db.key if default_db else None,
         "last_used_data_bundle": get_last_used_data_bundle_key(),
-        "sparql_queries": get_sparql_queries(),
+        "sparql_queries": merged_sparql_queries,
         "version": state["config_version"] if "config_version" in state else None,
     }
 
@@ -676,10 +728,13 @@ def save_config() -> None:
     content = dump(config, sort_keys=False)
 
     # Write the config to disk
-    config_path = _resolve_config_path()
     ensure_parent_dir(config_path)
     with open(config_path, "w", encoding="utf-8") as file:
         file.write(content)
+
+    # Clear one-shot tombstones after successful write.
+    if "deleted_sparql_queries" in state:
+        del state["deleted_sparql_queries"]
 
 
 ##### PREFIXES #####
@@ -1292,6 +1347,10 @@ def delete_sparql_query(sq_name: str) -> None:
     # Remove selected one.
     # How Logre is built makes it so that when deleting a query, it HAS to be selected
     del state["sparql_query"]
+
+    deleted_queries = set(state.get("deleted_sparql_queries", []))
+    deleted_queries.add(sq_name)
+    state["deleted_sparql_queries"] = sorted(deleted_queries)
 
     # Write on disk
     save_config()
