@@ -117,6 +117,8 @@ try:
             st.session_state[editor_content_key] = sparql_query_content
             st.session_state[editor_query_key] = sparql_query_name
 
+        editor_widget_key = f"sparql-editor-code-{sparql_query_name or 'none'}"
+
         if not data_bundle:
             st.info(
                 "No Data Bundle selected. Queries will run against the entire endpoint.",
@@ -141,7 +143,7 @@ try:
                     "commands": ["submit"],
                 }
             ],
-            key="sparql-editor-code",
+            key=editor_widget_key,
         )
 
         if editor and isinstance(editor, dict) and "text" in editor:

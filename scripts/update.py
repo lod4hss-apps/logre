@@ -6,6 +6,7 @@ handles the configuration transformation.
 
 from pathlib import Path
 import sys
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC_PATH = ROOT / "src"
@@ -13,10 +14,12 @@ if str(SRC_PATH) not in sys.path:
     sys.path.append(str(SRC_PATH))
 
 from lib.config_migrations import migrate_config_if_needed
+from lib.config_paths import get_config_path
 
 
 def main() -> None:
-    config_path = Path("../logre-config.yaml")
+    load_dotenv()
+    config_path = get_config_path()
     migrate_config_if_needed(config_path)
 
 

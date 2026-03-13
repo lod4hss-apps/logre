@@ -18,7 +18,6 @@ services:
       LOGRE_CONFIG_PATH: /data/logre-config.yaml
       LOGRE_DEFAULT_CONFIG_PATH: /app/docker/logre-config.yml
       LOGRE_SKIP_BRANCH_DETECTION: "1"
-      LOGRE_FORCE_CONFIG: ${LOGRE_FORCE_CONFIG:-0}
     volumes:
       - logre_data:/data
     command:
@@ -32,9 +31,6 @@ services:
         export LOGRE_TEMPLATE_RDF4J_URL="$${RDF4J_SERVER_URL}/repositories/$${RDF4J_REPOSITORY}"
         if [ ! -f /data/logre-config.yaml ]; then
           echo "[logre] Bootstrapping configuration from template."
-          envsubst '$${LOGRE_TEMPLATE_RDF4J_URL} $${RDF4J_REPOSITORY}' < docker/logre-config.yml > /data/logre-config.yaml
-        elif [ "$${LOGRE_FORCE_CONFIG:-0}" = "1" ]; then
-          echo "[logre] LOGRE_FORCE_CONFIG=1, regenerating configuration from template."
           envsubst '$${LOGRE_TEMPLATE_RDF4J_URL} $${RDF4J_REPOSITORY}' < docker/logre-config.yml > /data/logre-config.yaml
         fi
         /app/scripts/wait-for-http.sh "$${RDF4J_HEALTHCHECK_URL:-http://rdf4j:8080/rdf4j-server/}" -- /bin/true

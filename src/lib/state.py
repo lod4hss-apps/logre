@@ -19,19 +19,25 @@ from lib.autoconfigure_data_graph import autoconfigure_config
 
 ##### PATHS #####
 
-BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-VERSION_FILE_PATH = BASE_DIR + "/version"
-VERSION_FALLBACK_PATH = BASE_DIR + "/VERSION"
-CONFIG_FILE_PATH = get_config_path()
-DEFAULT_CONFIG_PATH = get_default_config_path(BASE_DIR)
-DEFAULTS_PREFIXES = BASE_DIR + "/defaults/prefixes.yaml"
-DEFAULTS_DATA_BUNDLES = BASE_DIR + "/defaults/data-bundles.yaml"
-DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR + "/defaults/default-data-bundle.yaml"
-DEFAULTS_SPARQL_QUERIES = BASE_DIR + "/defaults/sparql-queries.yaml"
+VERSION_FILE_PATH = BASE_DIR / "version"
+VERSION_FALLBACK_PATH = BASE_DIR / "VERSION"
+DEFAULTS_PREFIXES = BASE_DIR / "defaults" / "prefixes.yaml"
+DEFAULTS_DATA_BUNDLES = BASE_DIR / "defaults" / "data-bundles.yaml"
+DEFAULTS_DATA_BUNDLE_DEFAULT = BASE_DIR / "defaults" / "default-data-bundle.yaml"
+DEFAULTS_SPARQL_QUERIES = BASE_DIR / "defaults" / "sparql-queries.yaml"
 
 ENV_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
 UNREACHABLE_ENDPOINT_KEYS = "unreachable_endpoint_keys"
+
+
+def _resolve_config_path() -> Path:
+    return get_config_path()
+
+
+def _resolve_default_config_path() -> Path | None:
+    return get_default_config_path(str(BASE_DIR))
 
 
 def expand_env_value(value: str) -> tuple[str, List[str]]:
@@ -349,12 +355,9 @@ def load_config() -> None:
         if "data_bundles" not in state:
             set_data_bundles([])
 
-        config_path = (
-            CONFIG_FILE_PATH
-            if isinstance(CONFIG_FILE_PATH, Path)
-            else Path(CONFIG_FILE_PATH)
-        )
-        default_path = DEFAULT_CONFIG_PATH
+        config_path = _resolve_config_path()
+        default_path = _resolve_default_config_path()
+        print(f"[config] path={config_path}")
         ensure_parent_dir(config_path)
 
         migrated = migrate_config_if_needed(config_path)
@@ -673,11 +676,7 @@ def save_config() -> None:
     content = dump(config, sort_keys=False)
 
     # Write the config to disk
-    config_path = (
-        CONFIG_FILE_PATH
-        if isinstance(CONFIG_FILE_PATH, Path)
-        else Path(CONFIG_FILE_PATH)
-    )
+    config_path = _resolve_config_path()
     ensure_parent_dir(config_path)
     with open(config_path, "w", encoding="utf-8") as file:
         file.write(content)

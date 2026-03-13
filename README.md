@@ -134,7 +134,7 @@ LOGRE_SPARQL_PASSWORD=secret
 Docker specifics:
 
 * `LOGRE_CONFIG_PATH` is set to `/data/logre-config.yaml` (persistent volume).
-* The config is templated from `docker/logre-config.yml` on first run (or when `LOGRE_FORCE_CONFIG=1`).
+* The config is templated from `docker/logre-config.yml` on first run only.
 * Data graph autoconfiguration runs automatically in Docker; in local runs it is opt-in via `LOGRE_AUTOCONFIGURE_GRAPH=1`.
 
 Configuration migrations run automatically when the format changes.
