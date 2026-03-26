@@ -15,6 +15,8 @@ from dialogs.query_name import dialog_query_name
 RESULT_KIND_KEY = "sparql-editor-result-kind"
 RESULT_TABLE_KEY = "sparql-editor-result-table"
 RESULT_TEXT_KEY = "sparql-editor-result-text"
+EDITOR_SELECTED_BY_ENDPOINT_KEY = "sparql-editor-selected-query-by-endpoint"
+EDITOR_DRAFTS_BY_ENDPOINT_KEY = "sparql-editor-drafts-by-endpoint"
 
 
 def _normalize_binding_value(value):
@@ -53,9 +55,6 @@ try:
     endpoint = state.get_endpoint()
     data_bundle = state.get_data_bundle()
 
-    if not data_bundle:
-        st.switch_page("server.py")
-
     if not endpoint:
         st.markdown("# SPARQL Editor")
         st.warning("Select an endpoint from the sidebar to run queries.")
@@ -74,11 +73,47 @@ try:
 
         st.markdown("")
 
-        # Find the selected one
+        endpoint_key = state.get_endpoint_key() or endpoint.name
+        endpoint_widget_suffix = endpoint_key
+
+        selected_by_endpoint = st.session_state.get(EDITOR_SELECTED_BY_ENDPOINT_KEY)
+        if not isinstance(selected_by_endpoint, dict):
+            selected_by_endpoint = {}
+            st.session_state[EDITOR_SELECTED_BY_ENDPOINT_KEY] = selected_by_endpoint
+
+        drafts_by_endpoint = st.session_state.get(EDITOR_DRAFTS_BY_ENDPOINT_KEY)
+        if not isinstance(drafts_by_endpoint, dict):
+            drafts_by_endpoint = {}
+            st.session_state[EDITOR_DRAFTS_BY_ENDPOINT_KEY] = drafts_by_endpoint
+
+        endpoint_drafts = drafts_by_endpoint.get(endpoint_key)
+        if not isinstance(endpoint_drafts, dict):
+            endpoint_drafts = {}
+            drafts_by_endpoint[endpoint_key] = endpoint_drafts
+
         sparql_queries_names = [sq[0] for sq in sparql_queries]
-        index = (
-            sparql_queries_names.index(sparql_query_name) if sparql_query_name else 0
-        )
+        sparql_queries_by_name = {
+            sq[0]: sq[1]
+            for sq in sparql_queries
+            if isinstance(sq, list) and len(sq) >= 2
+        }
+
+        if not sparql_queries_names:
+            st.warning("No SPARQL query is available.")
+            st.stop()
+
+        selected_for_endpoint = selected_by_endpoint.get(endpoint_key)
+        if selected_for_endpoint not in sparql_queries_names:
+            if sparql_query_name in sparql_queries_names:
+                selected_for_endpoint = sparql_query_name
+            else:
+                selected_for_endpoint = sparql_queries_names[0]
+            selected_by_endpoint[endpoint_key] = selected_for_endpoint
+
+        index = sparql_queries_names.index(selected_for_endpoint)
+        selectbox_key = f"sparql-editor-query-select-{endpoint_widget_suffix}"
+        if st.session_state.get(selectbox_key) not in sparql_queries_names:
+            st.session_state.pop(selectbox_key, None)
 
         # Allow user to change the selected queries
         with st.container(horizontal=True, vertical_alignment="bottom"):
@@ -86,15 +121,25 @@ try:
                 "SPARQL query",
                 options=sparql_queries_names,
                 index=index,
+                key=selectbox_key,
                 width=300,
                 help=help_text("sparql_editor.saved_query"),
             )
+            selected_by_endpoint[endpoint_key] = sparql_query_name
             state.set_sparql_query(sparql_query_name)
 
             # And have a delete button for this query
             if st.button("", icon=":material/delete:", type="tertiary"):
 
                 def callback_delete_query(sq_name: str) -> None:
+                    for ep_key, selected_name in list(selected_by_endpoint.items()):
+                        if selected_name == sq_name:
+                            del selected_by_endpoint[ep_key]
+
+                    for drafts in drafts_by_endpoint.values():
+                        if isinstance(drafts, dict) and sq_name in drafts:
+                            del drafts[sq_name]
+
                     state.delete_sparql_query(sq_name)
                     state.set_toast("Query removed", icon=":material/delete:")
 
@@ -104,35 +149,38 @@ try:
                     sq_name=sparql_query_name,
                 )
 
-        # Get the query content
-        sparql_query_content = (
-            sparql_queries[sparql_queries_names.index(sparql_query_name)][1]
-            if sparql_query_name
-            else ""
+        sparql_query_content = sparql_queries_by_name.get(sparql_query_name, "")
+        if sparql_query_name not in endpoint_drafts:
+            endpoint_drafts[sparql_query_name] = sparql_query_content
+
+        editor_content = endpoint_drafts.get(sparql_query_name, sparql_query_content)
+        editor_widget_key = (
+            f"sparql-editor-code-{endpoint_widget_suffix}-{sparql_query_name or 'none'}"
         )
-
-        editor_content_key = "sparql-editor-content"
-        editor_query_key = "sparql-editor-selected-query"
-        if st.session_state.get(editor_query_key) != sparql_query_name:
-            st.session_state[editor_content_key] = sparql_query_content
-            st.session_state[editor_query_key] = sparql_query_name
-
-        editor_widget_key = f"sparql-editor-code-{sparql_query_name or 'none'}"
 
         if not data_bundle:
             st.info(
-                "No Data Bundle selected. Queries will run against the entire endpoint.",
+                "No Data Bundle selected. You can still run any SPARQL query on this endpoint; Data Bundles are used for dashboard and model context.",
                 icon=":material/info:",
             )
 
-        prefixes = data_bundle.prefixes if data_bundle else endpoint.prefixes
-        prefixes_str = "`, `".join([p.short for p in prefixes])
-        st.markdown("Available prefixes are: `" + prefixes_str + "`")
+        if data_bundle:
+            prefixes = data_bundle.prefixes
+        else:
+            # Some endpoint implementations do not expose per-endpoint prefixes.
+            prefixes = getattr(endpoint, "prefixes", None) or state.get_prefixes()
+
+        prefixes_list = [p.short for p in prefixes] if prefixes else []
+        if prefixes_list:
+            prefixes_str = "`, `".join(prefixes_list)
+            st.markdown("Available prefixes are: `" + prefixes_str + "`")
+        else:
+            st.caption("No prefixes configured.")
 
         # Code editor
         editor = code_editor(
             lang="sparql",
-            code=st.session_state.get(editor_content_key, sparql_query_content),
+            code=editor_content,
             height="400px",
             buttons=[
                 {
@@ -147,7 +195,7 @@ try:
         )
 
         if editor and isinstance(editor, dict) and "text" in editor:
-            st.session_state[editor_content_key] = editor["text"]
+            endpoint_drafts[sparql_query_name] = editor["text"]
 
         st.write("")
 
@@ -156,13 +204,12 @@ try:
             isinstance(editor, dict)
             and editor.get("type") == "submit"
             and editor.get("id")
-            and editor.get("id") != state.get_last_executed_sparql_id()
+            and f"{endpoint_key}:{editor.get('id')}"
+            != state.get_last_executed_sparql_id()
         ):
             # Run the query
-            result = endpoint.run(
-                st.session_state.get(editor_content_key, ""), prefixes
-            )
-            state.set_last_executed_sparql_id(editor["id"])
+            result = endpoint.run(endpoint_drafts.get(sparql_query_name, ""), prefixes)
+            state.set_last_executed_sparql_id(f"{endpoint_key}:{editor['id']}")
 
             # If there is a result
             if result is not None:
@@ -212,7 +259,7 @@ try:
                     "Save query",
                     icon=":material/reorder:",
                     on_click=dialog_query_name,
-                    kwargs={"query_text": st.session_state.get(editor_content_key, "")},
+                    kwargs={"query_text": endpoint_drafts.get(sparql_query_name, "")},
                 )
 
             if result_kind == "table":

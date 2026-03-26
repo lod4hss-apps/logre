@@ -350,7 +350,10 @@ try:
     data_bundles = state.get_data_bundles()
 
     if not data_bundle:
-        st.switch_page("server.py")
+        st.info(
+            "No Data Bundle selected. Configure one in the sidebar to load dashboard metrics.",
+            icon=":material/info:",
+        )
     else:
         with st.spinner("Loading statistics..."):
             overview = get_dashboard_overview(data_bundle)
