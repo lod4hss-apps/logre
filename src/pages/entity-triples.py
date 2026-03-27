@@ -1,10 +1,13 @@
 import streamlit as st
 from graphly.schema import Statement, Resource, Property
+from html import escape
+import re
+from urllib.parse import quote_plus
 from components.doc_links import decorate_doc_links
 from components.init import init
 from components.menu import menu
 from lib import state
-from lib.utils import get_max_length_text
+from lib.utils import get_max_length_text, get_short_uri_with_tail
 from dialogs.triple_info import dialog_triple_info
 
 # Page parameters
@@ -26,27 +29,108 @@ else:
     if not entity_uri:
         st.info("Logre needs an URI to show triples.")
     else:
+        endpoint_key = state.get_endpoint_key()
+
+        def get_internal_entity_url(uri: str) -> str:
+            endpoint_qs = (
+                f"&endpoint={quote_plus(endpoint_key)}" if endpoint_key else ""
+            )
+            return f"/entity?db={quote_plus(data_bundle.key)}{endpoint_qs}&uri={quote_plus(uri)}"
+
+        def get_uri_anchor_html(
+            uri: str,
+            url: str,
+            max_length: int = 55,
+            open_external: bool = False,
+        ) -> str:
+            short_uri = escape(get_short_uri_with_tail(uri, max_length))
+            uri_text = escape(uri)
+            url_text = escape(url, quote=True)
+            if open_external:
+                return (
+                    f'<a href="{url_text}" target="_blank" rel="noopener noreferrer" '
+                    f'title="{uri_text}">{short_uri}</a>'
+                )
+            return (
+                f'<a href="{url_text}" target="_blank" rel="noopener noreferrer" '
+                f'title="{uri_text}">{short_uri}</a>'
+            )
+
+        def get_resource_display_label(
+            resource: Resource | Property, max_length: int
+        ) -> str:
+            label = resource.get_text()
+            if isinstance(label, str):
+                stripped = label.strip()
+                looks_like_url = bool(
+                    re.match(
+                        r"^(https?://|www\.|[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)", stripped
+                    )
+                )
+                if looks_like_url:
+                    if getattr(resource, "uri", None):
+                        shortened = data_bundle.prefixes.shorten(resource.uri)
+                        if shortened != resource.uri:
+                            label = shortened
+                        else:
+                            uri_no_slash = resource.uri.rstrip("/")
+                            label = (
+                                uri_no_slash.rsplit("/", 1)[-1]
+                                if "/" in uri_no_slash
+                                else resource.uri
+                            )
+                    else:
+                        label = stripped
+            return get_max_length_text(str(label), max_length)
+
+        def get_external_uri_url(uri: str) -> str:
+            return data_bundle.prefixes.lengthen(uri)
+
+        def render_entity_resource(
+            col, resource: Resource, max_length: int = 40
+        ) -> None:
+            label = get_resource_display_label(resource, max_length)
+            uri_html = get_uri_anchor_html(
+                resource.uri,
+                get_internal_entity_url(resource.uri),
+                open_external=False,
+            )
+            with col:
+                st.html(f"<span>{escape(label)}</span> ({uri_html})")
+
+        def render_ontology_resource(
+            col, resource: Resource | Property, max_length: int = 40
+        ) -> None:
+            label = get_resource_display_label(resource, max_length)
+            uri_html = get_uri_anchor_html(
+                resource.uri,
+                get_external_uri_url(resource.uri),
+                open_external=True,
+            )
+            with col:
+                st.html(f"<span>{escape(label)}</span> ({uri_html})")
+
         # Function that is used for each category (Basic, Incomings, Outgoings)
-        def display_triple(statement: Statement) -> None:
+        def display_triple(
+            statement: Statement,
+            object_kind: str = "entity_or_literal",
+        ) -> None:
             col_sub, col_pred, col_obj, col_info = st.columns(
                 [6, 6, 6, 1], gap="medium", vertical_alignment="bottom"
             )
 
             # Subject
-            subject_text = f"{statement.subject.uri} ({get_max_length_text(statement.subject.get_text(), 40)})"
-            subject_link = data_bundle.prefixes.lengthen(statement.subject.uri)
-            col_sub.markdown(f"[{subject_text}]({subject_link})")
+            render_entity_resource(col_sub, statement.subject)
 
             # Predicate
-            predicate_text = f"{statement.predicate.uri} ({get_max_length_text(statement.predicate.get_text(), 40)})"
-            predicate_link = data_bundle.prefixes.lengthen(statement.predicate.uri)
-            col_pred.markdown(f"[{predicate_text}]({predicate_link})")
+            render_ontology_resource(col_pred, statement.predicate)
 
             # Object (Class instance)
             if statement.object.resource_type == "iri":
-                object_text = f"{statement.object.uri} ({get_max_length_text(statement.object.get_text(), 40)})"
-                object_link = data_bundle.prefixes.lengthen(statement.object.uri)
-                col_obj.markdown(f"[{object_text}]({object_link})")
+                if object_kind == "ontology":
+                    render_ontology_resource(col_obj, statement.object)
+                else:
+                    render_entity_resource(col_obj, statement.object)
             # Object (Literal)
             else:
                 object_text = get_max_length_text(statement.object.get_text(), 40)
@@ -70,7 +154,20 @@ else:
 
         # Header: entity name, additional info and description
         col_title, col_actions = st.columns([20, 10], vertical_alignment="bottom")
-        col_title.markdown(f"# {entity_uri}")
+        entity = data_bundle.get_entity_basics(entity_uri)
+        entity_label = get_resource_display_label(entity, max_length=120)
+        entity_uri_html = get_uri_anchor_html(
+            entity.uri,
+            get_internal_entity_url(entity.uri),
+            open_external=False,
+        )
+        with col_title:
+            st.html(
+                f"<h1 style='margin: 0;'><span>{escape(entity_label)}</span></h1>"
+                "<div style='font-size: 0.85rem; color: var(--secondary-text-color, #6b7280); margin-top: 0.15rem;'>"
+                f"{entity_uri_html}"
+                "</div>"
+            )
 
         # Header options
         with col_actions.container(horizontal=True, horizontal_alignment="right"):
@@ -95,7 +192,6 @@ else:
 
         # First category: Basics
         st.markdown("### Basic information")
-        entity = data_bundle.get_entity_basics(entity_uri)
 
         # Type
         if entity.class_uri:
@@ -103,7 +199,9 @@ else:
                 iter(data_bundle.model.find_properties(data_bundle.model.type_property))
             )
             entity_class = data_bundle.model.find_class(entity.class_uri)
-            display_triple(Statement(entity, prop_type, entity_class))
+            display_triple(
+                Statement(entity, prop_type, entity_class), object_kind="ontology"
+            )
 
         # Label
         if entity.label:
@@ -125,7 +223,7 @@ else:
                 )
             )
             entity_comment = Resource(entity.comment, resource_type="literal")
-            display_triple(Statement(entity, comment, entity_label))
+            display_triple(Statement(entity, comment, entity_comment))
 
         st.divider()
 

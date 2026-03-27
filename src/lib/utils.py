@@ -5,21 +5,30 @@ import time, unicodedata, re, io, zipfile
 def normalize_text(text: str, to_lower_case: bool = True) -> str:
     """
     Normalize the given text: binary chars, accents, spaces, lower case.
-    
+
     Args:
         text (string): The "dirty text" (eg "  héLlo  worlD ").
 
     Returns:
         string: The cleaned text (eg "hello world").
 
-    """    
+    """
     # To avoid errors if no text is sent
-    if not text: return text
+    if not text:
+        return text
 
     # Remove binary chars
-    allowed_categories = ('L', 'N', 'P', 'S', 'Z') # Letters, Numbers, Punctuation, Symbols, Spaces
-    to_return = ''.join(c for c in text if unicodedata.category(c)[0] in allowed_categories)
-    
+    allowed_categories = (
+        "L",
+        "N",
+        "P",
+        "S",
+        "Z",
+    )  # Letters, Numbers, Punctuation, Symbols, Spaces
+    to_return = "".join(
+        c for c in text if unicodedata.category(c)[0] in allowed_categories
+    )
+
     # Normalize text to decompose accented characters (e.g., é -> e + <accent>)
     to_return = unicodedata.normalize("NFKD", to_return)
 
@@ -27,10 +36,11 @@ def normalize_text(text: str, to_lower_case: bool = True) -> str:
     to_return = "".join([c for c in text if not unicodedata.combining(c)])
 
     # Handle extra spaces
-    to_return = re.sub(r'\s+', ' ', to_return).strip()
+    to_return = re.sub(r"\s+", " ", to_return).strip()
 
     # Lower case
-    if to_lower_case: to_return = to_return.lower()
+    if to_lower_case:
+        to_return = to_return.lower()
 
     return to_return
 
@@ -38,7 +48,7 @@ def normalize_text(text: str, to_lower_case: bool = True) -> str:
 def to_snake_case(text: str) -> str:
     """
     Format the given string into snake-case.
-    
+
     Args:
         text (string): The normal text (eg "Hello world").
 
@@ -49,7 +59,7 @@ def to_snake_case(text: str) -> str:
     clean_text = normalize_text(text)
 
     # Replace underscores by dashes
-    clean_text = clean_text.replace('_', '-')
+    clean_text = clean_text.replace("_", "-")
 
     # Replace spaces with dashs
     snake_case_text = re.sub(r"\s+", "-", clean_text)
@@ -67,9 +77,9 @@ def from_snake_case(text: str) -> str:
 
     Returns:
         string: Normal text (eg "Hello World").
-    
+
     """
-    return text.replace('_', ' ').title()
+    return text.replace("_", " ").title()
 
 
 def build_zip_file(file_names: List[str], file_contents: List[str]) -> io.BytesIO:
@@ -86,7 +96,7 @@ def build_zip_file(file_names: List[str], file_contents: List[str]) -> io.BytesI
     zip_buffer = io.BytesIO()
 
     # Create a zip archive in the buffer
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for name, content in zip(file_names, file_contents):
             zip_file.writestr(name, content)
 
@@ -115,29 +125,31 @@ def generate_id() -> str:
         timestamp_ms, remainder = divmod(timestamp_ms, 62)
         result = BASE62_ALPHABET[remainder] + result
 
-    # Make sure that the id generation took at least 1 ms, 
+    # Make sure that the id generation took at least 1 ms,
     # Doing so, we ensure that each generated ids are different
     # Having in mind that this is true only computer wide.
     if int(time.time() * 1000) - timestamp_ms < 1:
         time.sleep(0.001)
 
-    return 'i' + result[::-1]
+    return "i" + result[::-1]
 
 
 def generate_uri(id: str = None) -> str:
     """
     Build a local URI. In case an id is given, build the URI with the given ID.
 
-    Args: 
+    Args:
         id (string): Optional, the id to have in the URI.
 
     Returns:
         string: Generated URI.
     """
 
-    if id: return f"base:i{id}"
-    else: return f"base:i{generate_id()}"
-    
+    if id:
+        return f"base:i{id}"
+    else:
+        return f"base:i{generate_id()}"
+
 
 def get_max_length_text(text: str, max_length: 50) -> str:
     """
@@ -151,5 +163,48 @@ def get_max_length_text(text: str, max_length: 50) -> str:
         str: The original text if its length is within the limit, otherwise a truncated
             version ending with "...".
     """
-    if len(text) < max_length: return text
-    else: return text[0:max_length] + '...'
+    if len(text) < max_length:
+        return text
+    else:
+        return text[0:max_length] + "..."
+
+
+def get_short_uri_with_tail(
+    uri: str,
+    max_length: int = 55,
+    head_length: int = 14,
+    tail_length: int = 38,
+) -> str:
+    """
+    Truncate a URI while preserving its most meaningful ending.
+
+    The returned value keeps both the beginning and the end of the URI, and
+    inserts an ellipsis in the middle, for example:
+    "https://example.../resource/abc#Entity".
+
+    Args:
+        uri (str): Full URI text.
+        max_length (int, optional): Maximum rendered length. Defaults to 55.
+        head_length (int, optional): Preferred number of characters kept at the
+            beginning. Defaults to 14.
+        tail_length (int, optional): Preferred number of characters kept at the
+            end. Defaults to 38.
+
+    Returns:
+        str: URI shortened with a middle ellipsis when needed.
+    """
+    if len(uri) <= max_length:
+        return uri
+
+    if max_length <= 3:
+        return "." * max_length
+
+    available = max_length - 3
+    head = max(1, min(head_length, available - 1))
+    tail = max(1, min(tail_length, available - head))
+
+    used = head + tail
+    if used < available:
+        tail += available - used
+
+    return f"{uri[:head]}...{uri[-tail:]}"

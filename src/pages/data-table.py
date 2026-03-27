@@ -1,4 +1,5 @@
 import streamlit as st
+from urllib.parse import quote_plus
 from requests.exceptions import HTTPError, ConnectionError, Timeout
 from components.init import init
 from components.menu import menu
@@ -97,10 +98,15 @@ try:
             )  # So that indexes appears to start at 1
             if len(df_instances):
                 endpoint_key = state.get_endpoint_key()
-                endpoint_qs = f"&endpoint={endpoint_key}" if endpoint_key else ""
-                df_instances["Link"] = [
-                    f"/entity?db={data_bundle.key}{endpoint_qs}&uri={uri}"
+                endpoint_qs = (
+                    f"&endpoint={quote_plus(endpoint_key)}" if endpoint_key else ""
+                )
+                df_instances["Open in Logre"] = [
+                    f"/entity?db={quote_plus(data_bundle.key)}{endpoint_qs}&uri={quote_plus(uri)}"
                     for uri in df_instances["URI"]
+                ]
+                df_instances["Open external"] = [
+                    data_bundle.prefixes.lengthen(uri) for uri in df_instances["URI"]
                 ]
 
             st.dataframe(
@@ -108,10 +114,13 @@ try:
                 width="stretch",
                 column_config={
                     "URI": st.column_config.TextColumn(width="small"),
-                    "Outgoing Count": st.column_config.NumberColumn(width="small"),
-                    "Incoming Count": st.column_config.NumberColumn(width="small"),
-                    "Link": st.column_config.LinkColumn(
+                    "Outgoing count": st.column_config.NumberColumn(width="small"),
+                    "Incoming count": st.column_config.NumberColumn(width="small"),
+                    "Open in Logre": st.column_config.LinkColumn(
                         display_text="Open", width="small"
+                    ),
+                    "Open external": st.column_config.LinkColumn(
+                        display_text="External", width="small"
                     ),
                 },
             )

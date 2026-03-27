@@ -1,9 +1,11 @@
 import streamlit as st
+from html import escape
+from urllib.parse import quote_plus
 from components.doc_links import decorate_doc_links
 from components.init import init
 from components.menu import menu
 from lib import state
-from lib.utils import get_max_length_text
+from lib.utils import get_max_length_text, get_short_uri_with_tail
 from dialogs.triple_info import dialog_triple_info
 from dialogs.entity_edition import dialog_entity_edition
 from dialogs.confirmation import dialog_confirmation
@@ -28,14 +30,67 @@ else:
     # i.e. Fill Resource instance
     entity = data_bundle.get_entity_basics(entity_uri)
     entity_class = data_bundle.model.find_class(entity.class_uri)
+    endpoint_key = state.get_endpoint_key()
+
+    def get_internal_entity_url(uri: str) -> str:
+        endpoint_qs = f"&endpoint={quote_plus(endpoint_key)}" if endpoint_key else ""
+        return f"/entity?db={quote_plus(data_bundle.key)}{endpoint_qs}&uri={quote_plus(uri)}"
+
+    def get_external_uri_url(uri: str) -> str:
+        return data_bundle.prefixes.lengthen(uri)
+
+    def get_class_text_with_uri(resource) -> str:
+        if not resource or not resource.uri:
+            return ""
+        class_uri_url = get_external_uri_url(resource.uri)
+        short_uri = get_short_uri_with_tail(resource.uri)
+        return f"{resource.get_text()} ([{short_uri}]({class_uri_url}))"
+
+    def get_property_text_with_uri(resource) -> str:
+        if not resource or not resource.uri:
+            return ""
+        property_uri_url = get_external_uri_url(resource.uri)
+        short_uri = get_short_uri_with_tail(resource.uri)
+        return f"{resource.get_text()} ([{short_uri}]({property_uri_url}))"
+
+    def get_entity_uri_html(uri: str, max_uri_length: int = 55) -> str:
+        internal_url = escape(get_internal_entity_url(uri), quote=True)
+        external_url = escape(get_external_uri_url(uri), quote=True)
+        uri_text = escape(uri)
+        short_uri = escape(get_short_uri_with_tail(uri, max_uri_length))
+        return (
+            f'<a href="{internal_url}" target="_blank" rel="noopener noreferrer" title="{uri_text}">{short_uri}</a> '
+            f'<a href="{external_url}" target="_blank" rel="noopener noreferrer" title="Open externally">↗</a>'
+        )
+
+    def get_entity_text_with_uri(
+        resource, max_length: int | None = None, uri_max_length: int = 55
+    ) -> str:
+        label = resource.get_text()
+        if max_length:
+            label = get_max_length_text(label, max_length)
+        return (
+            f"<span>{escape(label)}</span> "
+            f"({get_entity_uri_html(resource.uri, uri_max_length)})"
+        )
+
+    def get_entity_header_html(resource, uri_max_length: int = 55) -> str:
+        label = escape(resource.get_text())
+        uri_html = get_entity_uri_html(resource.uri, uri_max_length)
+        return (
+            f"<h1 style='margin: 0;'>{label}</h1>"
+            "<div style='font-size: 0.85rem; color: var(--secondary-text-color, #6b7280); margin-top: 0.15rem;'>"
+            f"{uri_html}"
+            "</div>"
+        )
 
     # Header: entity name, additional info and description
     col_title, col_actions = st.columns([20, 10], vertical_alignment="bottom")
-    uri_text = f'<small style="font-size: 16px; color: gray; text-decoration: none;">{entity.uri}</small>'
-    col_title.markdown(
-        f"# {entity.get_text()} ({entity_class.get_text()}) {uri_text}",
-        unsafe_allow_html=True,
-    )
+    with col_title:
+        st.html(get_entity_header_html(entity))
+
+    if entity_class and entity_class.uri:
+        col_title.markdown(f"**Class:** {get_class_text_with_uri(entity_class)}")
     st.markdown(entity.comment or "")
 
     # Header options
@@ -94,9 +149,9 @@ else:
             # If the property is OUTGOING for the entity
             if p.domain and p.domain.uri == entity_class.uri:
                 # Property Label
-                col_prop.markdown(
-                    f"##### **{p.get_text()} {f'({p.range.get_text()})' if p.range and p.range.uri else ''}**"
-                )
+                col_prop.markdown(f"##### **{get_property_text_with_uri(p)}**")
+                if p.range and p.range.uri:
+                    col_prop.markdown(f"*Range:* {get_class_text_with_uri(p.range)}")
 
                 # Fetch all the objects (with paginagion)
                 statements = data_bundle.get_objects_of(
@@ -104,27 +159,20 @@ else:
                 )
 
                 # Loop through all retrieved objects
-                for s in statements:
+                for i, s in enumerate(statements):
                     col_value, col_info = col_entity.columns(
                         [7, 1], vertical_alignment="center"
                     )
-                    object_class = data_bundle.model.find_class(s.object.class_uri)
 
                     # Different behavior depending on the object resource type
                     object_text = get_max_length_text(
-                        s.object.get_text(comment=True), MAX_STRING_LENGTH
+                        s.object.get_text(), MAX_STRING_LENGTH
                     )
                     if s.object.resource_type == "iri":
-                        # Link to the OBJECT entity
-                        btn_key = f"btn-{entity_uri}-{p.get_key()}-{s.object.uri}-link"
-                        kwargs = {"uri": s.object.uri}
-                        col_value.button(
-                            f"{object_text}",
-                            type="tertiary",
-                            on_click=state.set_entity_uri,
-                            kwargs=kwargs,
-                            key=btn_key,
-                        )
+                        with col_value:
+                            st.html(
+                                get_entity_text_with_uri(s.object, MAX_STRING_LENGTH)
+                            )
                     else:
                         # Simply diplay the VALUE
                         col_value.markdown(f"> {object_text}")
@@ -134,7 +182,7 @@ else:
                     with col_info.container(
                         horizontal=False, horizontal_alignment="right"
                     ):
-                        btn_key = f"btn-{entity_uri}-{p.get_key()}-{s.object.uri if s.object.resource_type == 'iri' else s.object.literal}-info"
+                        btn_key = f"btn-{entity_uri}-{p.get_key()}-{s.object.uri if s.object.resource_type == 'iri' else s.object.literal}-{i}-info"
                         kwargs = {
                             "statement": s,
                             "prefixes": data_bundle.prefixes,
@@ -202,9 +250,11 @@ else:
                 # Property Label
                 incoming_text = f'<small style="font-size: 10px; color: gray; text-decoration: none;">(incoming)</small>'
                 col_prop.markdown(
-                    f"##### **{incoming_text}{f'({p.domain.get_text()})' if p.domain and p.domain.uri else ''} {p.get_text()}**",
+                    f"##### **{incoming_text} {get_property_text_with_uri(p)}**",
                     unsafe_allow_html=True,
                 )
+                if p.domain and p.domain.uri:
+                    col_prop.markdown(f"*Domain:* {get_class_text_with_uri(p.domain)}")
 
                 # Fetch all the subjects (with paginagion)
                 statements = data_bundle.get_subjects_of(
@@ -212,32 +262,23 @@ else:
                 )
 
                 # Loop through all retrieved subjects
-                for s in statements:
+                for i, s in enumerate(statements):
                     col_value, col_info = col_entity.columns(
                         [7, 1], vertical_alignment="center"
                     )
-                    subject_class = data_bundle.model.find_class(s.subject.class_uri)
 
                     # Link to the SUBJECT entity
                     # Because subjects are always entities, no need to differenciate from values
-                    subject_text = get_max_length_text(
-                        s.subject.get_text(comment=True), MAX_STRING_LENGTH
-                    )
-                    btn_key = f"btn-{entity_uri}-{p.get_key()}-{s.subject.uri}-link"
-                    kwargs = {"uri": s.subject.uri}
-                    col_value.button(
-                        f"{subject_text}",
-                        type="tertiary",
-                        on_click=state.set_entity_uri,
-                        kwargs=kwargs,
-                        key=btn_key,
-                    )
+                    with col_value:
+                        st.html(get_entity_text_with_uri(s.subject, MAX_STRING_LENGTH))
 
                     # Add a button which opens a dialog with raw informations about the triple
                     with col_info.container(
                         horizontal=False, horizontal_alignment="right"
                     ):
-                        btn_key = f"btn-{entity_uri}-{p.get_key()}-{s.subject.uri}-info"
+                        btn_key = (
+                            f"btn-{entity_uri}-{p.get_key()}-{s.subject.uri}-{i}-info"
+                        )
                         kwargs = {
                             "statement": s,
                             "prefixes": data_bundle.prefixes,
