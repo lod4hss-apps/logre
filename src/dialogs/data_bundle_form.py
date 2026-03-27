@@ -1,11 +1,15 @@
 import streamlit as st
+import os
+from urllib.parse import urlparse
 from requests.exceptions import HTTPError, ConnectionError, Timeout
-from graphly.schema import Prefixes, Prefix
 from components.doc_links import decorate_doc_links
 from lib import state
 from schema.data_bundle import DataBundle
 from schema.model_framework import ModelFramework
-from schema.sparql_technologies import SPARQLTechnology, get_sparql_technology
+from schema.sparql_technologies import (
+    SPARQLTechnology,
+    get_sparql_technology,
+)
 from components.help import help_text
 
 
@@ -243,27 +247,52 @@ def __get_graph_list(
     username: str | None,
     password: str | None,
     base_uri: str | None,
-) -> None:
-    if technology and url and username and password and base_uri:
+) -> list[str]:
+    technology_clean = (technology or "").strip()
+    url_clean = (url or "").strip()
+    username_clean = (username or "").strip()
+    password_clean = password or ""
+    base_uri_clean = (base_uri or "").strip()
+
+    has_credentials = bool(username_clean and password_clean)
+    allow_without_credentials = _is_local_rdf4j_endpoint(technology_clean, url_clean)
+
+    if (
+        technology_clean
+        and url_clean
+        and base_uri_clean
+        and (has_credentials or allow_without_credentials)
+    ):
         # First there is the need to set the endpoint, prefixes etc locally, based on things above
-        endpoint = get_sparql_technology(technology)(url, username, password)
-
-        # Retrieve prefixes while keeping only one declaration per short name
-        prefixes_by_short: dict[str, Prefix] = {}
-        for prefix in state.get_prefixes().prefix_list:
-            if not prefix.short or prefix.short == "base":
-                continue
-            prefixes_by_short[prefix.short] = prefix
-
-        prefixes = Prefixes(list(prefixes_by_short.values()))
-        prefixes.add(Prefix("base", base_uri))
+        endpoint = get_sparql_technology(technology_clean)(
+            url_clean,
+            username_clean,
+            password_clean,
+        )
 
         # Make the query
         with st.spinner("Fetching existing named graph"):
-            graphs = endpoint.run(
-                "SELECT DISTINCT ?g WHERE { GRAPH ?g { } }", prefixes=prefixes
-            )
+            graphs = endpoint.run("SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }")
 
         return [g["g"] for g in graphs]
     else:
         return []
+
+
+def _is_local_rdf4j_endpoint(technology: str, url: str) -> bool:
+    if technology != SPARQLTechnology.RDF4J.value:
+        return False
+
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+
+    local_hosts = {"localhost", "127.0.0.1", "::1", "rdf4j", "host.docker.internal"}
+
+    configured_rdf4j_server_url = os.getenv("RDF4J_SERVER_URL", "")
+    configured_rdf4j_hostname = (
+        urlparse(configured_rdf4j_server_url).hostname or ""
+    ).lower()
+    if configured_rdf4j_hostname:
+        local_hosts.add(configured_rdf4j_hostname)
+
+    return hostname in local_hosts
