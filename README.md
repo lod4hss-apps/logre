@@ -125,6 +125,8 @@ python -m streamlit run src/server.py
 
 Then open `http://localhost:8501`.
 
+When the Model page is opened, Logre auto-downloads `src/lib/shacl-maker.js` if it is missing.
+
 ---
 
 ## Configuration & secrets

@@ -1,16 +1,14 @@
 import streamlit as st
 import json
-from pathlib import Path
 from components.init import init
 from components.menu import menu
 from lib import state
+from lib.shacl_maker import load_shacl_maker_js
 from dialogs.confirmation import dialog_confirmation
 
 # Initialize
 init("wide", required_query_params=["endpoint", "db"])
 menu()
-
-BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 
 # From state
 data_bundle = state.get_data_bundle()
@@ -72,13 +70,12 @@ st.info(
 #   dialog_confirmation("Your are about to clear your model Named Graph and replace it by what is currently displayed.", replace_model, rerun=False)
 
 # Get the js code
-js_code = None
-try:
-    with open(BASE_DIR + "/src/lib/shacl-maker.js", encoding="utf-8") as file:
-        js_code = file.read().strip()
-except FileNotFoundError:
+js_code, load_error = load_shacl_maker_js()
+if js_code is None:
     st.warning(
-        "Missing shacl-maker.js. Run `make install` locally or rebuild the Docker image to fetch it."
+        "Unable to load shacl-maker.js automatically. "
+        f"Reason: {load_error}. "
+        "Run `make install` locally or rebuild the Docker image to fetch it."
     )
     st.stop()
 

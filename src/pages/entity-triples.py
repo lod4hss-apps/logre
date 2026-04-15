@@ -57,11 +57,23 @@ else:
             )
 
         def get_resource_display_label(
-            resource: Resource | Property, max_length: int
+            resource: Resource | Property,
+            max_length: int,
+            prefer_class_label_on_missing: bool = False,
         ) -> str:
             label = resource.get_text()
             if isinstance(label, str):
                 stripped = label.strip()
+                raw_label = (getattr(resource, "label", None) or "").strip()
+                if prefer_class_label_on_missing and not raw_label:
+                    class_uri = getattr(resource, "class_uri", None)
+                    if class_uri:
+                        resource_class = data_bundle.model.find_class(class_uri)
+                        if resource_class:
+                            class_label = (resource_class.get_text() or "").strip()
+                            if class_label:
+                                label = class_label
+                                stripped = class_label
                 looks_like_url = bool(
                     re.match(
                         r"^(https?://|www\.|[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)", stripped
@@ -89,14 +101,18 @@ else:
         def render_entity_resource(
             col, resource: Resource, max_length: int = 40
         ) -> None:
-            label = get_resource_display_label(resource, max_length)
+            label = get_resource_display_label(
+                resource,
+                max_length,
+                prefer_class_label_on_missing=True,
+            )
             uri_html = get_uri_anchor_html(
                 resource.uri,
                 get_internal_entity_url(resource.uri),
                 open_external=False,
             )
             with col:
-                st.html(f"<span>{escape(label)}</span> ({uri_html})")
+                st.html(f"<strong>{escape(label)}</strong> ({uri_html})")
 
         def render_ontology_resource(
             col, resource: Resource | Property, max_length: int = 40

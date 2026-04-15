@@ -25,4 +25,5 @@ Then open `http://localhost:8501`.
 
 - This mode does not start a triple store.
 - Add your SPARQL endpoint in Logre configuration.
+- On first access to the Model page, Logre auto-downloads `shacl-maker.js` if missing.
 - If you prefer the project-maintained scripted flow, use `make start` instead.
