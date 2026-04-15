@@ -7,4 +7,4 @@ pyyaml
 python-dotenv
 plotly
 streamlit_code_editor
-git+https://github.com/mauvois/graphly.git@compat
+git+https://github.com/lod4hss-apps/graphly.git@compat
