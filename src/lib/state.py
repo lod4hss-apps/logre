@@ -271,9 +271,11 @@ def parse_query_params() -> None:
             if data_bundle:
                 set_data_bundle(data_bundle)
 
-    # Entity URI: from query param to state only when it is currently unset.
+    # Entity URI: from query param to state whenever the URL targets another
+    # entity card. Unlike endpoint/bundle, entity links are expected to
+    # navigate within an already-initialized session.
     uri = __get_query_param_value("uri")
-    if uri and get_entity_uri() is None:
+    if uri and uri != get_entity_uri():
         set_entity_uri(uri)
 
 
