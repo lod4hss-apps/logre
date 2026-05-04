@@ -1,5 +1,6 @@
 import streamlit as st
 from requests.exceptions import HTTPError, ConnectionError, Timeout
+from urllib.parse import quote_plus
 from lib import state
 from lib.errors import get_HTTP_ERROR_message
 from lib.utils import get_max_length_text
@@ -69,9 +70,10 @@ def dialog_find_entity() -> None:
         )
 
         # Set the state selected entity as being the one chosen
-        for i, entity in enumerate(entities):
+        for entity in entities:
             entity_text = get_max_length_text(entity.get_text(comment=True), 90)
-            if st.button(entity_text, type="tertiary", key=f"dlg-find-entity-{i}"):
+            key = f"dlg-find-entity-{quote_plus(entity.uri)}"
+            if st.button(entity_text, type="tertiary", key=key):
                 state.set_entity_uri(entity.uri)
                 st.switch_page("pages/entity-card.py")
 

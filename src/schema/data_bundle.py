@@ -1,3 +1,4 @@
+import re
 from typing import List, Tuple, Dict
 import pandas as pd
 from requests.exceptions import HTTPError
@@ -121,6 +122,38 @@ class DataBundle:
                 message += f"\n\n{err.response.text}"
             raise Exception(message)
 
+    def _prepare_resource_uri(self, value: str | None) -> str | None:
+        """
+        Prepare a resource IRI for SPARQL patterns.
+
+        Unlike graphly.tools.prepare, this helper preserves absolute non-HTTP IRIs
+        (e.g. urn:, doi:) as IRIs instead of falling back to quoted literals.
+        """
+        if value is None:
+            return None
+
+        uri = str(value).strip()
+        if not uri:
+            return None
+
+        if uri.startswith("?"):
+            return uri
+
+        if uri.startswith("<") and uri.endswith(">"):
+            return uri
+
+        prefixes = self.prefixes.shorts()
+        prefix_sep = uri.find(":")
+        if prefix_sep > 0:
+            prefix = uri[:prefix_sep]
+            if prefix in prefixes:
+                return uri
+
+            if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", uri):
+                return f"<{uri}>"
+
+        return prepare(uri, prefixes)
+
     def has_usable_model(self) -> bool:
         """
         Indicate whether the current bundle has any non-datatype classes or properties loaded.
@@ -182,9 +215,9 @@ class DataBundle:
             # DataBundle.find_entities()
             SELECT
                 (?uri_ as ?uri)
-                (COALESCE(?label_, '') as ?label)
-                (COALESCE(?comment_, '') as ?comment)
-                (COALESCE(?class_uri_, '{class_uri if class_uri else ""}') as ?class_uri)
+                (COALESCE(SAMPLE(?label_), '') as ?label)
+                (COALESCE(SAMPLE(?comment_), '') as ?comment)
+                (COALESCE(SAMPLE(?class_uri_), '{class_uri if class_uri else ""}') as ?class_uri)
             WHERE {{
                 {self.data.sparql_begin}
                     ?uri_ {self.model.type_property} {prepared_class_uri if prepared_class_uri else "?class_uri_"} .
@@ -193,6 +226,8 @@ class DataBundle:
                 {self.data.sparql_end}
                 {filter_clause}
             }}
+            GROUP BY ?uri_
+            ORDER BY LCASE(STR(?label)) STR(?uri)
             {f"LIMIT {limit}" if limit else ""}
             {f"OFFSET {offset}" if offset else ""}
         """
@@ -227,7 +262,7 @@ class DataBundle:
             List[Property]: A list of properties outgoing from the given entity.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         query = f"""
             SELECT DISTINCT 
                 ?uri 
@@ -274,7 +309,7 @@ class DataBundle:
             List[Property]: A list of properties incoming to the given entity.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         query = f"""
             SELECT DISTINCT 
                 ?uri 
@@ -347,7 +382,7 @@ class DataBundle:
             List[Statement]: A list of statements representing the entity-property-object triples.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         property_uri = prepare(property.uri, self.prefixes.shorts())
         object_class_uri = prepare(
             property.range.uri if property.range else None, self.prefixes.shorts()
@@ -359,9 +394,9 @@ class DataBundle:
             # DataBundle.get_objects_of()
             SELECT
                 ?object_uri
-                (COALESCE(?object_label_, '') as ?object_label)
-                (COALESCE(?object_comment_, '') as ?object_comment)
-                (COALESCE(?object_class_uri_, IF(isLiteral(?object_uri), DATATYPE(?object_uri), '')) as ?object_class_uri)
+                (COALESCE(SAMPLE(?object_label_), '') as ?object_label)
+                (COALESCE(SAMPLE(?object_comment_), '') as ?object_comment)
+                (COALESCE(SAMPLE(?object_class_uri_), IF(isLiteral(?object_uri), DATATYPE(?object_uri), '')) as ?object_class_uri)
                 (IF(isIRI(?object_uri), 'iri', IF(isBlank(?object_uri), 'blank', IF(isLiteral(?object_uri), 'literal', ''))) as ?resource_type)
             WHERE {{
                 {self.data.sparql_begin}
@@ -372,15 +407,13 @@ class DataBundle:
                     OPTIONAL {{ ?object_uri {self.model.type_property} ?object_class_uri_ . }}
                 {self.data.sparql_end}
             }}
+            GROUP BY ?object_uri
             {f"LIMIT {limit}" if limit else ""}
             {f"OFFSET {offset}" if offset else ""}
         """
 
         # Execute query
         response = self.data.run(query)
-
-        # Make it unique based on object URI (can have duplicates because of multiple lables, comments, ...)
-        response = list({d["object_uri"]: d for d in reversed(response)}.values())
 
         # Parse response into Statement instance list
         statements = [
@@ -415,7 +448,7 @@ class DataBundle:
             int: The number of objects associated with the entity via the property.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         property_uri = prepare(property.uri, self.prefixes.shorts())
         query = f"""
             # DataBundle.get_objects_of_count()
@@ -453,7 +486,7 @@ class DataBundle:
             List[Statement]: A list of statements representing the subject-property-entity triples.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         property_uri = prepare(property.uri, self.prefixes.shorts())
         subject_class_uri = prepare(
             property.domain.uri if property.domain else None, self.prefixes.shorts()
@@ -462,9 +495,9 @@ class DataBundle:
             # DataBundle.get_subjects_of()
             SELECT
                 ?subject_uri
-                (COALESCE(?subject_label_, '') as ?subject_label)
-                (COALESCE(?subject_comment_, '') as ?subject_comment)
-                (COALESCE(?subject_class_uri_, IF(isLiteral(?subject_uri), DATATYPE(?subject_uri), '')) as ?subject_class_uri)
+                (COALESCE(SAMPLE(?subject_label_), '') as ?subject_label)
+                (COALESCE(SAMPLE(?subject_comment_), '') as ?subject_comment)
+                (COALESCE(SAMPLE(?subject_class_uri_), IF(isLiteral(?subject_uri), DATATYPE(?subject_uri), '')) as ?subject_class_uri)
                 (IF(isIRI(?subject_uri), 'iri', IF(isBlank(?subject_uri), 'blank', IF(isLiteral(?subject_uri), 'literal', ''))) as ?resource_type)
             WHERE {{
                 {self.data.sparql_begin}
@@ -475,15 +508,13 @@ class DataBundle:
                     OPTIONAL {{ ?subject_uri {self.model.type_property} ?subject_class_uri_ . }}
                 {self.data.sparql_end}
             }}
+            GROUP BY ?subject_uri
             {f"LIMIT {limit}" if limit else ""}
             {f"OFFSET {offset}" if offset else ""}
         """
 
         # Execute query
         response = self.data.run(query)
-
-        # Make it unique based on subject URI (can have duplicates because of multiple lables, comments, ...)
-        response = list({d["subject_uri"]: d for d in reversed(response)}.values())
 
         # Parse response into Statement instance list
         statements = [
@@ -518,7 +549,7 @@ class DataBundle:
             int: The number of subjects associated with the entity via the property.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         property_uri = prepare(property.uri, self.prefixes.shorts())
         query = f"""
             # DataBundle.get_objects_of_count()
@@ -554,7 +585,7 @@ class DataBundle:
             List[Statement]: A list of statements representing the outgoing triples.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         skip_prop_str = (
             ", ".join(
                 list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))
@@ -564,10 +595,10 @@ class DataBundle:
         )
         query = f"""
             # DataBundle.get_all_outgoing_statements()
-            SELECT DISTINCT
-                ?p ?o (isLiteral(?o) as ?is_literal) 
-                (COALESCE(?o_label_, '') as ?o_label)
-                (COALESCE(?o_class_uri_, '') as ?o_class_uri)
+            SELECT
+                ?p ?o (isLiteral(?o) as ?is_literal)
+                (COALESCE(SAMPLE(?o_label_), '') as ?o_label)
+                (COALESCE(SAMPLE(?o_class_uri_), '') as ?o_class_uri)
             WHERE {{ 
                 {self.data.sparql_begin}
                     {entity_uri} ?p ?o  .
@@ -576,6 +607,7 @@ class DataBundle:
                     {f"FILTER(?p NOT IN ({skip_prop_str}))" if len(skip_props) else ""}
                 {self.data.sparql_end}
             }}
+            GROUP BY ?p ?o
         """
 
         # Execute query
@@ -621,7 +653,7 @@ class DataBundle:
             List[Statement]: A list of statements representing the incoming triples.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         skip_prop_str = (
             ", ".join(
                 list(set([prepare(p.uri, self.prefixes.shorts()) for p in skip_props]))
@@ -631,10 +663,10 @@ class DataBundle:
         )
         query = f"""
             # DataBundle.get_all_outgoing_statements()
-            SELECT DISTINCT
+            SELECT
                 ?s ?p
-                (COALESCE(?s_label_, '') as ?s_label)
-                (COALESCE(?s_class_uri_, '') as ?s_class_uri)
+                (COALESCE(SAMPLE(?s_label_), '') as ?s_label)
+                (COALESCE(SAMPLE(?s_class_uri_), '') as ?s_class_uri)
             WHERE {{ 
                 {self.data.sparql_begin}
                     ?s ?p {entity_uri} .
@@ -643,6 +675,7 @@ class DataBundle:
                     {f"FILTER(?p NOT IN ({skip_prop_str}))" if len(skip_props) else ""}
                 {self.data.sparql_end}
             }}
+            GROUP BY ?s ?p
             LIMIT {limit}
             OFFSET {offset}
         """
@@ -676,7 +709,7 @@ class DataBundle:
             int: The number of incoming statements for the entity.
         """
         # Prepare the query
-        entity_uri = prepare(entity.uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(entity.uri)
         query = f"""
             # DataBundle.get_all_outgoing_statements()
             SELECT (COUNT(*) as ?count)
@@ -1214,15 +1247,15 @@ class DataBundle:
             Resource: An object containing the entity's URI, label, comment, and class URI.
         """
         # Make sure the URI is correctly formated
-        entity_uri = prepare(uri, self.prefixes.shorts())
+        entity_uri = self._prepare_resource_uri(uri)
 
         # Build the query text
         query = f"""
             # DataBundle.get_entity_basics()
             SELECT 
-                (COALESCE(?label_, '') as ?label)
-                (COALESCE(?comment_, '') as ?comment)
-                (COALESCE(?class_uri_, '') as ?class_uri)
+                (COALESCE(SAMPLE(?label_), '') as ?label)
+                (COALESCE(SAMPLE(?comment_), '') as ?comment)
+                (COALESCE(SAMPLE(?class_uri_), '') as ?class_uri)
             WHERE {{
                 {self.data.sparql_begin}
                     OPTIONAL {{ {entity_uri} {self.model.label_property} ?label_ . }}
@@ -1233,7 +1266,10 @@ class DataBundle:
         """
 
         # Execute the query
-        infos = self.data.run(query)[0]
+        response = self.data.run(query)
+        infos = (
+            response[0] if response else {"label": "", "comment": "", "class_uri": ""}
+        )
 
         # Build the resource
         resource = Resource(uri, infos["label"], infos["comment"], infos["class_uri"])
