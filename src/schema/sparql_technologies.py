@@ -22,6 +22,11 @@ def _extract_declared_prefix_shorts(query_text: str) -> set[str]:
     return {match.group(1) for match in PREFIX_DECLARATION_RE.finditer(query_text)}
 
 
+def _query_preview(text: str, max_length: int = 220) -> str:
+    compact = " ".join((text or "").split())
+    return compact if len(compact) <= max_length else compact[:max_length] + "..."
+
+
 def _patch_graphly_parser() -> None:
     graphly_sparql.parse_sparql_json_response = parse_sparql_json_response
 
@@ -97,7 +102,19 @@ def _patch_graphly_timeout() -> None:
                 return graphly_sparql.parse_sparql_json_response(
                     response.json(), prefixes
                 )
-            except Exception:
+            except Exception as err:
+                content_type = response.headers.get("Content-Type", "")
+                preview = response.text.strip()
+                if len(preview) > 400:
+                    preview = preview[:400] + "..."
+                print(
+                    "[sparql] JSON parse failed | "
+                    f"url={self.url + url_appendix} | "
+                    f"content_type={content_type or '(missing)'} | "
+                    f"query={_query_preview(text)} | "
+                    f"error={err} | "
+                    f"response={preview}"
+                )
                 return response.text
 
     graphly_sparql.Sparql.run = _run_with_timeout

@@ -111,7 +111,13 @@ class DataBundle:
         """
         # Fetch the Model
         try:
+            print(
+                f"[data_bundle] load_model start | bundle={self.name} | endpoint={self.endpoint.name if self.endpoint else None} | endpoint_url={self.endpoint.url if self.endpoint else None} | model_graph={self.model.uri}"
+            )
             self.model.update()
+            print(
+                f"[data_bundle] load_model done | bundle={self.name} | classes={len(self.model.classes)} | properties={len(self.model.properties)}"
+            )
         except HTTPError as err:
             status_code = err.response.status_code
             reason = err.response.reason

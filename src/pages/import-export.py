@@ -64,7 +64,16 @@ with st.expander("Import"):
                 ):
 
                     def upload_nquads(nquad_content) -> None:
+                        print(
+                            f"[import] Upload n-quads start | endpoint={data_bundle.endpoint.name} | url={data_bundle.endpoint.url} | bundle={data_bundle.name}"
+                        )
                         data_bundle.endpoint.upload_nquads(nquad_content)
+                        print(
+                            f"[import] Upload n-quads complete | endpoint={data_bundle.endpoint.name} | bundle={data_bundle.name}"
+                        )
+                        print(
+                            f"[import] Reload model after n-quads upload | model_graph={data_bundle.model.uri}"
+                        )
                         data_bundle.load_model()
                         state.set_toast("n-Quad file uploaded", icon=":material/done:")
                         state.invalidate_caches("import_nquads")
