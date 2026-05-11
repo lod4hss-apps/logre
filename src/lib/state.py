@@ -934,7 +934,7 @@ def deselect_bundle_after_endpoint_failure() -> None:
     if "has_config" in state:
         save_config()
 
-    timeout_seconds = os.getenv("LOGRE_SPARQL_TIMEOUT", "12")
+    timeout_seconds = os.getenv("LOGRE_SPARQL_TIMEOUT", "120")
     set_toast(
         f"Endpoint '{endpoint_name}' is unreachable (timeout {timeout_seconds}s). Data Bundle deselected.",
         icon=":material/warning:",

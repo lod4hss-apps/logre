@@ -32,12 +32,12 @@ def _patch_graphly_parser() -> None:
 
 
 def _get_sparql_timeout_seconds() -> float:
-    raw_value = os.getenv("LOGRE_SPARQL_TIMEOUT", "12")
+    raw_value = os.getenv("LOGRE_SPARQL_TIMEOUT", "120")
     try:
         parsed = float(raw_value)
     except (TypeError, ValueError):
-        return 12.0
-    return parsed if parsed > 0 else 12.0
+        return 120.0
+    return parsed if parsed > 0 else 120.0
 
 
 def _get_nquads_chunk_lines() -> int:
