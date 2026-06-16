@@ -130,6 +130,7 @@ else:
         def display_triple(
             statement: Statement,
             object_kind: str = "entity_or_literal",
+            key_suffix: str = "",
         ) -> None:
             col_sub, col_pred, col_obj, col_info = st.columns(
                 [6, 6, 6, 1], gap="medium", vertical_alignment="bottom"
@@ -153,7 +154,15 @@ else:
                 col_obj.markdown(f"> {object_text}")
 
             with col_info.container(horizontal=True, horizontal_alignment="right"):
-                key = f"btn-{statement.subject.uri}-{statement.predicate.uri}-{statement.object.uri if hasattr(statement.object, 'uri') else statement.object.literal}-info"
+                object_key = (
+                    statement.object.uri
+                    if hasattr(statement.object, "uri")
+                    else statement.object.literal
+                )
+                key = (
+                    f"btn-{statement.subject.uri}-{statement.predicate.uri}-{object_key}"
+                    f"-{key_suffix}-info"
+                )
                 kwargs = {
                     "statement": statement,
                     "prefixes": data_bundle.prefixes,
@@ -216,7 +225,9 @@ else:
             )
             entity_class = data_bundle.model.find_class(entity.class_uri)
             display_triple(
-                Statement(entity, prop_type, entity_class), object_kind="ontology"
+                Statement(entity, prop_type, entity_class),
+                object_kind="ontology",
+                key_suffix="basic-type",
             )
 
         # Label
@@ -227,7 +238,10 @@ else:
                 )
             )
             entity_label = Resource(entity.label, resource_type="literal")
-            display_triple(Statement(entity, prop_label, entity_label))
+            display_triple(
+                Statement(entity, prop_label, entity_label),
+                key_suffix="basic-label",
+            )
 
         # Comment
         if entity.comment:
@@ -239,7 +253,10 @@ else:
                 )
             )
             entity_comment = Resource(entity.comment, resource_type="literal")
-            display_triple(Statement(entity, comment, entity_comment))
+            display_triple(
+                Statement(entity, comment, entity_comment),
+                key_suffix="basic-comment",
+            )
 
         st.divider()
 
@@ -259,8 +276,8 @@ else:
         title_container.markdown(f"*{len(statements)} total outgoing triples*")
 
         # Display triples
-        for s in statements:
-            display_triple(s)
+        for i, s in enumerate(statements):
+            display_triple(s, key_suffix=f"out-{i}")
         if len(statements) == 0:
             st.markdown("*None*")
 
@@ -296,7 +313,7 @@ else:
             )
 
         # Display triples
-        for s in statements:
-            display_triple(s)
+        for i, s in enumerate(statements):
+            display_triple(s, key_suffix=f"in-{i}")
         if len(statements) == 0:
             st.markdown("*None*")
