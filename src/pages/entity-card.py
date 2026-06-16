@@ -84,6 +84,11 @@ else:
             "</div>"
         )
 
+    def get_last_page_offset(total_count: int) -> int:
+        if total_count <= PAGINATION_LENGTH:
+            return 0
+        return ((total_count - 1) // PAGINATION_LENGTH) * PAGINATION_LENGTH
+
     # Header: entity name, additional info and description
     col_title, col_actions = st.columns([20, 10], vertical_alignment="bottom")
     with col_title:
@@ -140,6 +145,28 @@ else:
     for p in all_properties:
         # In case it is not the first "st.run", get the right entities
         offset = state.get_offset(entity.uri, p.get_key())
+        is_outgoing = p.domain and p.domain.uri == entity_class.uri
+
+        if is_outgoing:
+            statements = data_bundle.get_objects_of(entity, p, PAGINATION_LENGTH, offset)
+            if not statements and offset != 0:
+                total_count = data_bundle.get_objects_of_count(entity, p)
+                if total_count > 0:
+                    state.set_offset(entity.uri, p.get_key(), get_last_page_offset(total_count))
+                    st.rerun()
+            elif not statements:
+                continue
+        else:
+            statements = data_bundle.get_subjects_of(
+                entity, p, limit=PAGINATION_LENGTH, offset=offset
+            )
+            if not statements and offset != 0:
+                total_count = data_bundle.get_subjects_of_count(entity, p)
+                if total_count > 0:
+                    state.set_offset(entity.uri, p.get_key(), get_last_page_offset(total_count))
+                    st.rerun()
+            elif not statements:
+                continue
 
         # Property and object/subjects container
         with st.container(horizontal=True, horizontal_alignment="right", border=True):
@@ -147,16 +174,11 @@ else:
             col_prop, col_entity = st.columns([5, 8])
 
             # If the property is OUTGOING for the entity
-            if p.domain and p.domain.uri == entity_class.uri:
+            if is_outgoing:
                 # Property Label
                 col_prop.markdown(f"##### **{get_property_text_with_uri(p)}**")
                 if p.range and p.range.uri:
                     col_prop.markdown(f"*Range:* {get_class_text_with_uri(p.range)}")
-
-                # Fetch all the objects (with paginagion)
-                statements = data_bundle.get_objects_of(
-                    entity, p, PAGINATION_LENGTH, offset
-                )
 
                 # Loop through all retrieved objects
                 for i, s in enumerate(statements):
@@ -255,11 +277,6 @@ else:
                 )
                 if p.domain and p.domain.uri:
                     col_prop.markdown(f"*Domain:* {get_class_text_with_uri(p.domain)}")
-
-                # Fetch all the subjects (with paginagion)
-                statements = data_bundle.get_subjects_of(
-                    entity, p, limit=PAGINATION_LENGTH, offset=offset
-                )
 
                 # Loop through all retrieved subjects
                 for i, s in enumerate(statements):
