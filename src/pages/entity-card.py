@@ -166,6 +166,130 @@ else:
             return 0
         return ((total_count - 1) // PAGINATION_LENGTH) * PAGINATION_LENGTH
 
+    def get_model_property(uri: str):
+        properties = data_bundle.model.find_properties(uri)
+        return properties[0] if properties else None
+
+    def get_system_skip_props() -> list:
+        system_props = []
+        for uri in (
+            data_bundle.model.type_property,
+            data_bundle.model.label_property,
+            data_bundle.model.comment_property,
+        ):
+            property = get_model_property(uri)
+            if property:
+                system_props.append(property)
+        return system_props
+
+    def group_statements_by_property(statements: list) -> list:
+        grouped = {}
+        for statement in statements:
+            property_uri = statement.predicate.uri
+            if property_uri not in grouped:
+                grouped[property_uri] = {
+                    "property": statement.predicate,
+                    "statements": [],
+                }
+            grouped[property_uri]["statements"].append(statement)
+        return list(grouped.values())
+
+    def render_statement_value(statement, key_prefix: str, index: int) -> None:
+        col_value, col_info = st.columns([12, 1], vertical_alignment="top")
+
+        if statement.object.resource_type == "iri":
+            with col_value:
+                st.html(get_entity_value_html(statement.object, MAX_STRING_LENGTH))
+            object_key = statement.object.uri
+        else:
+            object_text = get_max_length_text(statement.object.get_text(), MAX_STRING_LENGTH)
+            with col_value:
+                st.html(get_literal_value_html(object_text))
+            object_key = statement.object.literal
+
+        with col_info.container(horizontal=False, horizontal_alignment="right"):
+            kwargs = {
+                "statement": statement,
+                "prefixes": data_bundle.prefixes,
+                "model": data_bundle.model,
+            }
+            st.button(
+                "",
+                icon=":material/expand_more:",
+                type="tertiary",
+                help="Show RDF details",
+                on_click=dialog_triple_info,
+                kwargs=kwargs,
+                key=f"btn-{key_prefix}-{object_key}-{index}-info",
+            )
+
+    def render_property_group(property, statements: list, key_prefix: str) -> None:
+        st.html(get_property_heading_html(property, is_outgoing=True))
+        for i, statement in enumerate(statements):
+            render_statement_value(statement, key_prefix, i)
+            if i < len(statements) - 1:
+                st.divider()
+        st.html(get_property_meta_html(property, is_outgoing=True))
+
+    def get_section_heading_html(label: str) -> str:
+        return (
+            "<div style='font-size: 1.02rem; color: color-mix(in srgb, var(--text-color, #f3f4f6) 92%, transparent); margin-bottom: 0.1rem;'>"
+            f"{escape(label)}"
+            "</div>"
+        )
+
+    def get_section_meta_html(resource=None, property=None) -> str:
+        meta_parts = []
+        if property and property.uri:
+            property_url = escape(get_external_uri_url(property.uri), quote=True)
+            property_uri = escape(get_short_uri_with_tail(property.uri))
+            meta_parts.append(
+                f'<a href="{property_url}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">{property_uri}</a>'
+            )
+
+        if resource and getattr(resource, "class_uri", None):
+            resource_class = data_bundle.model.find_class(resource.class_uri)
+            if resource_class and resource_class.uri:
+                class_url = escape(get_external_uri_url(resource_class.uri), quote=True)
+                class_label = escape(resource_class.get_text())
+                meta_parts.append(
+                    f'<a href="{class_url}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">{class_label}</a>'
+                )
+
+        if not meta_parts:
+            return ""
+
+        return (
+            "<div style='font-size: 0.82rem; color: color-mix(in srgb, var(--secondary-text-color, #6b7280) 82%, transparent); margin-top: 0.5rem; line-height: 1.35;'>"
+            + " &bull; ".join(meta_parts)
+            + "</div>"
+        )
+
+    def get_section_label(resource, fallback_property=None) -> str:
+        if resource and resource.get_text():
+            resource_text = resource.get_text().strip()
+            resource_uri = getattr(resource, "uri", "") or ""
+            if (
+                resource_text
+                and resource_text != resource_uri
+                and not resource_text.startswith("http://")
+                and not resource_text.startswith("https://")
+            ):
+                return resource_text
+
+        if resource and getattr(resource, "class_uri", None):
+            resource_class = data_bundle.model.find_class(resource.class_uri)
+            if resource_class and resource_class.get_text():
+                return resource_class.get_text()
+
+        if fallback_property and fallback_property.get_text():
+            return fallback_property.get_text()
+        if resource and getattr(resource, "uri", None):
+            return get_short_uri_with_tail(resource.uri)
+        if fallback_property and getattr(fallback_property, "uri", None):
+            return get_short_uri_with_tail(fallback_property.uri)
+        return "Additional information"
+
     # Header: entity name, additional info and description
     st.html(get_entity_header_html(entity))
 
@@ -224,6 +348,7 @@ else:
 
     # According to the model (thanks to the entity class), get all the properties that the entity can have in its card
     all_properties = data_bundle.get_card_properties_of(entity.class_uri)
+    system_skip_props = get_system_skip_props()
 
     # Loop through all of them
     for prop_index, p in enumerate(all_properties):
@@ -256,39 +381,27 @@ else:
             st.html(get_property_heading_html(p, is_outgoing=is_outgoing))
 
             for i, s in enumerate(statements):
-                col_value, col_info = st.columns([12, 1], vertical_alignment="top")
-
                 if is_outgoing:
-                    object_text = get_max_length_text(
-                        s.object.get_text(), MAX_STRING_LENGTH
-                    )
-                    if s.object.resource_type == "iri":
-                        with col_value:
-                            st.html(get_entity_value_html(s.object, MAX_STRING_LENGTH))
-                    else:
-                        with col_value:
-                            st.html(get_literal_value_html(object_text))
-                    btn_key = f"btn-{entity_uri}-{p.get_key()}-{s.object.uri if s.object.resource_type == 'iri' else s.object.literal}-{i}-info"
+                    render_statement_value(s, f"{entity_uri}-{p.get_key()}-out", i)
                 else:
+                    col_value, col_info = st.columns([12, 1], vertical_alignment="top")
                     with col_value:
                         st.html(get_entity_value_html(s.subject, MAX_STRING_LENGTH))
-                    btn_key = f"btn-{entity_uri}-{p.get_key()}-{s.subject.uri}-{i}-info"
-
-                with col_info.container(horizontal=False, horizontal_alignment="right"):
-                    kwargs = {
-                        "statement": s,
-                        "prefixes": data_bundle.prefixes,
-                        "model": data_bundle.model,
-                    }
-                    st.button(
-                        "",
-                        icon=":material/expand_more:",
-                        type="tertiary",
-                        help="Show RDF details",
-                        on_click=dialog_triple_info,
-                        kwargs=kwargs,
-                        key=btn_key,
-                    )
+                    with col_info.container(horizontal=False, horizontal_alignment="right"):
+                        kwargs = {
+                            "statement": s,
+                            "prefixes": data_bundle.prefixes,
+                            "model": data_bundle.model,
+                        }
+                        st.button(
+                            "",
+                            icon=":material/expand_more:",
+                            type="tertiary",
+                            help="Show RDF details",
+                            on_click=dialog_triple_info,
+                            kwargs=kwargs,
+                            key=f"btn-{entity_uri}-{p.get_key()}-{s.subject.uri}-{i}-info",
+                        )
 
                 if i < len(statements) - 1:
                     st.divider()
@@ -335,3 +448,150 @@ else:
 
         if prop_index < len(all_properties) - 1:
             st.divider()
+
+    extended_skip_props = list(all_properties) + system_skip_props
+    extended_candidates = data_bundle.get_outgoing_statements_of(
+        entity, skip_props=extended_skip_props
+    )
+    extended_candidates = [
+        statement
+        for statement in extended_candidates
+        if statement.object.resource_type == "iri"
+    ]
+
+    extended_sections = []
+    for property_group in group_statements_by_property(extended_candidates):
+        enriched_objects = []
+        for statement in property_group["statements"]:
+            child_statements = data_bundle.get_outgoing_statements_of(
+                statement.object, skip_props=system_skip_props
+            )
+            enriched_objects.append(
+                {
+                    "statement": statement,
+                    "child_groups": group_statements_by_property(child_statements),
+                }
+            )
+
+        if enriched_objects:
+            extended_sections.append(
+                {
+                    "kind": "outgoing",
+                    "property": property_group["property"],
+                    "objects": enriched_objects,
+                    "label": property_group["property"].get_text(),
+                }
+            )
+
+    incoming_total = data_bundle.get_incoming_statements_of_count(entity)
+    incoming_candidates = []
+    if incoming_total > 0:
+        incoming_candidates = data_bundle.get_incoming_statements_of(
+            entity, limit=incoming_total, skip_props=system_skip_props
+        )
+        incoming_candidates = [
+            statement
+            for statement in incoming_candidates
+            if statement.subject.resource_type == "iri"
+        ]
+
+    for statement in incoming_candidates:
+        child_skip_props = list(system_skip_props) + [statement.predicate]
+        child_statements = data_bundle.get_outgoing_statements_of(
+            statement.subject, skip_props=child_skip_props
+        )
+        child_statements = [
+            child_statement
+            for child_statement in child_statements
+            if not (
+                child_statement.object.resource_type == "iri"
+                and child_statement.object.uri == entity.uri
+            )
+        ]
+
+        extended_sections.append(
+            {
+                "kind": "incoming",
+                "resource": statement.subject,
+                "property": statement.predicate,
+                "child_groups": group_statements_by_property(child_statements),
+                "label": get_section_label(statement.subject, statement.predicate),
+            }
+        )
+
+    if extended_sections:
+        st.divider()
+        with st.expander(
+            f"Additional information ({len(extended_sections)})", expanded=False
+        ):
+            st.markdown("Select additional sections")
+            selected_sections = []
+            for section_index, section in enumerate(extended_sections):
+                if section["kind"] == "outgoing":
+                    section_key = section["property"].get_key()
+                else:
+                    section_key = section["resource"].uri
+                checkbox_key = f"extended-card-{entity.uri}-{section_key}-selected"
+                if st.checkbox(
+                    section["label"],
+                    value=False,
+                    key=checkbox_key,
+                ):
+                    selected_sections.append((section_index, section))
+
+            if selected_sections:
+                st.divider()
+
+            for selected_index, (section_index, section) in enumerate(selected_sections):
+                if section["kind"] == "outgoing":
+                    st.html(get_property_heading_html(section["property"], is_outgoing=True))
+                    st.html(get_property_meta_html(section["property"], is_outgoing=True))
+
+                    for object_index, enriched_object in enumerate(section["objects"]):
+                        st.html(get_entity_value_html(enriched_object["statement"].object))
+
+                        for child_group_index, child_group in enumerate(
+                            enriched_object["child_groups"]
+                        ):
+                            with st.container():
+                                render_property_group(
+                                    child_group["property"],
+                                    child_group["statements"],
+                                    (
+                                        f"extended-{section_index}-{object_index}-"
+                                        f"{child_group['property'].get_key()}"
+                                    ),
+                                )
+                            if child_group_index < len(enriched_object["child_groups"]) - 1:
+                                st.divider()
+
+                        if object_index < len(section["objects"]) - 1:
+                            st.divider()
+                else:
+                    st.html(get_section_heading_html(section["label"]))
+                    meta_html = get_section_meta_html(
+                        resource=section["resource"], property=section["property"]
+                    )
+                    if meta_html:
+                        st.html(meta_html)
+
+                    if section["child_groups"]:
+                        for child_group_index, child_group in enumerate(
+                            section["child_groups"]
+                        ):
+                            with st.container():
+                                render_property_group(
+                                    child_group["property"],
+                                    child_group["statements"],
+                                    (
+                                        f"extended-in-{section_index}-"
+                                        f"{child_group['property'].get_key()}"
+                                    ),
+                                )
+                            if child_group_index < len(section["child_groups"]) - 1:
+                                st.divider()
+                    else:
+                        st.html(get_entity_value_html(section["resource"]))
+
+                if selected_index < len(selected_sections) - 1:
+                    st.divider()
