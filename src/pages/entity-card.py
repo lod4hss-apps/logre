@@ -520,11 +520,20 @@ else:
         )
 
     if extended_sections:
-        st.divider()
         with st.expander(
             f"Additional information ({len(extended_sections)})", expanded=False
         ):
-            st.markdown("Select additional sections")
+            with st.container(horizontal=True, vertical_alignment="center"):
+                st.markdown("Incoming statement sections to display", width="content")
+                st.button(
+                    "",
+                    icon=":material/info:",
+                    type="tertiary",
+                    help=decorate_doc_links(
+                        "[What are incoming statements?](/documentation?section=what-are-incoming-statements)"
+                    ),
+                    key=f"incoming-statements-help-{entity.uri}",
+                )
             selected_sections = []
             for section_index, section in enumerate(extended_sections):
                 if section["kind"] == "outgoing":

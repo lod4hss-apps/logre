@@ -324,6 +324,14 @@ For incoming triples, to avoid overload of the web page, a limited amount of tri
 
 ---
 
+### What are incoming statements?
+
+Incoming statements are RDF triples where the current entity appears as the object of the statement. In other words, they are links coming from other resources toward the entity you are looking at.
+
+In the entity card, these sections help you discover which other resources point to the current entity, without switching to the full raw triples view.
+
+---
+
 ### What is shown on page "Visualization"?
 
 On the visualization page, well you guessed it, you can observe your data in a graphical way, with real nodes and edges. This can help you visualize your data.
