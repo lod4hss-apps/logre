@@ -107,7 +107,7 @@ class DataBundle:
         """
         Load and update the model for the data bundle by fetching it from the model graph.
 
-        Updates the current model with information from `graph_model` using the defined prefixes.
+        Updates the current model with information from its configured graph using the defined prefixes.
         """
         # Fetch the Model
         try:
@@ -1260,13 +1260,9 @@ class DataBundle:
         # It means that all information are in actually one single file, with graph information in it.
         # Therefore, everything can be return as a single string.
         content = ""
-        content += self.graph_model.dump_nquad(
-            self.prefixes
-        )  # Add the data bundle model
-        content += self.data.dump_nquad(self.prefixes)  # Add the data bundle data
-        content += self.graph_metadata.dump_nquad(
-            self.prefixes
-        )  # Add the data bundle metadata
+        content += self.model.dump_nquad()  # Add the data bundle model
+        content += self.data.dump_nquad()  # Add the data bundle data
+        content += self.metadata.dump_nquad()  # Add the data bundle metadata
         return content
 
     def dump_ttl(self) -> Dict[str, str]:
@@ -1285,11 +1281,9 @@ class DataBundle:
         # Therefore, there is the need to split information in 3 differents extractions (data, model, metadata)
         # Hence the returned thing is a dictionary of strings (data, model, metadata)
         return {
-            "data": self.data.dump_turtle(self.prefixes),  # Data bundle data
-            "model": self.graph_model.dump_turtle(self.prefixes),  # Data bundle model
-            "metadata": self.graph_metadata.dump_turtle(
-                self.prefixes
-            ),  # Data bundle metadata
+            "data": self.data.dump_turtle(),  # Data bundle data
+            "model": self.model.dump_turtle(),  # Data bundle model
+            "metadata": self.metadata.dump_turtle(),  # Data bundle metadata
         }
 
     def dump_csv(self) -> Dict[str, pd.DataFrame]:
@@ -1424,9 +1418,9 @@ class DataBundle:
                 ?s ?p ?o
             }}
             WHERE {{
-                {self.graph_model.sparql_begin}
+                {self.model.sparql_begin}
                     ?s ?p ?o
-                {self.graph_model.sparql_end}
+                {self.model.sparql_end}
             }}
         """
         response = self.run(query)

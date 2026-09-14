@@ -1677,29 +1677,34 @@ def data_table_get_page(class_uri: str) -> int:
 ##### DIALOG ENTITY CREATION #####
 
 
-def entity_creation_set_input_number(property: Property, input_number: int) -> None:
+def get_entity_form_field_key(property: Property, occurrence: int) -> str:
+    """Build a unique key for one occurrence of a property in an entity form."""
+    return f"{property.get_key()}-{occurrence}"
+
+
+def entity_creation_set_input_number(field_key: str, input_number: int) -> None:
     """
     Set the input number for a specific property during entity creation.
 
     Args:
-        property (Property): The property for which the input number is set.
+        field_key (str): The unique key for the property occurrence.
         input_number (int): The input number to store.
     """
-    key = f"entity-creation-input-number-{property.get_key()}"
+    key = f"entity-creation-input-number-{field_key}"
     state[key] = input_number
 
 
-def entity_creation_get_input_number(property: Property) -> int:
+def entity_creation_get_input_number(field_key: str) -> int:
     """
     Retrieve the input number for a specific property during entity creation.
 
     Args:
-        property (Property): The property for which the input number is retrieved.
+        field_key (str): The unique key for the property occurrence.
 
     Returns:
         int: The stored input number, or 1 if not set.
     """
-    key = f"entity-creation-input-number-{property.get_key()}"
+    key = f"entity-creation-input-number-{field_key}"
     if key in state:
         return state[key]
     else:
@@ -1709,29 +1714,29 @@ def entity_creation_get_input_number(property: Property) -> int:
 ##### DIALOG ENTITY EDITION #####
 
 
-def entity_edition_set_input_number(property: Property, input_number: int) -> None:
+def entity_edition_set_input_number(field_key: str, input_number: int) -> None:
     """
     Set the input number for a specific property during entity edition.
 
     Args:
-        property (Property): The property for which the input number is set.
+        field_key (str): The unique key for the property occurrence.
         input_number (int): The input number to store.
     """
-    key = f"entity-edition-input-number-{property.get_key()}"
+    key = f"entity-edition-input-number-{field_key}"
     state[key] = input_number
 
 
-def entity_edition_get_input_number(property: Property) -> int:
+def entity_edition_get_input_number(field_key: str) -> int:
     """
     Retrieve the input number for a specific property during entity edition.
 
     Args:
-        property (Property): The property for which the input number is retrieved.
+        field_key (str): The unique key for the property occurrence.
 
     Returns:
         int: The stored input number, or 0 if not set.
     """
-    key = f"entity-edition-input-number-{property.get_key()}"
+    key = f"entity-edition-input-number-{field_key}"
     if key in state:
         return state[key]
     else:

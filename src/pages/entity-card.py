@@ -5,7 +5,7 @@ from components.doc_links import decorate_doc_links
 from components.init import init
 from components.menu import menu
 from lib import state
-from lib.utils import get_max_length_text, get_short_uri_with_tail
+from lib.utils import get_max_length_text, get_short_uri_with_tail, get_widget_key
 from dialogs.triple_info import dialog_triple_info
 from dialogs.entity_edition import dialog_entity_edition
 from dialogs.confirmation import dialog_confirmation
@@ -194,18 +194,16 @@ else:
             grouped[property_uri]["statements"].append(statement)
         return list(grouped.values())
 
-    def render_statement_value(statement, key_prefix: str, index: int) -> None:
+    def render_statement_value(statement, key_parts: tuple) -> None:
         col_value, col_info = st.columns([12, 1], vertical_alignment="top")
 
         if statement.object.resource_type == "iri":
             with col_value:
                 st.html(get_entity_value_html(statement.object, MAX_STRING_LENGTH))
-            object_key = statement.object.uri
         else:
             object_text = get_max_length_text(statement.object.get_text(), MAX_STRING_LENGTH)
             with col_value:
                 st.html(get_literal_value_html(object_text))
-            object_key = statement.object.literal
 
         with col_info.container(horizontal=False, horizontal_alignment="right"):
             kwargs = {
@@ -220,13 +218,13 @@ else:
                 help="Show RDF details",
                 on_click=dialog_triple_info,
                 kwargs=kwargs,
-                key=f"btn-{key_prefix}-{object_key}-{index}-info",
+                key=get_widget_key("entity-card", *key_parts, "info"),
             )
 
-    def render_property_group(property, statements: list, key_prefix: str) -> None:
+    def render_property_group(property, statements: list, key_scope: tuple) -> None:
         st.html(get_property_heading_html(property, is_outgoing=True))
         for i, statement in enumerate(statements):
-            render_statement_value(statement, key_prefix, i)
+            render_statement_value(statement, (*key_scope, i))
             if i < len(statements) - 1:
                 st.divider()
         st.html(get_property_meta_html(property, is_outgoing=True))
@@ -382,7 +380,9 @@ else:
 
             for i, s in enumerate(statements):
                 if is_outgoing:
-                    render_statement_value(s, f"{entity_uri}-{p.get_key()}-out", i)
+                    render_statement_value(
+                        s, (entity_uri, "card", "out", prop_index, i)
+                    )
                 else:
                     col_value, col_info = st.columns([12, 1], vertical_alignment="top")
                     with col_value:
@@ -400,7 +400,15 @@ else:
                             help="Show RDF details",
                             on_click=dialog_triple_info,
                             kwargs=kwargs,
-                            key=f"btn-{entity_uri}-{p.get_key()}-{s.subject.uri}-{i}-info",
+                            key=get_widget_key(
+                                "entity-card",
+                                entity_uri,
+                                "card",
+                                "in",
+                                prop_index,
+                                i,
+                                "info",
+                            ),
                         )
 
                 if i < len(statements) - 1:
@@ -417,7 +425,14 @@ else:
                         else data_bundle.get_subjects_of_count(entity, p)
                     )
 
-                    btn_key = f"btn-{entity_uri}-{p.get_key()}-previous"
+                    btn_key = get_widget_key(
+                        "entity-card",
+                        entity_uri,
+                        "card",
+                        "out" if is_outgoing else "in",
+                        prop_index,
+                        "previous",
+                    )
                     disabled = offset <= 0
                     if st.button("<-", type="tertiary", disabled=disabled, key=btn_key):
                         if offset > PAGINATION_LENGTH:
@@ -433,7 +448,14 @@ else:
                         width="content",
                     )
 
-                    btn_key = f"btn-{entity_uri}-{p.get_key()}-next"
+                    btn_key = get_widget_key(
+                        "entity-card",
+                        entity_uri,
+                        "card",
+                        "out" if is_outgoing else "in",
+                        prop_index,
+                        "next",
+                    )
                     disabled = offset + PAGINATION_LENGTH >= total_count
                     if st.button("->", type="tertiary", disabled=disabled, key=btn_key):
                         if offset < total_count:
@@ -532,15 +554,13 @@ else:
                     help=decorate_doc_links(
                         "[What are incoming statements?](/documentation?section=what-are-incoming-statements)"
                     ),
-                    key=f"incoming-statements-help-{entity.uri}",
+                    key=get_widget_key("entity-card", entity.uri, "incoming-help"),
                 )
             selected_sections = []
             for section_index, section in enumerate(extended_sections):
-                if section["kind"] == "outgoing":
-                    section_key = section["property"].get_key()
-                else:
-                    section_key = section["resource"].uri
-                checkbox_key = f"extended-card-{entity.uri}-{section_key}-selected"
+                checkbox_key = get_widget_key(
+                    "entity-card", entity.uri, "extended", section_index, "selected"
+                )
                 if st.checkbox(
                     section["label"],
                     value=False,
@@ -567,8 +587,12 @@ else:
                                     child_group["property"],
                                     child_group["statements"],
                                     (
-                                        f"extended-{section_index}-{object_index}-"
-                                        f"{child_group['property'].get_key()}"
+                                        entity_uri,
+                                        "extended",
+                                        "out",
+                                        section_index,
+                                        object_index,
+                                        child_group_index,
                                     ),
                                 )
                             if child_group_index < len(enriched_object["child_groups"]) - 1:
@@ -593,8 +617,11 @@ else:
                                     child_group["property"],
                                     child_group["statements"],
                                     (
-                                        f"extended-in-{section_index}-"
-                                        f"{child_group['property'].get_key()}"
+                                        entity_uri,
+                                        "extended",
+                                        "in",
+                                        section_index,
+                                        child_group_index,
                                     ),
                                 )
                             if child_group_index < len(section["child_groups"]) - 1:

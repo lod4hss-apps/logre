@@ -95,7 +95,22 @@ def _patch_graphly_timeout() -> None:
             auth=auth,
             timeout=_get_sparql_timeout_seconds(),
         )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except HTTPError:
+            response_preview = response.text.strip()
+            if len(response_preview) > 400:
+                response_preview = response_preview[:400] + "..."
+            print(
+                "[sparql] request failed | "
+                f"url={self.url + url_appendix} | "
+                f"status={response.status_code} | "
+                f"reason={response.reason or '(missing)'} | "
+                f"response={response_preview or '(empty)'}"
+            )
+            if os.getenv("GRAPHLY_MODE") == "debug":
+                print(f"[sparql] failed query | query={_query_preview(text, 1000)}")
+            raise
 
         if parse_response:
             try:
