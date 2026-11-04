@@ -1,6 +1,6 @@
 # LOGRE (LOcal GRaph Editor)
 
-Logre is an open-source UI that helps you visualize, edit, and explore RDF graph data through SPARQL endpoints.
+Logre is an open-source user interface (UI) that helps you visualise, explore and edit RDF graph data available on SPARQL endpoints. It uses SCHACL profiles to build tables and forms.
 
 > Logre does not embed its own triple store. You can connect Logre to your own endpoint, or run it with the bundled RDF4J stack in containers.
 
