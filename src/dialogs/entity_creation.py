@@ -1,6 +1,8 @@
 from typing import List
 import streamlit as st
+from requests.exceptions import ConnectionError, HTTPError, Timeout
 import lib.state as state
+from lib.errors import get_HTTP_ERROR_message
 from lib.utils import generate_uri
 from graphly.schema import Resource
 
@@ -55,8 +57,9 @@ def dialog_entity_creation() -> None:
         mandatories = {}
 
         # Loop through all of them
-        for p in properties:
+        for property_occurrence, p in enumerate(properties):
             with st.container():
+                field_key = state.get_entity_form_field_key(p, property_occurrence)
 
                 # Prepare
                 if p.domain and p.domain.uri == selected_class.uri: # Outgoing
@@ -74,14 +77,14 @@ def dialog_entity_creation() -> None:
                 # If the property is mandatory
                 if p.is_mandatory():
                     property_label += " ❗️" # Change the display for the user
-                    mandatories[p.get_key()] = False # List it as not yet added, so that it can be checked later if it has been set
+                    mandatories[field_key] = False # List it as not yet added, so that it can be checked later if it has been set
 
                 # Make 3 columns: One for the property label, one for objects/subjects, and one for informations
                 col_prop, col_input = st.columns([5, 8], vertical_alignment='center')
                 col_prop.markdown(property_label, unsafe_allow_html=True)
 
                 # State stores how much of this field are open
-                input_number = state.entity_creation_get_input_number(p)
+                input_number = state.entity_creation_get_input_number(field_key)
 
                 # And for each one of them, display it correctly
                 for i in range(input_number):
@@ -93,27 +96,27 @@ def dialog_entity_creation() -> None:
                         
                         # If the target is a STRING
                         elif target.uri == 'xsd:string':
-                            input = st.text_input(target.get_text(), "", key=f"entity-creation-input-{p.get_key()}-{i}")
+                            input = st.text_input(target.get_text(), "", key=f"entity-creation-input-{field_key}-{i}")
                             if input:
                                 if way == 'outgoing': triples.append((entity_uri, p.uri, input))
                                 else: raise Exception('Can not have an incoming property with a Literal as domain')
-                                if p.is_mandatory(): mandatories[p.get_key()] = True
+                                if p.is_mandatory(): mandatories[field_key] = True
 
                         # If the target is an INTEGER
                         elif target.uri == 'xsd:integer':
-                            input = st.number_input(target.get_text(), step=1, key=f"entity-creation-input-{p.get_key()}-{i}")
-                            if input:
+                            input = st.number_input(target.get_text(), value=None, step=1, key=f"entity-creation-input-{field_key}-{i}")
+                            if input is not None:
                                 if way == 'outgoing': triples.append((entity_uri, p.uri, input))
                                 else: raise Exception('Can not have an incoming property with a Literal as domain')
-                                if p.is_mandatory(): mandatories[p.get_key()] = True
+                                if p.is_mandatory(): mandatories[field_key] = True
 
                         # If the target is a FLOAT
                         elif target.uri == 'xsd:float':
-                            input = st.number_input(target.get_text(), key=f"entity-creation-input-{p.get_key()}-{i}")
-                            if input:
+                            input = st.number_input(target.get_text(), value=None, key=f"entity-creation-input-{field_key}-{i}")
+                            if input is not None:
                                 if way == 'outgoing': triples.append((entity_uri, p.uri, input))
                                 else: raise Exception('Can not have an incoming property with a Literal as domain')
-                                if p.is_mandatory(): mandatories[p.get_key()] = True
+                                if p.is_mandatory(): mandatories[field_key] = True
 
                         # Otherwise, target is a CLASS INSTANCE
                         else:
@@ -121,13 +124,13 @@ def dialog_entity_creation() -> None:
                             possibles: List[Resource] = data_bundle.find_entities(class_uri=target.uri, limit=None, offset=None)
                             possibles_labels = [resource.get_text() for resource in possibles]
                             # Class instance
-                            input_label = st.selectbox(target.get_text(), options=possibles_labels, index=None, key=f"entity-creation-input-{p.get_key()}-{i}")
+                            input_label = st.selectbox(target.get_text(), options=possibles_labels, index=None, key=f"entity-creation-input-{field_key}-{i}")
                             if input_label:
                                 input_index = possibles_labels.index(input_label)
                                 input = possibles[input_index]
                                 if way == 'outgoing': triples.append((entity_uri, p.uri, input.uri))
                                 else: triples.append((input.uri, p.uri, entity_uri))
-                                if p.is_mandatory(): mandatories[p.get_key()] = True
+                                if p.is_mandatory(): mandatories[field_key] = True
 
                         # Display the property information only on first row, others would be redundancy 
                         if i == 0:
@@ -167,12 +170,12 @@ def dialog_entity_creation() -> None:
                     # If at least one of the two can be pressed, display both
                     if not disabled_minus or not disabled_plus:
                         # Minus button
-                        if st.button('', type='tertiary', icon=':material/remove:', key=f"entity-creation-remove-{p.get_key()}", disabled=disabled_minus):
-                            state.entity_creation_set_input_number(p, input_number - 1)
+                        if st.button('', type='tertiary', icon=':material/remove:', key=f"entity-creation-remove-{field_key}", disabled=disabled_minus):
+                            state.entity_creation_set_input_number(field_key, input_number - 1)
                             st.rerun(scope='fragment')
                         # Plus button
-                        if st.button('', type='tertiary', icon=':material/add:', key=f"entity-creation-add-{p.get_key()}", disabled=disabled_plus):
-                            state.entity_creation_set_input_number(p, input_number + 1)
+                        if st.button('', type='tertiary', icon=':material/add:', key=f"entity-creation-add-{field_key}", disabled=disabled_plus):
+                            state.entity_creation_set_input_number(field_key, input_number + 1)
                             st.rerun(scope='fragment')
 
             st.divider()
@@ -184,8 +187,20 @@ def dialog_entity_creation() -> None:
             # Verify that all mandatories are present
             validated = all(mandatories.values())
             if validated:
-                # And create the entity
-                data_bundle.data.insert(triples)
+                try:
+                    data_bundle.data.insert(triples)
+                except HTTPError as err:
+                    message = get_HTTP_ERROR_message(err)
+                    st.error(message)
+                    print(message.replace("\n\n", "\n"))
+                    return
+                except (ConnectionError, Timeout) as err:
+                    st.error(f"Unable to create the entity: {err}")
+                    return
+                except ValueError as err:
+                    st.error(f"Unable to create the entity: {err}")
+                    return
+
                 state.set_toast('Entity created', ':material/save:')
                 # And then, open it
                 state.set_entity_uri(entity_uri)

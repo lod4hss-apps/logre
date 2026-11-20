@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+from pathlib import Path
 from components.init import init
 from components.menu import menu
 from lib import state
@@ -79,6 +80,10 @@ if js_code is None:
     )
     st.stop()
 
+canvas_code = (Path(__file__).resolve().parent.parent / "lib" / "model-canvas.js").read_text(
+    encoding="utf-8"
+)
+
 
 def _is_datatype_range(prop: dict) -> bool:
     range_info = prop.get("range") or {}
@@ -94,6 +99,12 @@ def _is_datatype_range(prop: dict) -> bool:
 properties = [prop.to_dict() for prop in data_bundle.model.properties]
 properties = [prop for prop in properties if not _is_datatype_range(prop)]
 properties_string = json.dumps(properties, ensure_ascii=False)
+
+if not properties:
+    st.info(
+        "No class-to-class properties to draw. The model may still be loaded and usable "
+        "for forms with datatype properties."
+    )
 
 st.components.v1.html(
     f"""
@@ -120,6 +131,7 @@ st.components.v1.html(
     </div>
 
     <script>{js_code}</script>
+    <script>{canvas_code}</script>
     <script>
       (function () {{
         const triples = {properties_string};
@@ -136,23 +148,27 @@ st.components.v1.html(
           if (width <= 0 || height <= 0) return false;
 
           wrapper.style.height = height + "px";
+          if (canvas.width === width && canvas.height === height) return false;
           canvas.width = width;
           canvas.height = height;
           return true;
         }}
 
         function layoutAndDraw() {{
-          if (!setModelCanvasSize()) return;
-          if (typeof draw === "function") draw();
+          const resized = setModelCanvasSize();
+          if (resized && typeof fitModelZoom === "function") fitModelZoom();
+          else if (typeof draw === "function") draw();
         }}
 
         function initCanvas() {{
           const canvas = document.getElementById("canvas-shacl-maker");
           if (!canvas || typeof setCanvas !== "function") return false;
-          if (!setModelCanvasSize()) return false;
+          if (!canvas.parentElement || canvas.parentElement.clientWidth <= 0) return false;
+          setModelCanvasSize();
           if (!initialized) {{
             setCanvas(canvas);
             addTriples(triples);
+            if (typeof fitModelZoom === "function") fitModelZoom();
             initialized = true;
           }}
           layoutAndDraw();

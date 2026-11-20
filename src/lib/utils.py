@@ -1,5 +1,12 @@
 from typing import List
-import time, unicodedata, re, io, zipfile
+import hashlib, io, json, re, time, unicodedata, zipfile
+
+
+def get_widget_key(namespace: str, *parts: object) -> str:
+    """Build a stable Streamlit widget key from structural identifiers."""
+    content = json.dumps(parts, ensure_ascii=True, separators=(",", ":"), default=str)
+    digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
+    return f"{namespace}-{digest}"
 
 
 def normalize_text(text: str, to_lower_case: bool = True) -> str:
