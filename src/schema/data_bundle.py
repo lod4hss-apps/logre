@@ -1,4 +1,5 @@
 from typing import List, Tuple, Dict
+import json
 import pandas as pd
 from requests.exceptions import HTTPError
 from graphly.schema import (
@@ -14,6 +15,7 @@ from graphly.schema import (
 )
 from graphly.tools import prepare
 from lib.utils import normalize_text, to_snake_case, from_snake_case
+from lib.data_table import EntityFilter, find_relation_paths
 from .model_framework import get_model_framework
 
 
@@ -724,11 +726,10 @@ class DataBundle:
         """
         # Prepare sorting
         if sort_col is not None:
-            clean_sort_col = sort_col[: sort_col.index(" (")]
-            # Find the property with the given label
-            sort_prop = next(
-                prop for prop in needed_properties if prop.label == clean_sort_col
+            column_names = self.__data_table_get_display_names(
+                needed_properties, class_uri
             )
+            sort_prop = needed_properties[column_names.index(sort_col)]
             if sort_prop.domain.uri == class_uri:  # ie: is outgoing
                 if (
                     sort_prop.range.class_uri == "rdfs:Datatype"
@@ -746,67 +747,86 @@ class DataBundle:
 
             # Create the SPARQL appendix for the sorting
             if sort_way == "ASC":
-                order_by = "ORDER BY ASC(?sort_on)"
+                order_by = "ORDER BY ASC(?sort_on) ?uri_"
             else:
-                order_by = "ORDER BY DESC(?sort_on)"
+                order_by = "ORDER BY DESC(?sort_on) ?uri_"
         else:  # ie: no sorting
             sort_prop = ""
-            order_by = ""
+            order_by = "ORDER BY ?uri_"
 
         return sort_prop, order_by
 
     def __data_table_prepare_filtering(
         self,
-        filter_col: str,
-        filter_value: str,
-        needed_properties: List[Property],
+        filters: List[Tuple[str, str] | EntityFilter],
+        filter_operator: str,
         class_uri: str,
-    ) -> Tuple[str, str]:
-        """
-        Prepare the SPARQL components for filtering a data table by a specified column and value.
+    ) -> str:
+        """Combine independent filters without multiplying the entity rows."""
+        if filter_operator not in ("AND", "OR"):
+            raise ValueError(f"Unsupported filter operator: {filter_operator}")
 
-        Determines the SPARQL pattern needed to filter by the given property, handling
-        outgoing vs. incoming properties and whether the property is a literal or requires
-        fetching a label. Generates a FILTER clause that performs a case-insensitive
-        substring match on the filter value.
+        conditions = []
+        for index, criterion in enumerate(filters):
+            if isinstance(criterion, EntityFilter):
+                entity_filter = criterion
+            else:
+                column_name, value = criterion
+                entity_filter = EntityFilter(class_uri, column_name, value)
 
-        Args:
-            filter_col (str): The column label to filter by, or None for no filtering.
-            filter_value (str): The value to filter on.
-            needed_properties (List[Property]): The list of properties available for the class.
-            class_uri (str): The URI of the class for which the data table is built.
+            if not entity_filter.column_name or not entity_filter.value or not entity_filter.value.strip():
+                continue
+            target_class_uri = entity_filter.class_uri
+            if entity_filter.path not in find_relation_paths(
+                self.model.properties, class_uri, target_class_uri
+            ):
+                raise ValueError("No model relation matches the selected filter path")
 
-        Returns:
-            Tuple[str, str]: A tuple containing the SPARQL pattern for filtering and the FILTER clause.
-        """
-        if filter_col is not None:
-            clean_filter_col = filter_col[: filter_col.index(" (")]
-            # Find the property with the given label
-            filter_prop = list(
-                filter(lambda prop: prop.label == clean_filter_col, needed_properties)
-            )[0]
-            if filter_prop.domain.uri == class_uri:  # ie: is outgoing
-                if (
-                    filter_prop.range.class_uri == "rdfs:Datatype"
-                ):  # ie: no need to get the label
-                    filter_prop_str1 = f"?uri_ {prepare(filter_prop.uri, self.prefixes.shorts())} ?filter_on ."
-                else:  # ie: need extra path to the label
-                    filter_prop_str1 = f"?uri_ {prepare(filter_prop.uri, self.prefixes.shorts())} ?filter_entity . ?filter_entity {self.model.label_property} ?filter_on ."
-            else:  # ie: is incoming
-                if (
-                    filter_prop.range.class_uri == "rdfs:Datatype"
-                ):  # ie: no need to get the label
-                    filter_prop_str1 = f"?filter_on {prepare(filter_prop.uri, self.prefixes.shorts())} ?uri_ ."
-                else:  # ie: need extra path to the label
-                    filter_prop_str1 = f"?filter_entity {prepare(filter_prop.uri, self.prefixes.shorts())} ?uri_ . ?filter_entity {self.model.label_property} ?filter_on ."
+            target_properties = self.__data_table_get_properties(target_class_uri)
+            target_names = self.__data_table_get_display_names(
+                target_properties, target_class_uri
+            )
+            filter_prop = target_properties[target_names.index(entity_filter.column_name)]
+            value_var = f"?filter_value_{index}"
+            entity_var = f"?filter_entity_{index}"
+            target_var = "?uri_"
+            path_patterns = []
+            for step_index, step in enumerate(entity_filter.path):
+                next_var = f"?filter_node_{index}_{step_index}"
+                edge = prepare(step.property_uri, self.prefixes.shorts())
+                if step.reverse:
+                    path_patterns.append(f"{next_var} {edge} {target_var} .")
+                else:
+                    path_patterns.append(f"{target_var} {edge} {next_var} .")
+                path_patterns.append(
+                    f"{next_var} {self.model.type_property} "
+                    f"{prepare(step.to_class_uri, self.prefixes.shorts())} ."
+                )
+                target_var = next_var
 
-            # Create the SPARQL appendix for the sorting
-            filter_prop_str2 = f'FILTER(CONTAINS(LCASE(STR(?filter_on)), LCASE("{normalize_text(filter_value)}")))'
-        else:  # ie: no filter
-            filter_prop_str1 = ""
-            filter_prop_str2 = ""
+            predicate = prepare(filter_prop.uri, self.prefixes.shorts())
+            if filter_prop.domain and filter_prop.domain.uri == target_class_uri:
+                if filter_prop.range and filter_prop.range.class_uri == "rdfs:Datatype":
+                    pattern = f"{target_var} {predicate} {value_var} ."
+                else:
+                    pattern = f"{target_var} {predicate} {entity_var} . {entity_var} {self.model.label_property} {value_var} ."
+            elif filter_prop.range and filter_prop.range.uri == target_class_uri:
+                pattern = f"{entity_var} {predicate} {target_var} . {entity_var} {self.model.label_property} {value_var} ."
+            else:
+                raise ValueError("Filter property is not attached to its selected class")
 
-        return filter_prop_str1, filter_prop_str2
+            search_value = json.dumps(
+                normalize_text(entity_filter.value), ensure_ascii=False
+            )
+            conditions.append(
+                f"EXISTS {{ {' '.join(path_patterns)} {pattern} "
+                f"FILTER(CONTAINS(LCASE(STR({value_var})), LCASE({search_value}))) }}"
+            )
+
+        if not conditions:
+            return ""
+        joiner = " && " if filter_operator == "AND" else " || "
+        return f"FILTER({joiner.join(conditions)})"
 
     def __data_table_get_select_property(
         self, property: Property, index: int, class_uri: str
@@ -913,6 +933,43 @@ class DataBundle:
             label = f"{label} (incoming)"
         return label
 
+    def __data_table_get_properties(self, class_uri: str) -> List[Property]:
+        properties = [
+            prop
+            for prop in self.model.properties
+            if prop.card_of and prop.card_of.uri == class_uri
+        ]
+        properties.sort(key=lambda prop: prop.order or 10**18)
+        return properties
+
+    def __data_table_get_display_names(
+        self, properties: List[Property], class_uri: str
+    ) -> List[str]:
+        base_names = [
+            self.__data_table_get_display_name(prop, class_uri) for prop in properties
+        ]
+        fixed_names = {
+            "URI",
+            "Outgoing count",
+            "Incoming count",
+            "Open in Logre",
+            "Open external",
+        }
+        reserved = set(base_names) | fixed_names
+        used = set()
+        names = []
+        for base_name in base_names:
+            name = base_name
+            if name in used or name in fixed_names:
+                suffix = 2
+                name = f"{base_name} [{suffix}]"
+                while name in reserved or name in used:
+                    suffix += 1
+                    name = f"{base_name} [{suffix}]"
+            names.append(name)
+            used.add(name)
+        return names
+
     @staticmethod
     def __as_sparql_uri_term(uri: str) -> str | None:
         """
@@ -942,16 +999,8 @@ class DataBundle:
         Returns:
             List[str]: A list of column names for the data table.
         """
-        needed_properties = [
-            prop
-            for prop in self.model.properties
-            if prop.card_of and prop.card_of.uri == cls.uri
-        ]
-        needed_properties.sort(key=lambda x: x.order or 10**18)
-        return [
-            self.__data_table_get_display_name(prop, cls.uri)
-            for prop in needed_properties
-        ]
+        needed_properties = self.__data_table_get_properties(cls.uri)
+        return self.__data_table_get_display_names(needed_properties, cls.uri)
 
     def get_data_table(
         self,
@@ -962,6 +1011,8 @@ class DataBundle:
         sort_way: str = None,
         filter_col: str = None,
         filter_value: str = None,
+        filters: List[Tuple[str, str] | EntityFilter] | None = None,
+        filter_operator: str = "AND",
     ) -> pd.DataFrame:
         """
         Generate a data table for a given class, optionally supporting pagination, sorting, and filtering.
@@ -977,19 +1028,16 @@ class DataBundle:
             offset (int, optional): Number of instances to skip for pagination. Defaults to 0.
             sort_col (str, optional): Column label to sort by. Defaults to None.
             sort_way (str, optional): Sorting direction, 'ASC' or 'DESC'. Defaults to None.
-            filter_col (str, optional): Column label to filter by. Defaults to None.
-            filter_value (str, optional): Value to filter the column by. Defaults to None.
+            filter_col (str, optional): Legacy single column filter. Defaults to None.
+            filter_value (str, optional): Legacy filter value. Defaults to None.
+            filters (list, optional): Column/value pairs to combine. Defaults to None.
+            filter_operator (str, optional): "AND" or "OR". Defaults to "AND".
 
         Returns:
             pd.DataFrame: A DataFrame containing the instances, their properties, and counts of incoming and outgoing triples.
         """
         # List all wanted properties for this class (according to ontology)
-        needed_properties = [
-            prop
-            for prop in self.model.properties
-            if prop.card_of and prop.card_of.uri == cls.uri
-        ]
-        needed_properties.sort(key=lambda x: x.order or 10**18)
+        needed_properties = self.__data_table_get_properties(cls.uri)
 
         class_uri = cls.uri
         class_uri_prepared = prepare(class_uri, self.prefixes.shorts())
@@ -999,9 +1047,10 @@ class DataBundle:
             sort_col, sort_way, needed_properties, class_uri
         )
 
-        # Prepare filtering
-        filter_prop_str1, filter_prop_str2 = self.__data_table_prepare_filtering(
-            filter_col, filter_value, needed_properties, class_uri
+        # Prepare filtering (keep single-filter calls compatible).
+        active_filters = filters if filters is not None else [(filter_col, filter_value)]
+        filter_clause = self.__data_table_prepare_filtering(
+            active_filters, filter_operator, class_uri
         )
 
         # For each wanted properties, used the small private function to build SPARQL "select" text
@@ -1032,12 +1081,11 @@ class DataBundle:
             WHERE {{
                 {self.data.sparql_begin}
                     {{
-                        SELECT ?uri_ 
+                        SELECT {"DISTINCT " if sort_col is None else ""}?uri_
                         WHERE {{ 
                             ?uri_ {self.model.type_property} {class_uri_prepared} . 
-                            {filter_prop_str1}
+                            {filter_clause}
                             {sort_prop_str1}
-                            {filter_prop_str2}
                         }}
                         {order_by}
                         {offset}
@@ -1134,10 +1182,7 @@ class DataBundle:
             self.__data_table_get_column_var_name(prop, i, class_uri)
             for i, prop in enumerate(needed_properties)
         ]
-        display_names = [
-            self.__data_table_get_display_name(prop, class_uri)
-            for prop in needed_properties
-        ]
+        display_names = self.__data_table_get_display_names(needed_properties, class_uri)
         if len(df) != 0:
             ordered_columns = (
                 ["uri"] + prop_var_names + ["outgoing_count", "incoming_count"]
